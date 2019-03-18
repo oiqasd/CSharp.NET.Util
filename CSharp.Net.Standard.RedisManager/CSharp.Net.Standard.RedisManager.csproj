@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharp.Net.Standard.Util" Version="1.0.0" />
+    <PackageReference Include="CSharp.Net.Standard.Util" Version="1.0.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.571" />
   </ItemGroup>
 

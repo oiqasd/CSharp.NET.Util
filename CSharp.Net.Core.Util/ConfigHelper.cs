@@ -53,7 +53,7 @@ namespace CSharp.Net.Core.Util
             if (configValue == null)
             {
                 string msg = string.Format("在AppSetting节点下未找到{0}", key);
-                throw new Exception(msg);
+                Utils.WriteLog(msg);
                 //throw new ConfigurationErrorsException(msg);
             }
             try
@@ -62,6 +62,8 @@ namespace CSharp.Net.Core.Util
             }
             catch (Exception ex)
             {
+                var msg = string.Format("类型转换失败 '{0}' to type of {1}", configValue, typeof(T).FullName);
+                Utils.WriteLog(msg + "\n" + ex.GetExcetionMessage());
                 throw new Exception(string.Format("类型转换失败 '{0}' to type of {1}", configValue, typeof(T).FullName), ex);
             }
         }
@@ -82,8 +84,8 @@ namespace CSharp.Net.Core.Util
             }
             catch (Exception ex)
             {
-                //LogHelper.Error("获取AppSetting失败", "", ex);
-                throw new ArgumentException("获取AppSetting失败");
+                Utils.WriteLog("获取AppSetting失败" + "\n" + ex.GetExcetionMessage());
+                //throw new ArgumentException("获取AppSetting失败");
             }
             return retValue;
         }
@@ -132,8 +134,7 @@ namespace CSharp.Net.Core.Util
             }
             catch (Exception ex)
             {
-                throw new ArgumentException(ex.Message);
-                //LogHelper.Error("获取参数失败", JsonHelper.Serialize(keys), ex);
+                Utils.WriteLog("获取参数失败" + "\n" + ex.GetExcetionMessage());
             }
             return retValue;
         }
