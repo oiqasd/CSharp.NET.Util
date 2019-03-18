@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp.Net.Standard.RedisManager", "CSharp.Net.Standard.RedisManager\CSharp.Net.Standard.RedisManager.csproj", "{7B1C13AB-82E5-46DF-8D32-5B91B8C24308}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp.Net.Core.Util", "CSharp.Net.Core.Util\CSharp.Net.Core.Util.csproj", "{1E02FB8B-B8B6-42DC-8DC4-9D749F1E76EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp.Net.Standard.ADO.MySql", "CSharp.Net.Standard.ADO.MySql\CSharp.Net.Standard.ADO.MySql.csproj", "{A430BC28-B1EF-4D06-B827-63E1670CABD3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +39,14 @@ Global
 		{7B1C13AB-82E5-46DF-8D32-5B91B8C24308}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B1C13AB-82E5-46DF-8D32-5B91B8C24308}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B1C13AB-82E5-46DF-8D32-5B91B8C24308}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E02FB8B-B8B6-42DC-8DC4-9D749F1E76EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E02FB8B-B8B6-42DC-8DC4-9D749F1E76EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E02FB8B-B8B6-42DC-8DC4-9D749F1E76EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E02FB8B-B8B6-42DC-8DC4-9D749F1E76EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A430BC28-B1EF-4D06-B827-63E1670CABD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A430BC28-B1EF-4D06-B827-63E1670CABD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A430BC28-B1EF-4D06-B827-63E1670CABD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A430BC28-B1EF-4D06-B827-63E1670CABD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

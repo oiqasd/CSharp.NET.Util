@@ -2,41 +2,38 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Pager
+public class PageArgument
 {
-    public class PageArgument
+    private int index;
+    private int size;
+    /// <summary>
+    /// 请求页码
+    /// 默认1
+    /// </summary>
+    public int PageIndex
     {
-        private int index;
-        private int size;
-        /// <summary>
-        /// 请求页码
-        /// 默认1
-        /// </summary>
-        public int PageIndex
+        get
         {
-            get
-            {
-                return index <= 0 ? 1 : index;
-            }
-            set
-            {
-                index = value;
-            }
+            return index <= 0 ? 1 : index;
         }
-        /// <summary>
-        /// 每页记录数
-        /// 默认10
-        /// </summary>
-        public int PageSize
+        set
         {
-            get
-            {
-                return size <= 0 ? 10 : size;
-            }
-            set
-            {
-                size = value;
-            }
+            index = value;
+        }
+    }
+    /// <summary>
+    /// 每页记录数
+    /// 默认10
+    /// </summary>
+    public int PageSize
+    {
+        get
+        {
+            return size <= 0 ? 10 : size;
+        }
+        set
+        {
+            size = value;
         }
     }
 }

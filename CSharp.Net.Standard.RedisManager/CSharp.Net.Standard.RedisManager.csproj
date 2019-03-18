@@ -1,7 +1,17 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>CSharp.Net.Standard.RedisManager</PackageId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="RedisService_ServiceStack.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CSharp.Net.Standard.Util" Version="1.0.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.571" />
+  </ItemGroup>
 
 </Project>
