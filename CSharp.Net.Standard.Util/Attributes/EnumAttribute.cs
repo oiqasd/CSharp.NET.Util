@@ -2,62 +2,65 @@
 using System.Collections.Generic;
 using System.Text;
 
-/// <summary>
-/// 枚举排序
-/// </summary>
-[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-public class EnumOrderAttribute : Attribute
+namespace CSharp.Net.Standard.Util
 {
     /// <summary>
-    /// 枚举的排序值
+    /// 枚举排序
     /// </summary>
-    public int EnumOrder { get; }
-
-    /// <summary>
-    /// 构造函数
-    /// </summary>
-    /// <param name="order"></param>
-    public EnumOrderAttribute(int order)
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public class EnumOrderAttribute : Attribute
     {
-        EnumOrder = order;
-    }
+        /// <summary>
+        /// 枚举的排序值
+        /// </summary>
+        public int EnumOrder { get; }
 
-    /// <summary>
-    /// 通过枚举类型和枚举返回对应的序号
-    /// </summary>
-    /// <param name="type">枚举类型</param>
-    /// <param name="enumValue">枚举</param>
-    /// <returns></returns>
-    public static int GetOrder(Type type, object enumValue)
-    {
-        object[] objs = type.GetField(enumValue.ToString()).GetCustomAttributes(typeof(EnumOrderAttribute), false);
-        if (objs.Length > 0)
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="order"></param>
+        public EnumOrderAttribute(int order)
         {
-            var attribute = objs[0] as EnumOrderAttribute;
-            if (attribute != null) return attribute.EnumOrder;
+            EnumOrder = order;
         }
-        return 0;
+
+        /// <summary>
+        /// 通过枚举类型和枚举返回对应的序号
+        /// </summary>
+        /// <param name="type">枚举类型</param>
+        /// <param name="enumValue">枚举</param>
+        /// <returns></returns>
+        public static int GetOrder(Type type, object enumValue)
+        {
+            object[] objs = type.GetField(enumValue.ToString()).GetCustomAttributes(typeof(EnumOrderAttribute), false);
+            if (objs.Length > 0)
+            {
+                var attribute = objs[0] as EnumOrderAttribute;
+                if (attribute != null) return attribute.EnumOrder;
+            }
+            return 0;
+        }
     }
-}
-
-/// <summary>
-/// 英文描述特性
-/// </summary>
-[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-public class EDescriptionAttribute : Attribute
-{
-    /// <summary>
-    /// 英文描述
-    /// </summary>
-    public string EDescription { get; }
 
     /// <summary>
-    /// 构造函数
+    /// 英文描述特性
     /// </summary>
-    /// <param name="order"></param>
-    public EDescriptionAttribute(string eDescription)
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    public class EDescriptionAttribute : Attribute
     {
-        EDescription = eDescription;
-    }
-}
+        /// <summary>
+        /// 英文描述
+        /// </summary>
+        public string EDescription { get; }
 
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="order"></param>
+        public EDescriptionAttribute(string eDescription)
+        {
+            EDescription = eDescription;
+        }
+    }
+
+}

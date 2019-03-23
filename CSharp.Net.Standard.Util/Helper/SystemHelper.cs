@@ -3,49 +3,36 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-public class SystemHelper
+namespace CSharp.Net.Standard.Util
 {
-    /// <summary>
-    /// 获取运行根目录
-    /// </summary>
-    public static string GetRunRoot
+    public class SystemHelper
     {
-        get
+        /// <summary>
+        /// 获取运行根目录
+        /// </summary>
+        public static string GetRunRoot
         {
-            return System.AppDomain.CurrentDomain.BaseDirectory;
+            get
+            {
+                return System.AppDomain.CurrentDomain.BaseDirectory;
+            }
         }
-    }
 
-    /// <summary>
-    /// 返回路径，不存在则创建
-    /// </summary>
-    /// <param name="path"></param>
-    /// <returns></returns>
-    public static string GetRealPath(params string[] path)
-    {
-        var root = Path.Combine(path);
-        if (!Directory.Exists(root))
+        /// <summary>
+        /// 获取用户数据缓存目录
+        /// </summary>
+        /// <returns></returns>
+        public static string GetUserRoamingFolder(string path = "", bool defaultCreate = false)
         {
-            Directory.CreateDirectory(root);
+            string dir = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), path);
+            if (defaultCreate)
+            {
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+            }
+
+            return dir;
         }
-        return root;
+          
     }
-
-    /// <summary>
-    /// 创建文件
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="file"></param>
-    /// <returns></returns>
-    public static string GetFilePath(string path, string file)
-    {
-        var filepath = Path.Combine(GetRealPath(path), file);
-
-        if (!File.Exists(filepath))
-        {
-            File.Create(filepath).Dispose();
-        }
-        return filepath;
-    }
-
 }

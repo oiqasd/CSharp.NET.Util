@@ -1,7 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
+    <Authors>Developer</Authors>
+    <Company>Developer</Company>
+    <Description>基于.NET Standard2.0的MySql类库</Description>
+    <Copyright>Y</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

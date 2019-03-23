@@ -4,7 +4,7 @@ using System.Data;
 using System.Reflection;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Helper
+namespace CSharp.Net.Standard.Util
 {
     /// <summary>
     /// 实体类转换类

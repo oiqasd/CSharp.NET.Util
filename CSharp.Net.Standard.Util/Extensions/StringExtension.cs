@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSharp.Net.Standard.Util;
+using System;
 
 public static class StringExtension
 {

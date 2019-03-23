@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CSharp.Net.Standard.Util;
+using System;
 using System.Data;
-using System.Text;
 
 /// <summary>
 /// Extension methods for all kind of ADO.NET DataReaders (SqlDataReader, OracleDataReader, ...)

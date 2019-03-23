@@ -3,6 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>CSharp.Net.Standard.RedisManager</PackageId>
+    <Authors>Developer</Authors>
+    <Company>Developer</Company>
+    <Description>StackExchange.Redis分装类库</Description>
+    <Copyright>Y</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharp.Net.Standard.Util" Version="1.0.1" />
+    <PackageReference Include="CSharp.Net.Standard.Util" Version="1.0.2" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.571" />
   </ItemGroup>
 

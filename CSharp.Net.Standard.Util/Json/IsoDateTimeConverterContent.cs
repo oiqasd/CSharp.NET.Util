@@ -4,22 +4,25 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-public class IsoDateTimeConverterContent : IsoDateTimeConverter
+namespace CSharp.Net.Standard.Util
 {
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    public class IsoDateTimeConverterContent : IsoDateTimeConverter
     {
-        if (value is DateTime)
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            DateTime dateTime = (DateTime)value;
-            if (dateTime == default(DateTime)
-                || dateTime == DateTime.MinValue
-                || dateTime.ToString("yyyy-MM-dd") == "1970-01-01"
-                || dateTime.ToString("yyyy-MM-dd") == "1900-01-01")
+            if (value is DateTime)
             {
-                writer.WriteValue("");
-                return;
+                DateTime dateTime = (DateTime)value;
+                if (dateTime == default(DateTime)
+                    || dateTime == DateTime.MinValue
+                    || dateTime.ToString("yyyy-MM-dd") == "1970-01-01"
+                    || dateTime.ToString("yyyy-MM-dd") == "1900-01-01")
+                {
+                    writer.WriteValue("");
+                    return;
+                }
             }
+            base.WriteJson(writer, value, serializer);
         }
-        base.WriteJson(writer, value, serializer);
     }
 }

@@ -3,6 +3,8 @@ using System;
 using System.Configuration;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
+using CSharp.Net.Standard.Util;
 
 namespace CSharp.Net.Core.Util
 {
@@ -28,11 +30,26 @@ namespace CSharp.Net.Core.Util
         /// <summary>
         /// 在程序启动的时候加上
         /// </summary>
-        /// <param name="configurationRoot"></param>
-        public static void Init(IConfigurationRoot configurationRoot)
+        /// <param name="args"></param>
+        public static void Init(string[] args = null)
         {
-            _configurationRoot = configurationRoot;
-            _configurationSection = configurationRoot.GetSection("AppSetting");
+            IConfigurationBuilder builder = new ConfigurationBuilder()
+                           .AddEnvironmentVariables()
+                           .SetBasePath(Directory.GetCurrentDirectory())
+                           .AddJsonFile("appsettings.json", false, false);
+            if (args != null) builder = builder.AddCommandLine(args);
+
+            string environmen = builder.Build()["ASPNETCORE_ENVIRONMENT"];
+            if (!string.IsNullOrWhiteSpace(environmen))
+            {
+                builder = builder.AddEnvironmentVariables();
+                builder = builder.AddJsonFile($"appsettings.{environmen}.json", false, false);
+            }
+            //命令行最后加载，覆盖前面的参数
+            if (args != null) builder = builder.AddCommandLine(args);
+            var config = builder.Build();
+            _configurationRoot = config;
+            _configurationSection = config.GetSection("AppSetting");
         }
         /// <summary>
         /// 只支持在节点AppSetting下取一级参数的值

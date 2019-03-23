@@ -3,10 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework> 
     <PackageId>CSharp.Net.Standard.Util</PackageId>
-    <PackageVersion>1.0.1</PackageVersion>
-    <Authors>Freedom Yuy</Authors>
+    <PackageVersion>1.0.2</PackageVersion>
+    <Authors>Developer</Authors>
     <Description>Integrating common util class libraries</Description>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
+    <Copyright>Y</Copyright>
     <RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
     <LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

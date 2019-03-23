@@ -1,36 +1,38 @@
 ﻿
 
-
-/// <summary>
-/// 通用单例
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public class SingletonHelper<T> where T : new()
+namespace CSharp.Net.Standard.Util
 {
-    private static object LockKey = new object();
-
-    public static T _Instance;
-
     /// <summary>
-    /// 获取并创建单例
+    /// 通用单例
     /// </summary>
-    /// <returns></returns>
-    public static T Instance
+    /// <typeparam name="T"></typeparam>
+    public class SingletonHelper<T> where T : new()
     {
-        get
+        private static object LockKey = new object();
+
+        public static T _Instance;
+
+        /// <summary>
+        /// 获取并创建单例
+        /// </summary>
+        /// <returns></returns>
+        public static T Instance
         {
-            if (_Instance == null)
+            get
             {
-                lock (LockKey)
+                if (_Instance == null)
                 {
-                    if (_Instance == null)
+                    lock (LockKey)
                     {
-                        _Instance = new T();
+                        if (_Instance == null)
+                        {
+                            _Instance = new T();
+                        }
                     }
                 }
+                return _Instance;
             }
-            return _Instance;
-        }
 
+        }
     }
 }

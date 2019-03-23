@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Helper
+namespace CSharp.Net.Standard.Util
 {
     /// <summary>
     /// 银行信息
