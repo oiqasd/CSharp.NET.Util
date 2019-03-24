@@ -11,6 +11,8 @@ namespace CSharp.Net.Core.Util.Middlewares
     /// </summary>
     public static class ClaimKit
     {
+        public static string _scheme { get { return _schemeTmp; } }
+        private static string _schemeTmp { get; set; }
         /// <summary>
         /// 使用缓存
         /// 在ConfigureServices中使用
@@ -21,9 +23,9 @@ namespace CSharp.Net.Core.Util.Middlewares
         /// <param name="accessDeniedPath">无权限访问地址.例:/Error/Forbidden</param>
         /// <param name="scheme">例:cookies</param>
         /// <returns></returns>
-        public static void AddClaim(this IServiceCollection services, string loginPath = "/Account/Login", string accessDeniedPath = "/Error/Forbidden", string scheme = CookieAuthenticationDefaults.AuthenticationScheme, string domain = null)
+        public static void AddClaims(this IServiceCollection services, string loginPath = "/Account/Login", string accessDeniedPath = "/Error/Forbidden", string scheme = CookieAuthenticationDefaults.AuthenticationScheme, string domain = null)
         {
-            scheme = string.IsNullOrWhiteSpace(scheme) ? CookieAuthenticationDefaults.AuthenticationScheme : scheme;
+            _schemeTmp = string.IsNullOrWhiteSpace(scheme) ? CookieAuthenticationDefaults.AuthenticationScheme : scheme;
             services.AddAuthentication(scheme).AddCookie(scheme, option =>
            {
                option.AccessDeniedPath = accessDeniedPath;

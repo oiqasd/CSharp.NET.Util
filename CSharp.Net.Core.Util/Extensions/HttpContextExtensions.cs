@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using CSharp.Net.Core.Util.Middlewares;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 public static class HttpContextExtensions
 {
@@ -31,15 +36,7 @@ public static class HttpContextExtensions
     /// <returns></returns>
     public static string GetCookie(this HttpContext httpContext, string Name)
     {
-        string s = "";
-        try
-        {
-            s = httpContext.Request.Cookies[Name];
-        }
-        catch (Exception ex)
-        {
-        }
-        return s;
+        return httpContext.Request.Cookies[Name];
     }
 
     /// <summary>
@@ -52,20 +49,54 @@ public static class HttpContextExtensions
     /// <param name="EndTime">失效日期</param>
     public static void SetCookie(this HttpContext httpContext, string Name, string Value, string Path, string Domain, DateTime? EndTime)
     {
-        try
+        CookieOptions option = new CookieOptions();
+        option.Path = Path;
+        option.Domain = Domain;
+        if (EndTime.HasValue)
         {
-            CookieOptions option = new CookieOptions();
-            option.Path = Path;
-            option.Domain = Domain;
-            if (EndTime.HasValue)
-            {
-                option.Expires = EndTime.Value;
-            }
-            httpContext.Response.Cookies.Append(Name, Value, option);
+            option.Expires = EndTime.Value;
         }
-        catch (Exception ex)
+        httpContext.Response.Cookies.Append(Name, Value, option);
+
+    }
+
+    /// <summary>
+    /// sign in use <see cref="ClaimsIdentity"/>
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <param name="authenticationType"></param>
+    /// <param name="claims"></param>
+    /// <param name="expiressTime"></param>
+    public static async Task SignInAsync(this HttpContext httpContext, string authenticationType, Dictionary<string, string> claims, DateTime expiressTime)
+    {
+        if (claims == null || claims.Count <= 0) throw new ArgumentException("claims dic can't be null.");
+        var identity = new ClaimsIdentity(authenticationType);
+        foreach (var a in claims)
         {
+            //identity.AddClaim(new Claim(ClaimsIdentity.DefaultNameClaimType, ""));
+            identity.AddClaim(new Claim(a.Key, a.Value));
         }
+        var clapro = new ClaimsPrincipal(identity);
+        await httpContext.SignInAsync(ClaimKit._scheme, clapro, new AuthenticationProperties() { IsPersistent = true, ExpiresUtc = expiressTime });
+    }
+
+    /// <summary>
+    /// sign out claims
+    /// </summary>
+    /// <param name="httpContext">上下文</param>
+    public static async Task SignOutAsync(this HttpContext httpContext)
+    {
+        await httpContext.SignOutAsync(ClaimKit._scheme);
+    }
+
+    /// <summary>
+    /// 是否登录
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <returns></returns>
+    public static bool IsSignIn(this HttpContext httpContext)
+    {
+        return httpContext.User.Identity.IsAuthenticated;
     }
 
     #endregion
