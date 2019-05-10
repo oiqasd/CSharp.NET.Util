@@ -65,9 +65,9 @@ public static class HttpContextExtensions
     /// </summary>
     /// <param name="httpContext"></param>
     /// <param name="authenticationType"></param>
-    /// <param name="claims"></param>
+    /// <param name="claims">this key suggest use <c>ClaimTypes</c><see cref="ClaimTypes"/></param>
     /// <param name="expiressTime"></param>
-    public static async Task SignInAsync(this HttpContext httpContext, string authenticationType, Dictionary<string, string> claims, DateTime expiressTime)
+    public static async Task SignInAsync(this HttpContext httpContext, string authenticationType, Dictionary<string, string> claims, DateTime? expiressTime = null)
     {
         if (claims == null || claims.Count <= 0) throw new ArgumentException("claims dic can't be null.");
         var identity = new ClaimsIdentity(authenticationType);

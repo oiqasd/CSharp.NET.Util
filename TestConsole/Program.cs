@@ -1,8 +1,8 @@
 ﻿using CSharp.Net.Standard.Util;
 using System;
 using System.ComponentModel;
-using CSharp.Net.Standard.Util.Extensions;
-using CSharp.Net.Standard.Util.Helper;
+using System.Data;
+using System.IO;
 
 namespace TestConsole
 {
@@ -10,6 +10,18 @@ namespace TestConsole
     {
         static void Main(string[] args)
         {
+            string file = "D:\\log.txt";
+
+            for (var i = 0; i < 2; i++)
+            {
+                using (System.IO.StreamWriter sw = new StreamWriter(file, false))
+                {
+                    sw.BaseStream.Seek(0, System.IO.SeekOrigin.End);
+                    sw.WriteLine(Utils.GetRandom(9));
+                }
+
+            }
+
 
             for (var i = 0; i < 999; i++)
             {
@@ -18,9 +30,11 @@ namespace TestConsole
             }
             //   var s = Utils.GetRandom();
 
+            DataTable tl = new DataTable();
 
+            tl.GetRow(1).GetString("aa");
             Console.ReadLine();
-
+           
         }
     }
 

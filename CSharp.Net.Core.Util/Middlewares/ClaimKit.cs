@@ -21,9 +21,9 @@ namespace CSharp.Net.Core.Util.Middlewares
         /// <param name="services"></param>
         /// <param name="loginPath">登陆地址.例:/Account/Login</param>
         /// <param name="accessDeniedPath">无权限访问地址.例:/Error/Forbidden</param>
-        /// <param name="scheme">例:cookies</param>
+        /// <param name="scheme"><see cref="CookieAuthenticationDefaults.AuthenticationScheme"/></param>
         /// <returns></returns>
-        public static void AddClaims(this IServiceCollection services, string loginPath = "/Account/Login", string accessDeniedPath = "/Error/Forbidden", string scheme = CookieAuthenticationDefaults.AuthenticationScheme, string domain = null)
+        public static void AddAuthenticationUseClaims(this IServiceCollection services, string scheme = CookieAuthenticationDefaults.AuthenticationScheme, string loginPath = "/Account/Login", string accessDeniedPath = "/Error/Forbidden", string domain = null)
         {
             _schemeTmp = string.IsNullOrWhiteSpace(scheme) ? CookieAuthenticationDefaults.AuthenticationScheme : scheme;
             services.AddAuthentication(scheme).AddCookie(scheme, option =>

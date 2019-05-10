@@ -318,7 +318,7 @@ namespace CSharp.Net.Standard.Util
         {
             try
             {
-                var path = Path.Combine(SystemHelper.GetRunRoot, "logs");
+                var path = Path.Combine(AppDomainHelper.GetRunRoot, "logs");
 
                 string file = FileHelper.GetFilePath(path, "log.txt", true);
 

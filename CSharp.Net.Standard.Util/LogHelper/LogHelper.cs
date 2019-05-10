@@ -143,7 +143,7 @@ namespace CSharp.Net.Standard.Util.Log
                 string msg = string.IsNullOrEmpty(log.Title) ? "" : (log.Title + "\t");
                 msg += string.IsNullOrEmpty(log.Message) ? "" : (log.Message + "\t");
                 msg += string.IsNullOrEmpty(log.Exception) ? "" : (log.Exception + "\t");
-               // LongjubankLogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
+               // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
             }
             catch (Exception exx)
             {
@@ -203,7 +203,7 @@ namespace CSharp.Net.Standard.Util.Log
         }
         public static void ClearTraceId()
         {
-            //  LongjubankLogClient.Instance.ClearTraceId();
+            // LogClient.Instance.ClearTraceId();
         }
 
         public static LogLevel ConvertLogLevel(LogLevel level)

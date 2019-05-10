@@ -5,7 +5,11 @@ using System.Text;
 
 namespace CSharp.Net.Standard.Util
 {
-    public class SystemHelper
+
+    /// <summary>
+    /// 应用程序帮助类
+    /// </summary>
+    public class AppDomainHelper
     {
         /// <summary>
         /// 获取运行根目录
@@ -17,7 +21,10 @@ namespace CSharp.Net.Standard.Util
                 return System.AppDomain.CurrentDomain.BaseDirectory;
             }
         }
+    }
 
+    public class SystemHelper
+    {
         /// <summary>
         /// 获取用户数据缓存目录
         /// </summary>
@@ -33,6 +40,6 @@ namespace CSharp.Net.Standard.Util
 
             return dir;
         }
-          
+
     }
 }
