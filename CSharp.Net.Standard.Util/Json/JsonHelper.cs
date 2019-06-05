@@ -19,6 +19,8 @@ namespace CSharp.Net.Standard.Util
             _jsonSettings.MissingMemberHandling = Newtonsoft.Json.MissingMemberHandling.Ignore;
             _jsonSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
             _jsonSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            // _jsonSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Serialize;
+            //_jsonSettings.PreserveReferencesHandling = Newtonsoft.Json.PreserveReferencesHandling.Objects;
             _jsonSettings.Converters.Add(datetimeConverter);
             _jsonSettings.ContractResolver = new LowercaseContractResolver();
         }

@@ -1,15 +1,28 @@
 ﻿using CSharp.Net.Standard.Util;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.IO;
+using System.Linq;
 
 namespace TestConsole
 {
+    public class stu
+    {
+        public string name { get; set; }
+        public string key { get; set; }
+    }
     class Program
     {
         static void Main(string[] args)
         {
+            List<stu> ls = new List<stu>() { new stu { key = "12", name = "amg" }, new stu { key = "13", name = "tmd" } };
+            var pa = new PageArgument() { PageIndex = 1, PageSize = 12 };
+            PageList<stu> ts = (from a in ls select a).AsQueryable().ToPageList(pa);
+
+            var re = JsonHelper.Serialize(ts);
+
             string file = "D:\\log.txt";
 
             for (var i = 0; i < 2; i++)
@@ -34,7 +47,7 @@ namespace TestConsole
 
             tl.GetRow(1).GetString("aa");
             Console.ReadLine();
-           
+
         }
     }
 

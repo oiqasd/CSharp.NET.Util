@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CSharp.Net.Standard.Util
+﻿namespace CSharp.Net.Standard.Util
 {
+    /// <summary>
+    /// 请求分页参数
+    /// </summary>
     public class PageArgument
     {
         private int index;

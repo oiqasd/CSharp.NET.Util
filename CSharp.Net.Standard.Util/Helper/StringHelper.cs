@@ -1589,6 +1589,7 @@ namespace CSharp.Net.Standard.Util
 
         /// <summary>
         /// Joins  the values of a string array if the values are not null or empty.
+        /// 数组拼接成字符串
         /// </summary>
         /// <param name="objs">The string array used for joining.</param>
         /// <param name="separator">The separator to use in the joined string.</param>
@@ -1783,7 +1784,7 @@ namespace CSharp.Net.Standard.Util
         /// <summary>
         /// Determines whether the string contains all of the provided values.
         /// </summary>
-        /// <param name="this"></param>
+        /// <param name="inputValue"></param>
         /// <param name="comparisonType"></param>
         /// <param name="values"></param>
         /// <returns></returns>
@@ -1799,7 +1800,7 @@ namespace CSharp.Net.Standard.Util
         /// <summary>
         /// Determines whether the string is equal to any of the provided values.
         /// </summary>
-        /// <param name="this"></param>
+        /// <param name="inputValue"></param>
         /// <param name="comparisonType"></param>
         /// <param name="values"></param>
         /// <returns></returns>
@@ -1868,6 +1869,11 @@ namespace CSharp.Net.Standard.Util
             return Encoding.Default.GetBytes(value).Length;
         }
 
+        /// <summary>
+        /// 获取邮箱域名
+        /// </summary>
+        /// <param name="strEmail"></param>
+        /// <returns></returns>
         public static string GetEmailHostName(string strEmail)
         {
             if (strEmail.IndexOf("@") < 0)
@@ -1922,11 +1928,24 @@ namespace CSharp.Net.Standard.Util
         /// <returns>编码结果</returns>
         public static string UrlEncode(string value)
         {
-            //936 gb2312 简体中文 (GB2312)
-            //950 big5 繁体中文 (Big5)
             return HttpUtility.UrlEncode(value);
         }
 
+        /// <summary>
+        /// 返回 URL 字符串的解码结果
+        /// </summary>
+        /// <param name="value">字符串</param>
+        /// <returns>解码结果</returns>
+        public static string UrlDecode(string value)
+        {
+            return HttpUtility.UrlDecode(value);
+        }
+
+        /// <summary>
+        /// 简体汉字转换为url编码
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string UrlGB2312Encode(string value)
         {
             //936 gb2312 简体中文 (GB2312)
@@ -1934,6 +1953,23 @@ namespace CSharp.Net.Standard.Util
             return HttpUtility.UrlEncode(value, Encoding.GetEncoding(936));
         }
 
+        /// <summary>
+        /// url编码转换为简体汉字
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string UrlGB2312Decode(string value)
+        {
+            //936 gb2312 简体中文 (GB2312)
+            //950 big5 繁体中文 (Big5)
+            return HttpUtility.UrlDecode(value, Encoding.GetEncoding(936));
+        }
+
+        /// <summary>
+        /// 繁体汉字转换为url编码
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string UrlBig5Encode(string value)
         {
             //936 gb2312 简体中文 (GB2312)
@@ -1942,36 +1978,10 @@ namespace CSharp.Net.Standard.Util
         }
 
         /// <summary>
-        /// 返回 URL 字符串的编码结果
+        /// url编码转换成繁体汉字
         /// </summary>
-        /// <param name="value">字符串</param>
-        /// <returns>编码结果</returns>
-        public static string UrlEncode(string value, Encoding encoding)
-        {
-            //936 gb2312 简体中文 (GB2312)
-            //950 big5 繁体中文 (Big5)
-            return HttpUtility.UrlEncode(value, encoding);
-        }
-
-        /// <summary>
-        /// 返回 URL 字符串的编码结果
-        /// </summary>
-        /// <param name="value">字符串</param>
-        /// <returns>解码结果</returns>
-        public static string UrlDecode(string value)
-        {
-            //936 gb2312 简体中文 (GB2312)
-            //950 big5 繁体中文 (Big5)
-            return HttpUtility.UrlDecode(value);
-        }
-
-        public static string UrlGB2312Decode(string value)
-        {
-            //936 gb2312 简体中文 (GB2312)
-            //950 big5 繁体中文 (Big5)
-            return HttpUtility.UrlDecode(value, Encoding.GetEncoding(936));
-        }
-
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static string UrlBig5Decode(string value)
         {
             //936 gb2312 简体中文 (GB2312)
@@ -1983,6 +1993,20 @@ namespace CSharp.Net.Standard.Util
         /// 返回 URL 字符串的编码结果
         /// </summary>
         /// <param name="value">字符串</param>
+        /// <param name="encoding">编码格式</param>
+        /// <returns>编码结果</returns>
+        public static string UrlEncode(string value, Encoding encoding)
+        {
+            //936 gb2312 简体中文 (GB2312)
+            //950 big5 繁体中文 (Big5)
+            return HttpUtility.UrlEncode(value, encoding);
+        }
+
+        /// <summary>
+        /// 返回 URL 字符串的解码结果
+        /// </summary>
+        /// <param name="value">字符串</param>
+        /// <param name="encoding">解码格式</param>
         /// <returns>解码结果</returns>
         public static string UrlDecode(string value, Encoding encoding)
         {
@@ -2017,6 +2041,11 @@ namespace CSharp.Net.Standard.Util
         }
 
         #region 获取相应扩展名的ContentType类型
+        /// <summary>
+        /// 获取相应扩展名的ContentType类型
+        /// </summary>
+        /// <param name="fileExtName">扩展名（.jpg）</param>
+        /// <returns></returns>
         public static string GetContentType(string fileExtName)
         {
             switch (fileExtName)
@@ -2358,7 +2387,7 @@ namespace CSharp.Net.Standard.Util
         /// <summary>
         /// 将对象序列化成Json后Base64加密
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">对象</param>
         /// <returns></returns>
         public static string BuildBase64Body(object obj)
         {

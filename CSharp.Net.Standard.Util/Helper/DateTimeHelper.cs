@@ -15,11 +15,50 @@ namespace CSharp.Net.Standard.Util
     public class DateTimeHelper
     {
         /// <summary>
-        /// 返回标准日期格式string
+        /// 返回当前标准日期格式
+        /// yyyy-MM-dd
         /// </summary>
-        public static string GetDate()
+        public static string GetNowDate()
         {
             return DateTime.Now.ToString("yyyy-MM-dd");
+        }
+
+        /// <summary>
+        /// 返回标准时间格式
+        /// HH:mm:ss
+        /// </summary>
+        public static string GeNowTime()
+        {
+            return DateTime.Now.ToString("HH:mm:ss");
+        }
+
+
+
+        /// <summary>
+        /// 返回标准时间格式
+        /// yyyy-MM-dd HH:mm:ss
+        /// </summary>
+        public static string GetNowDateTime()
+        {
+            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
+        /// <summary>
+        /// 返回相对于当前时间的相对天数时间
+        /// yyyy-MM-dd HH:mm:ss
+        /// </summary>
+        public static string GetDateTime(int relativeday)
+        {
+            return DateTime.Now.AddDays(relativeday).ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
+        /// <summary>
+        /// 返回标准时间格式
+        /// yyyy-MM-dd HH:mm:ss:fffffff
+        /// </summary>
+        public static string GetNowDateTimeF()
+        {
+            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fffffff");
         }
 
         /// <summary>
@@ -46,40 +85,11 @@ namespace CSharp.Net.Standard.Util
 
 
         /// <summary>
-        /// 返回标准时间格式string
-        /// </summary>
-        public static string GetTime()
-        {
-            return DateTime.Now.ToString("HH:mm:ss");
-        }
-
-        /// <summary>
-        /// 返回标准时间格式string
-        /// </summary>
-        public static string GetDateTime()
-        {
-            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-        }
-
-        /// <summary>
-        /// 返回相对于当前时间的相对天数
-        /// </summary>
-        public static string GetDateTime(int relativeday)
-        {
-            return DateTime.Now.AddDays(relativeday).ToString("yyyy-MM-dd HH:mm:ss");
-        }
-
-        /// <summary>
-        /// 返回标准时间格式string
-        /// </summary>
-        public static string GetDateTimeF()
-        {
-            return DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fffffff");
-        }
-
-        /// <summary>
         /// 返回标准时间 
-        /// </sumary>
+        /// </summary>
+        /// <param name="fDateTime"></param>
+        /// <param name="formatStr"></param>
+        /// <returns></returns>
         public static string GetStandardDateTime(string fDateTime, string formatStr)
         {
             if (fDateTime == "0000-0-0 0:00:00")
@@ -93,7 +103,9 @@ namespace CSharp.Net.Standard.Util
 
         /// <summary>
         /// 返回标准时间 yyyy-MM-dd HH:mm:ss
-        /// </sumary>
+        /// </summary>
+        /// <param name="fDateTime"></param>
+        /// <returns></returns>
         public static string GetStandardDateTime(string fDateTime)
         {
             return GetStandardDateTime(fDateTime, "yyyy-MM-dd HH:mm:ss");
@@ -101,7 +113,9 @@ namespace CSharp.Net.Standard.Util
 
         /// <summary>
         /// 返回标准时间 yyyy-MM-dd
-        /// </sumary>
+        /// </summary>
+        /// <param name="fDate"></param>
+        /// <returns></returns>
         public static string GetStandardDate(string fDate)
         {
             return GetStandardDateTime(fDate, "yyyy-MM-dd");
@@ -207,11 +221,6 @@ namespace CSharp.Net.Standard.Util
         public static string FormatDate(int date)
         {
             return FormatDate(date, false);
-        }
-
-        public static string AdDeTime(int times)
-        {
-            return (DateTime.Now).AddMinutes(times).ToString();
         }
 
         /// <summary>
@@ -379,7 +388,7 @@ namespace CSharp.Net.Standard.Util
         /// <summary>
         /// 时间戳转为C#格式时间
         /// </summary>
-        /// <param name=”timeStamp”></param>
+        /// <param name="timeStamp"></param>
         /// <returns></returns>
         private DateTime GetTime(string timeStamp)
         {
@@ -391,7 +400,7 @@ namespace CSharp.Net.Standard.Util
         /// <summary>
         /// DateTime时间格式转换为Unix时间戳格式
         /// </summary>
-        /// <param name=”time”></param>
+        /// <param name="time"></param>
         /// <returns></returns>
         public static int ConvertDateTimeInt(System.DateTime time)
         {

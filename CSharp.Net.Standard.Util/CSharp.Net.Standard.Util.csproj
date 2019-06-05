@@ -3,15 +3,26 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework> 
     <PackageId>CSharp.Net.Standard.Util</PackageId>
-    <PackageVersion>1.0.2</PackageVersion>
+    <PackageVersion>1.0.5</PackageVersion>
     <Authors>Developer</Authors>
     <Description>Integrating common util class libraries</Description>
-    <Version>1.0.2</Version>
+    <Version>1.0.5</Version>
     <Copyright>Y</Copyright>
     <RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
     <LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>修改了PageResult Json 序列号的问题</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>bin\CSharp.Net.Standard.Util.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin\</OutputPath>
+    <DocumentationFile>bin\CSharp.Net.Standard.Util.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
