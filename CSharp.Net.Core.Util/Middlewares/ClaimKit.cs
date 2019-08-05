@@ -31,6 +31,7 @@ namespace CSharp.Net.Core.Util.Middlewares
                option.AccessDeniedPath = accessDeniedPath;
                option.LoginPath = loginPath;
                option.Cookie.Domain = domain;
+               option.SlidingExpiration = true;
            });
 
         }

@@ -77,7 +77,7 @@ public static class HttpContextExtensions
             identity.AddClaim(new Claim(a.Key, a.Value));
         }
         var clapro = new ClaimsPrincipal(identity);
-        await httpContext.SignInAsync(ClaimKit._scheme, clapro, new AuthenticationProperties() { IsPersistent = true, ExpiresUtc = expiressTime });
+        await httpContext.SignInAsync(ClaimKit._scheme, clapro, new AuthenticationProperties() { IsPersistent = true, ExpiresUtc = expiressTime ?? DateTime.Now.AddYears(10) });
     }
 
     /// <summary>

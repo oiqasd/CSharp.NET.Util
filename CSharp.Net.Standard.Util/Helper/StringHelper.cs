@@ -25,7 +25,7 @@ namespace CSharp.Net.Standard.Util
         /// <summary>
         /// 提取首字母,只能取到常用的一级汉字
         /// </summary>
-        /// <param name="strText">需要转换的字符串</param>
+        /// <param name="words">需要转换的字符串</param>
         /// <returns>转换结果</returns>
         public static string GetFirstSpell(string words)
         {
@@ -221,7 +221,7 @@ namespace CSharp.Net.Standard.Util
         /// 确保一个字符串的指定的后缀
         /// </summary>
         /// <param name = "value">输入字符串</param>
-        /// <param name = "prefix">指定的后缀</param>
+        /// <param name = "suffix">指定的后缀</param>
         /// <returns>包含后缀的字符串</returns>
         /// <example>
         /// 	<code>
@@ -514,8 +514,8 @@ namespace CSharp.Net.Standard.Util
         /// 字符串如果操过指定长度则将超出的部分用指定字符串代替
         /// </summary>
         /// <param name="value">要检查的字符串</param>
-        /// <param name="length">指定长度</param>
-        /// <param name="p_TailString">用于替换的字符串</param>
+        /// <param name="maxLength">指定长度</param>
+        /// <param name="suffix">用于替换的字符串</param>
         /// <returns>截取后的字符串</returns>
         public static string GetSubString(string value, int maxLength, string suffix)
         {
@@ -581,8 +581,7 @@ namespace CSharp.Net.Standard.Util
                     if (index >= value.Length)
                         return "";
                     else
-                        return value.Substring(index,
-                                                       ((maxLength + index) > value.Length) ? (value.Length - index) : maxLength);
+                        return value.Substring(index,((maxLength + index) > value.Length) ? (value.Length - index) : maxLength);
                 }
             }
 
@@ -2398,5 +2397,21 @@ namespace CSharp.Net.Standard.Util
             return "";
         }
 
+        /// <summary>
+        /// 去除HTML标签
+        /// </summary>
+        /// <param name="html">html文本</param>
+        /// <param name="length">返回长度</param>
+        /// <returns></returns>
+        public static string ReplaceHtmlTag(string html, int length = 0)
+        {
+            string strText = System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", "");
+            strText = System.Text.RegularExpressions.Regex.Replace(strText, "&[^;]+;", "");
+
+            if (length > 0 && strText.Length > length)
+                return strText.Substring(0, length);
+
+            return strText;
+        }
     }
 }

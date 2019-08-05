@@ -216,6 +216,22 @@ namespace CSharp.Net.Standard.Util
             }
             return flag;
         }
+
+        /// <summary>
+        /// 获取汉字列表
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static List<string> GetHangZiList(string text)
+        {
+            List<string> list = new List<string>();
+            var regex = new Regex(@"[\u4e00-\u9fa5]+");
+            foreach (var str in regex.Matches(text))
+            {
+                list.Add(str.ToString());
+            }
+            return list;
+        }
     }
 }
 

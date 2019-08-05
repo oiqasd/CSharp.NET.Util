@@ -97,7 +97,8 @@ namespace CSharp.Net.Standard.Util.Cryptography
         {
             using (var rsa = CreateRsaProviderFromPublicKey(publicKey))
             {
-                return Convert.ToBase64String(rsa.Encrypt(Encoding.GetEncoding(charset).GetBytes(text), RSAEncryptionPadding.Pkcs1));
+                var data = rsa.Encrypt(Encoding.GetEncoding(charset).GetBytes(text), RSAEncryptionPadding.Pkcs1);
+                return Convert.ToBase64String(data);
             }
 
         }
