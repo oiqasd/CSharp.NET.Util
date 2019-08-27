@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Core.Util.Middlewares
 {
@@ -33,8 +35,32 @@ namespace CSharp.Net.Core.Util.Middlewares
                option.Cookie.Domain = domain;
                option.SlidingExpiration = true;
            });
-
+            //将Cookie存储在服务端Redis缓存中
+            //services.AddSingleton<ITicketStore, RedisTicketStore>();
+            //services.AddOptions<CookieAuthenticationOptions>(scheme).Configure<ITicketStore>((option, ticket) => option.SessionStore = ticket);
         }
 
+    }
+    public class RedisTicketStore : ITicketStore
+    {
+        public Task RemoveAsync(string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RenewAsync(string key, AuthenticationTicket ticket)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<AuthenticationTicket> RetrieveAsync(string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> StoreAsync(AuthenticationTicket ticket)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

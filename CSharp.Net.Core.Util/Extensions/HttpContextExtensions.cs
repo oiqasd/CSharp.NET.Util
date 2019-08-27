@@ -59,6 +59,39 @@ public static class HttpContextExtensions
         httpContext.Response.Cookies.Append(Name, Value, option);
 
     }
+    /// <summary>
+    /// 设置Cookie
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <param name="Name"></param>
+    /// <param name="Value"></param>
+    /// <param name="EndTime">到期时间</param>
+    public static void SetCookie(this HttpContext httpContext, string Name, string Value, DateTime? EndTime)
+    {
+        CookieOptions option = new CookieOptions();
+        if (EndTime.HasValue)
+        {
+            option.Expires = EndTime.Value;
+        }
+        httpContext.Response.Cookies.Append(Name, Value, option);
+    }
+
+    /// <summary>
+    /// 设置Cookie
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <param name="Name"></param>
+    /// <param name="Value"></param>
+    /// <param name="expiresSeconds">保存秒数</param>
+    public static void SetCookie(this HttpContext httpContext, string Name, string Value, int expiredSeconds = 0)
+    {
+        CookieOptions option = new CookieOptions();
+        if (expiredSeconds > 0)
+        {
+            option.Expires = DateTime.Now.AddSeconds(expiredSeconds);
+        }
+        httpContext.Response.Cookies.Append(Name, Value, option);
+    }
 
     /// <summary>
     /// sign in use <see cref="ClaimsIdentity"/>
