@@ -5,7 +5,23 @@ using System.Text;
 namespace CSharp.Net.Standard.Util
 {
     /// <summary>
+    /// 金钱转换
+    /// </summary>
+    public class MoneyHelper
+    {
+        /// <summary>
+        /// 转大写
+        /// </summary>
+        /// <param name="money"></param>
+        /// <returns></returns>
+        public static string ToUpper(decimal money)
+        {
+            return TraditionalNumber.NumberString(money);
+        }
+    }
+    /// <summary>
     /// 数字转换大写汉字
+    /// (金额)
     /// </summary>
     public class TraditionalNumber
     {
@@ -15,12 +31,21 @@ namespace CSharp.Net.Standard.Util
         /// 数字转换成大写汉字主函数
         /// </summary>
         /// <returns>返回转换后的大写汉字</returns>
-        public static string NumberString(string m)
+        public static string NumberString(decimal number)
         {
             string bb = string.Empty;
             string xs = "0";
             string Num = "";
+            bool IsNegative = false; // 是否是负数
 
+            if (number < 0)
+            {
+                // 是负数则先转为正数
+                number = Math.Abs(number);
+                IsNegative = true;
+            }
+
+            var m = number.ToString();
             if (m.Contains("."))
             {
                 string[] ss = m.Split('.');
@@ -32,152 +57,75 @@ namespace CSharp.Net.Standard.Util
                 Num = m;
             }
 
-            if (Num.Length <= 4)
+            var arr = ConvertString(Num).ToCharArray();
+            Array.Reverse(arr);
+            for (int i = 0; i < arr.Length; i++)
             {
-                bb = Convert4(Num);
+                switch (i % 4)
+                {
+                    case 1:
+                        bb = arr[i] + "拾" + bb;
+                        break;
+                    case 2:
+                        bb = arr[i] + "百" + bb;
+                        break;
+                    case 3:
+                        bb = arr[i] + "仟" + bb;
+                        break;
+                    default:
+                        if (i == 0)
+                        {
+                            bb = arr[i].ToString();
+                        }
+                        else if (i == 8)
+                        {
+                            bb = arr[i] + "亿" + bb;
+                        }
+                        else
+                        {
+                            bb = arr[i] + "万" + bb;
+                        }
+                        break;
+                }
             }
-            else if (Num.Length > 4 && Num.Length <= 8)
-            {
-                bb = Convert4(Num.Substring(0, Num.Length - 4)) + "万";
-                bb += Convert4(Num.Substring(Num.Length - 4, 4));
-            }
-            else if (Num.Length > 8 && Num.Length <= 12)
-            {
-                bb = Convert4(Num.Substring(0, Num.Length - 8)) + "亿";
-                if (Convert4(Num.Substring(Num.Length - 8, 4)) == "")
-                    if (Convert4(Num.Substring(Num.Length - 4, 4)) != "")
-                        bb += "零";
-                    else
-                        bb += "";
-                else
-                    bb += Convert4(Num.Substring(Num.Length - 8, 4)) + "万";
-                bb += Convert4(Num.Substring(Num.Length - 4, 4));
-            }
-            //if (Num.Length == 2 && Num.StartsWith("1"))
-            //{
-            //    bb = bb.Substring(1);
-            //}
-            bb = bb + "元整";
+
+            bb = bb + "圆";
             if (int.Parse(xs) > 0)
             {
-                bb = bb.Substring(0, bb.Length - 1);
-                for (int xj = 0; xj < xs.Length; xj++)
+                var arrx = ConvertString(xs).ToCharArray();
+
+                for (int i = 0; i < arrx.Length; i++)
                 {
-                    bb = bb + Convert1(xs.Substring(xj, 1));
-                    if (xj == 0)
+                    bb = bb + arrx[i];
+                    if (i == 0)
                     {
                         bb = bb + "角";
                     }
-                    else if (xj == 1)
+                    else if (i == 1)
                     {
                         bb = bb + "分";
                     }
                 }
             }
+            else
+            {
+                bb = bb + "整";
+            }
+
+            if (IsNegative == true)
+            {
+                return "负" + bb;
+            }
 
             return bb;
         }
-        private static string Convert4(string Num)
-        {
-            string bb = "";
-            if (Num.Length == 1)
-            {
-                bb = ConvertString(Num);
-            }
-            else if (Num.Length == 2)
-            {
-                bb = ConvertString(Num);
-                bb = Convert2(bb);
-            }
-            else if (Num.Length == 3)
-            {
-                bb = ConvertString(Num);
-                bb = Convert3(bb);
-            }
-            else
-            {
-                bb = ConvertString(Num);
-                string cc = "";
-                string len = bb.Substring(0, 4);
-                if (len != "零零零零")
-                {
-                    len = bb.Substring(0, 3);
-                    if (len != "零零零")
-                    {
-                        bb = bb.Replace("零零零", "");
-                        if (bb.Length == 1)
-                        {
-                            bb = bb.Substring(0, 1) + "仟";
-                        }
-                        else
-                        {
-                            if (bb.Substring(0, 1) != "零" && bb.Substring(0, 2) != "零")
-                                cc = bb.Substring(0, 1) + "仟";
-                            else
-                                cc = bb.Substring(0, 1);
-                            bb = cc + Convert3(bb.Substring(1, 3));
-                        }
-                    }
-                    else
-                    {
-                        bb = bb.Replace("零零零", "零");
-                    }
-                }
-                else
-                {
-                    bb = bb.Replace("零零零零", "");
-                }
-            }
-            return bb;
-        }
-        private static string Convert3(string Num)
-        {
-            string bb = ""; string cc = "";
-            string len = Num.Substring(0, 2);
-            if (len != "零零")
-            {
-                bb = Num.Replace("零零", "");
-                if (bb.Length == 1)
-                {
-                    bb = bb.Substring(0, 1) + "佰";
-                }
-                else
-                {
-                    if (bb.Substring(0, 1) != "零")
-                        cc = bb.Substring(0, 1) + "佰";
-                    else
-                        cc = bb.Substring(0, 1);
-                    bb = cc + Convert2(bb.Substring(1, 2));
-                }
-            }
-            else
-            {
-                bb = Num.Replace("零零", "零");
-            }
-            return bb;
-        }
-        private static string Convert2(string Num)
-        {
-            string bb = ""; string cc = "";
-            string len = Num.Substring(0, 1);
-            if (len != "零")
-            {
-                bb = Num.Replace("零", "");
-                if (bb.Length == 1)
-                {
-                    cc = bb.Substring(0, 1) + "拾";
-                }
-                else
-                {
-                    cc = bb.Substring(0, 1) + "拾";
-                    cc += bb.Substring(1, 1);
-                }
-            }
-            else
-                cc = Num;
-            return cc;
-        }
-        private static string ConvertString(string Num)
+
+        /// <summary>
+        /// 小写数字转大写
+        /// </summary>
+        /// <param name="Num"></param>
+        /// <returns></returns>
+        public static string ConvertString(string Num)
         {
             string bb = "";
             for (int i = 0; i < Num.Length; i++)
@@ -186,9 +134,29 @@ namespace CSharp.Net.Standard.Util
             }
             return bb;
         }
-        private static string Convert1(string Num)
+
+        /// <summary>
+        /// 将全角数字转换为数字
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string SBCCaseToNumberic(string value)
         {
-            return NumChineseCharacter[int.Parse(Num.Substring(0, 1))];
+            char[] c = value.ToCharArray();
+            for (int i = 0; i < c.Length; i++)
+            {
+                byte[] b = System.Text.Encoding.Unicode.GetBytes(c, i, 1);
+                if (b.Length == 2)
+                {
+                    if (b[1] == 255)
+                    {
+                        b[0] = (byte)(b[0] + 32);
+                        b[1] = 0;
+                        c[i] = System.Text.Encoding.Unicode.GetChars(b)[0];
+                    }
+                }
+            }
+            return new string(c);
         }
         #endregion
 

@@ -1,7 +1,10 @@
+using CSharp.Net.Standard.Util;
 using CSharp.Net.Standard.Util.Cryptography;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.IO;
+
 
 namespace UnitTestProject1
 {
@@ -60,6 +63,16 @@ namespace UnitTestProject1
 
             w.Close();
             fs.Close();
+        }
+
+        [TestMethod]
+        public void TestTransNumber()
+        {
+            decimal m = 858521685.25M;
+
+            var s = TraditionalNumber.NumberString(m);
+
+            Console.WriteLine(s);
         }
     }
 }

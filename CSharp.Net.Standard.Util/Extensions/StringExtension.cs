@@ -81,11 +81,16 @@ public static class StringExtension
         return ((DateTime)time).ToString(formatType, defaultvalue);
     }
 
-    public static string ToString(this string str, string format)
+    /// <summary>
+    /// 字符串转换
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns>如果obj是null,返回string.Empty </returns>
+    public static string ToString(this object obj)
     {
-        if (str == null)
-            return "";
-        return str;
+        if (obj == null)
+            return string.Empty;
+        return obj.ToString();
     }
-     
+
 }

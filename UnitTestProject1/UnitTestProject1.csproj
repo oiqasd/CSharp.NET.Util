@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CSharp.Net.Standard.Util.Aliyun.Oss\CSharp.Net.Standard.Util.Aliyun.Oss.csproj" />
     <ProjectReference Include="..\CSharp.Net.Standard.Util\CSharp.Net.Standard.Util.csproj" />
   </ItemGroup>
 
