@@ -1,4 +1,4 @@
-﻿namespace CSharp.Net.Standard.Util.Compression
+﻿namespace CSharp.Net.Util.Compression
 {
     /// <summary>
     /// http://www.cnblogs.com/luoxiaojie/articles/1818885.html

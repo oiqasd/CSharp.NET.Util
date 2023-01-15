@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.NewtJson
+namespace CSharp.Net.Util.NewtJson
 {
     public class IsoDateTimeConverterContent : IsoDateTimeConverter
     {

@@ -4,7 +4,7 @@
 		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Cache</PackageId>
 		<!--<PackageVersion>2.2</PackageVersion>-->
-		<!--<Authors>tool man</Authors>-->
+		<Authors>y</Authors>
 		<Description>memorycache;redis</Description>
 		<Version>2.2</Version>
 		<Copyright></Copyright>

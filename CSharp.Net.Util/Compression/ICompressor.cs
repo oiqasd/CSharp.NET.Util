@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace CSharp.Net.Standard.Util.Compression
+namespace CSharp.Net.Util.Compression
 {
     public interface ICompressor
     {

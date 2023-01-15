@@ -2,7 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 
-namespace CSharp.Net.Standard.Util.Compression
+namespace CSharp.Net.Util.Compression
 {
     public class SOAGZipCompressor : GZipCompressor
     {

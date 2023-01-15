@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace CSharp.Net.Core.Util
+namespace CSharp.Net.Mvc
 {
     public static class RequestHelper
     {

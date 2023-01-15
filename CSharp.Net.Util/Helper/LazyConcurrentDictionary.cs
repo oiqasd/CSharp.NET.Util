@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 线程安全ConcurrentDictionary

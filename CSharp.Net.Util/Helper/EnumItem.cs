@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 枚举条目信息

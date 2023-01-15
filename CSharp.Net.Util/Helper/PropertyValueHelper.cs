@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 动态获取对象属性值

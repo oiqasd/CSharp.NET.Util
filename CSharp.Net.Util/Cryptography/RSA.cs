@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 
-namespace CSharp.Net.Standard.Util.Cryptography
+namespace CSharp.Net.Util.Cryptography
 {
     /// <summary>
     /// RSA加密类

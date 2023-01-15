@@ -6,7 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// Http请求帮助类

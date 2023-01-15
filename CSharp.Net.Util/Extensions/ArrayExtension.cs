@@ -7,13 +7,14 @@ using System.Text;
 /// Array 扩展方法
 /// </summary>
 public static class ArrayExtension
-{/// <summary>
- /// 根据id生成 in 字符串
- /// 直接拼接Sql语句中（参数化需使用find_in_set函数，由于find_in_set函数效率低，不建议使用）
- /// </summary>
- /// <param name="ids">id集合</param>
- /// <param name="defaultValue">默认值（当ids值无效时，使用默认值）</param>
- /// <returns></returns>
+{
+    /// <summary>
+    /// 根据id生成 in 字符串
+    /// 直接拼接Sql语句中（参数化需使用find_in_set函数，由于find_in_set函数效率低，不建议使用）
+    /// </summary>
+    /// <param name="ids">id集合</param>
+    /// <param name="defaultValue">默认值（当ids值无效时，使用默认值）</param>
+    /// <returns></returns>
     public static string IdsToInSql(this IList<long> ids, IList<long> defaultValue)
     {
         var result = @"''";
@@ -139,7 +140,7 @@ public static class ArrayExtension
     /// <param name="source"></param>
     /// <param name="keySelector"></param>
     /// <returns></returns>
-    public static IEnumerable<TSource> Distinct<TSource, TKey>(this IEnumerable<TSource> source,Func<TSource, TKey> keySelector)
+    public static IEnumerable<TSource> Distinct<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
     {
         var hashSet = new HashSet<TKey>();
 
@@ -150,7 +151,7 @@ public static class ArrayExtension
                 yield return element;
             }
         }
-    } 
+    }
     /// <summary>
     /// [推荐]使用IEqualityComparer通过指定属性去重
     /// list.Distinct((a, b) => a.x == b.x && a.y == b.y)
@@ -159,7 +160,7 @@ public static class ArrayExtension
     /// <param name="source"></param>
     /// <param name="comparer"></param>
     /// <returns></returns>
-    public static IEnumerable<T> Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> comparer)where T : class
+    public static IEnumerable<T> Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> comparer) where T : class
        => source.Distinct(new DynamicEqualityComparer<T>(comparer));
 
     private sealed class DynamicEqualityComparer<T> : IEqualityComparer<T>

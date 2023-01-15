@@ -1,4 +1,4 @@
-﻿using CSharp.Net.Standard.Util.NewtJson;
+﻿using CSharp.Net.Util.NewtJson;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// http请求工具类
@@ -208,7 +208,7 @@ namespace CSharp.Net.Standard.Util
                     fileContent.Headers.ContentType = new MediaTypeHeaderValue(f.ContentType);
 
                     //解决中文乱码
-                    var hv = $"form-data; name=\"file\"; filename=\"{f.FileName}\""; 
+                    var hv = $"form-data; name=\"file\"; filename=\"{f.FileName}\"";
                     byte[] bdis = Encoding.GetEncoding(encoding).GetBytes(hv);
                     hv = "";
                     foreach (byte b in bdis)
@@ -250,7 +250,7 @@ namespace CSharp.Net.Standard.Util
 
         //    var count = 0;
         //    var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
-              
+
         //    stream.Read(buffer, 0, buffer.Length);
         //    pool.Return(buffer);
         //}
@@ -429,10 +429,12 @@ namespace CSharp.Net.Standard.Util
                 var res = await response.Content.ReadAsStringAsync();
                 ret.Data = res;
                 ret.Success = true;
-                return ret;
             }
-            ret.Success = false;
-            ret.Data = response.StatusCode.ToString();
+            else
+            {
+                ret.Success = false;
+            }
+            ret.StatusCode = response.StatusCode.ToString();
             return ret;
         }
 
@@ -622,8 +624,18 @@ namespace CSharp.Net.Standard.Util
 
     public class HttpResponseDto
     {
+        /// <summary>
+        /// 是否成功
+        /// StatusCode:200-299
+        /// </summary>
         public bool Success { get; set; }
+        /// <summary>
+        /// Success true:返回数据
+        /// </summary>
         public string Data { get; set; }
+        /// <summary>
+        /// StatusCode
+        /// </summary>
         public string StatusCode { get; set; }
     }
 

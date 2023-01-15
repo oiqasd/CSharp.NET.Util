@@ -6,7 +6,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 枚举帮助类

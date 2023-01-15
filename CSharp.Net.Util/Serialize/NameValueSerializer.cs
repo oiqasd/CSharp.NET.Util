@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Reflection;
 
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     /// <summary>
     /// NameValue序列化、反序列化工具类

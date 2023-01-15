@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     public class IdWorkerOptions
     {
@@ -26,11 +26,11 @@ namespace CSharp.Net.Standard.Util
         /// 基础时间（UTC格式）
         /// 不能超过当前系统时间
         /// </summary>
-        public virtual DateTime BaseUtcTime { get; set; } = new DateTime(2000, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+        public virtual DateTime BaseUtcTime { get; set; } = new DateTime(2020, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         /// <summary>
         /// 一毫秒内可以产生计数，如果达到该值则等到下一毫秒再进行生成
-        /// 默认: -1L ^ -1L << SequenceBits
+        /// 默认: -1L ^ -1L 《 SequenceBits
         /// </summary>
         public virtual long SequenceMask { get; set; }
     }

@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     /// <summary>
     /// XML序列化、反序列化工具类

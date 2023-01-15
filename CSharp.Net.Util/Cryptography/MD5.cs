@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Cryptography
+namespace CSharp.Net.Util.Cryptography
 {
     /// <summary>
     /// md5相关

@@ -1,6 +1,6 @@
 ﻿
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 通用单例

@@ -12,7 +12,7 @@ public static class HttpRequestExtension
     {
         if (request != null && request.Headers != null)
         {
-            request.Headers["DateTimeF"] = DateTimeHelper.ConvertDateTimeLong(DateTime.Now).ToString();
+            request.Headers["DateTimeF"] = DateTimeHelper.GetTimeStampLong(DateTime.Now).ToString();
             request.Headers["GUID"] = Guid.NewGuid().ToString("N");
         }
     }

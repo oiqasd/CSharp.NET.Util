@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.NewtJson
+namespace CSharp.Net.Util.NewtJson
 {
     /// <summary>
     /// 使用Newtonsoft.Json序列化

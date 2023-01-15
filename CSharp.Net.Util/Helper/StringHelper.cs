@@ -8,9 +8,9 @@ using System.Linq;
 using System.Web;
 using System.Security.Cryptography;
 using System.IO;
-using CSharp.Net.Standard.Util.NewtJson;
+using CSharp.Net.Util.NewtJson;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     public class StringHelper
     {

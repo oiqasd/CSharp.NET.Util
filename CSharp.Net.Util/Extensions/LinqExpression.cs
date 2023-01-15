@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Extensions
+namespace CSharp.Net.Util.Extensions
 {
     /// <summary>
     /// EF Core Linq 拓展

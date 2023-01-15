@@ -32,17 +32,17 @@ namespace UnitTestProject1
             string content = "BirthDay=1990-09-10&BirthPlace=°²»Õ&CName=ÇØ¿¥&CNameSpelling=qinjun&ContactInformation=15555230910&CountryId=1&CredentialsNum=321312313&CredentialsType=1&Email=jun.qin@xiaobao100.com&EName=qinjun&EntranceYear=2009&FamilyInfos=System.Collections.Generic.List`1[Xiaobao.Cloud.OpenApi.CSharp.Model.CreateStudentFamilyRequest]&GraduateSchoolName=¼¯ÃÀ&IsGetAccommodation=true&NationId=1&Remark=212121&SchoolId=108&Sex=1&StudySection=1&StuNumber=2312313";
             if (1 == 2)
             {
-                var keys = new CrypRSA().CreateKey();
+                var keys = new RSA().CreateKey();
                 pri = keys.Item1;
                 pub = keys.Item2;
             }
 
-            var signdata = CrypRSA.Sign(content, pri);
+            var signdata = RSA.Sign(content, pri);
 
-            var cksign = CrypRSA.CheckSign(content, signdata, pub);
+            var cksign = RSA.CheckSign(content, signdata, pub);
 
-            string encal = CrypRSA.Encrypt(content, pub);
-            string deval = CrypRSA.Decrypt(encal, pri);
+            string encal = RSA.Encrypt(content, pub);
+            string deval = RSA.Decrypt(encal, pri);
 
             Assert.IsTrue(deval == content);
 
@@ -70,7 +70,7 @@ namespace UnitTestProject1
         {
             decimal m = 858521685.25M;
 
-            var s = TraditionalNumber.NumberString(m);
+            var s = NumberHelper.NumberString(m);
 
             Console.WriteLine(s);
         }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     /// <summary>
     /// 序列化对象工厂,根据用户输入或配置项创建序列化对象

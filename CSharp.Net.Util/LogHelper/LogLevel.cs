@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Log
+namespace CSharp.Net.Util.Log
 {
 
     /// <summary>

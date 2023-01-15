@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Interface
+namespace CSharp.Net.Util.Interface
 {
     /// <summary>
     /// 

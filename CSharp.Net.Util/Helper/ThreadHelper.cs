@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Standard.Util.Helper
+namespace CSharp.Net.Util.Helper
 {
     /// <summary>
     /// https://www.cnblogs.com/wei325/p/16065342.html

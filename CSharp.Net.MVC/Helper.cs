@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Web;
 
-namespace CSharp.Net.Core.Util
+namespace CSharp.Net.Mvc
 {
     public static class Helper
     {

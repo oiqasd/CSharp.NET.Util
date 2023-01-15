@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Cryptography
+namespace CSharp.Net.Util.Cryptography
 {
     /// <summary>
     /// 高级加密标准 Advanced Encryption Standard
@@ -14,13 +14,12 @@ namespace CSharp.Net.Standard.Util.Cryptography
         /// 有密码的AES加密 
         /// </summary>
         /// <param name="text">加密字符</param>
-        /// <param name="password">加密的密码</param>
-        /// <param name="iv">密钥</param>
+        /// <param name="key">加密的密码</param>
         /// <returns></returns>
-        public static string Encrypt(string toEncrypt, string key)
+        public static string Encrypt(string text, string key)
         {
             byte[] keyArray = Encoding.UTF8.GetBytes(key);
-            byte[] toEncryptArray = Encoding.UTF8.GetBytes(toEncrypt);
+            byte[] toEncryptArray = Encoding.UTF8.GetBytes(text);
 
             RijndaelManaged rDel = new RijndaelManaged();
             rDel.Key = keyArray;
@@ -37,13 +36,13 @@ namespace CSharp.Net.Standard.Util.Cryptography
         /// AES解密
         /// </summary>
         /// <param name="text"></param>
-        /// <param name="password"></param>
+        /// <param name="key"></param>
         /// <param name="iv"></param>
         /// <returns></returns>
-        public static string Decrypt(string toDecrypt, string key)
+        public static string Decrypt(string text, string key)
         {
             byte[] keyArray = Encoding.UTF8.GetBytes(key);
-            byte[] toEncryptArray = Convert.FromBase64String(toDecrypt);
+            byte[] toEncryptArray = Convert.FromBase64String(text);
 
             RijndaelManaged rDel = new RijndaelManaged();
             rDel.Key = keyArray;

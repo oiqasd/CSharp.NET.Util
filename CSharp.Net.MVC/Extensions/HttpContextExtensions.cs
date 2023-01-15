@@ -1,4 +1,4 @@
-﻿using CSharp.Net.Core.Util.Middlewares;
+﻿using CSharp.Net.Mvc.Middlewares;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

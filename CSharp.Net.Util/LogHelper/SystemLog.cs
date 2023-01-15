@@ -1,7 +1,7 @@
-﻿using CSharp.Net.Standard.Util.NewtJson;
+﻿using CSharp.Net.Util.NewtJson;
 using System;
 
-namespace CSharp.Net.Standard.Util.Log
+namespace CSharp.Net.Util.Log
 {
     public class SystemLog : ISystemLog
     {

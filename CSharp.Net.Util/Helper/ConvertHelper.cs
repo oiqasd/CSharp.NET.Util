@@ -6,7 +6,7 @@ using System.Data;
 using System.Reflection;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 类型转换

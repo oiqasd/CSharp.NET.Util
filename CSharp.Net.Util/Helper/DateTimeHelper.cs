@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
-    //// <summary>
+    /// <summary>
     /// 枚举，比对时间的类型
     /// </summary>
     public enum DateInterval
@@ -216,7 +216,7 @@ namespace CSharp.Net.Standard.Util
         }
 
         /// <summary>
-        /// 计算工作日期
+        /// 计算工作日期，1.1、5.1、10.1
         /// </summary>
         /// <param name="BeginDate">开始日期</param>
         /// <param name="numday">工作日</param>

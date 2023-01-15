@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     /// <summary>
     /// 通用序列化、反序列化接口

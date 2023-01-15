@@ -2,7 +2,7 @@
 /// 验证码类型
 /// </summary>
 
-namespace CSharp.Net.Core.Util
+namespace CSharp.Net.Mvc
 {
     public enum ValidateCodeType
     {

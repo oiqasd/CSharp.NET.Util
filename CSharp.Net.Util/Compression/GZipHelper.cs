@@ -5,7 +5,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Compression
+namespace CSharp.Net.Util.Compression
 {
     /// <summary>
     /// GZip压缩帮助类

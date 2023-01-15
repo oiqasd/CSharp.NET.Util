@@ -1,4 +1,4 @@
-﻿using CSharp.Net.Standard.Util;
+﻿using CSharp.Net.Util;
 using System;
 using System.Globalization;
 using System.Text;
@@ -19,6 +19,8 @@ public static class StringExtension
     /// 7.yyyy年MM月dd日HH时mm分ss秒
     /// 8.yyyyMMdd
     /// 9.yyyy-MM-dd HH:mm
+    /// 10.HH:mm:ss
+    /// 11.HH:mm
     /// </param>
     /// <param name="defaultvalue"></param>
     /// <returns></returns>
@@ -147,16 +149,24 @@ public static class StringExtension
         return int.Parse(s);
     }
 
+    /// <summary>
+    /// 转int
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
     public static int TryInt(this string s)
     {
-        int result = 0;
-        int.TryParse(s, out result);
+        int.TryParse(s, out int result);
         return result;
     }
+    /// <summary>
+    /// 转decimal
+    /// </summary>
+    /// <param name="s"></param>
+    /// <returns></returns>
     public static decimal TryDecimal(string s)
     {
-        decimal result = 0;
-        decimal.TryParse(s, out result);
+        decimal.TryParse(s, out decimal result);
         return result;
     }
 
@@ -169,7 +179,7 @@ public static class StringExtension
     {
         if (s.Contains("."))
             return Convert.ToInt64(Math.Round(decimal.Parse(s), 0));
-        bool t = long.TryParse(s, out long ret);
+        long.TryParse(s, out long ret);
         return ret;
     }
 

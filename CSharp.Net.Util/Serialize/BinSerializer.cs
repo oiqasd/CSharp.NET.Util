@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     /// <summary>
     /// 二进制序列化、反序列化工具类

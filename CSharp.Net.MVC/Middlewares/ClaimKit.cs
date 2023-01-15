@@ -2,11 +2,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Core.Util.Middlewares
+namespace CSharp.Net.Mvc.Middlewares
 {
     /// <summary>
     /// 缓存套件

@@ -3,7 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Compression
+namespace CSharp.Net.Util.Compression
 {
     public abstract class AbstractCompressor : ICompressor
     {

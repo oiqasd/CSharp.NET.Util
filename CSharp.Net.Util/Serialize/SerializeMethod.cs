@@ -1,5 +1,5 @@
 ﻿
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     /// <summary>
     /// 序列化方式

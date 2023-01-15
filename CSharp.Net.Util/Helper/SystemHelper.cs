@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
 
     //待完善

@@ -4,7 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util.Cryptography
+namespace CSharp.Net.Util.Cryptography
 {
     /// <summary>
     /// 数据加密算法 Data Encryption Algorithm

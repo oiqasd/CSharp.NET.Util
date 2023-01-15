@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CSharp.Net.Standard.Util.Serialize
+namespace CSharp.Net.Util.Serialize
 {
     public class Base64Serializer : BinSerializer, ISerializer
     {

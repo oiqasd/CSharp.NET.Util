@@ -5,7 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// Gets the <see cref="Utils"/> for help.
@@ -130,7 +130,7 @@ namespace CSharp.Net.Standard.Util
         }
 
         /// <summary>
-        /// 检查手机验证码
+        /// 检查6位纯数字手机验证码
         /// </summary>
         /// <param name="vercode"></param>
         public static bool CheckMobileVerCode(string vercode)

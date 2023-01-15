@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace CSharp.Net.Standard.Util.Log
+namespace CSharp.Net.Util.Log
 {
     /// <summary>
     /// 客户端写日志帮助文件

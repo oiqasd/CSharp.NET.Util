@@ -6,7 +6,7 @@ using System.Text;
 using System.IO;
 using CSharp.Net.Util;
 
-namespace CSharp.Net.Core.Util
+namespace CSharp.Net.Mvc
 {
     /// <summary>
     /// IConfigurationBuilder builder = new ConfigurationBuilder()

@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharp.Net.Util" Version="2.3.1" />
+    <PackageReference Include="CSharp.Net.Util" Version="5.0.0" />
   </ItemGroup>
 	
 </Project>
