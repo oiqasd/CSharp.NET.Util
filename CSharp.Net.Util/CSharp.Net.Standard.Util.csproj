@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
+		<PackageId>CSharp.Net.Standard.Util</PackageId>
+		<PackageVersion>2.3.1</PackageVersion>
+		<Authors></Authors>
+		<Description>Integrating common util class libraries</Description>
+		<!--<Version>2.2.7</Version>-->
+		<Copyright></Copyright>
+		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
+		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<!--<AssemblyVersion>2.2.1.0</AssemblyVersion>
+		<FileVersion>2.2.1.0</FileVersion>-->
+		<Company />
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<OutputPath>bin\</OutputPath>
+		<DocumentationFile>bin\CSharp.Net.Standard.Util.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<OutputPath>bin\</OutputPath>
+		<DocumentationFile>bin\CSharp.Net.Standard.Util.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="Cache\**" />
+		<Compile Remove="Pager\**" />
+		<EmbeddedResource Remove="Cache\**" />
+		<EmbeddedResource Remove="Pager\**" />
+		<None Remove="Cache\**" />
+		<None Remove="Pager\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
+		<Compile Remove="Json\JsonHelper.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Json\" />
+	</ItemGroup>
+
+</Project>

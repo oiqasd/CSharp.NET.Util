@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Developer</Authors>
+    <Company>Developer</Company>
+    <Description>基于.NET Standard2.0的MySql类库</Description>
+    <PackageVersion>1.0.1</PackageVersion>
+    <Copyright>Y</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="8.0.15" />
+  </ItemGroup>
+
+</Project>

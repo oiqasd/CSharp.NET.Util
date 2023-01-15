@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>CSharp.Net.Util.zip</PackageId>
+    <Authors>Developer</Authors>
+    <Version>1.0.0</Version>
+    <PackageVersion>1.0.0</PackageVersion>
+    <Description>基于SharpZipLib解压缩文件</Description>
+    <PackageReleaseNotes>基于SharpZipLib解压缩文件</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SharpZipLib" Version="1.2.0" />
+  </ItemGroup>
+ 
+
+</Project>

@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
+		<PackageId>CSharp.Net.Cache</PackageId>
+		<!--<PackageVersion>2.2</PackageVersion>-->
+		<!--<Authors>tool man</Authors>-->
+		<Description>memorycache;redis</Description>
+		<Version>2.2</Version>
+		<Copyright></Copyright>
+		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
+		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<OutputPath>bin\</OutputPath>
+		<DocumentationFile>bin\CSharp.Net.Util.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<OutputPath>bin\</OutputPath>
+		<DocumentationFile>bin\CSharp.Net.Util.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.2.88" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\CSharp.Net.Util\CSharp.Net.Util.csproj" />
+	</ItemGroup>
+
+</Project>
