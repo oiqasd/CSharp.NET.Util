@@ -143,10 +143,11 @@ namespace CSharp.Net.Util.Log
                 string msg = string.IsNullOrEmpty(log.Title) ? "" : (log.Title + "\t");
                 msg += string.IsNullOrEmpty(log.Message) ? "" : (log.Message + "\t");
                 msg += string.IsNullOrEmpty(log.Exception) ? "" : (log.Exception + "\t");
-               // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
+                // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
             }
-            catch (Exception exx)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 //Utils.WriteLog(log.ToString() + "\n " + exx.Message + exx.StackTrace, GetStrLogUrl());
             }
         }

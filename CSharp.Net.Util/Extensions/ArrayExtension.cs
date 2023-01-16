@@ -154,7 +154,7 @@ public static class ArrayExtension
     }
     /// <summary>
     /// [推荐]使用IEqualityComparer通过指定属性去重
-    /// list.Distinct((a, b) => a.x == b.x && a.y == b.y)
+    /// list.Distinct((a, b) => a.x == b.x &amp;&amp; a.y == b.y)
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="source"></param>

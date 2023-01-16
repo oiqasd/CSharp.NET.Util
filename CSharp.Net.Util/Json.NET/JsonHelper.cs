@@ -41,7 +41,6 @@ namespace CSharp.Net.Util.NewtJson
         /// 将指定的对象序列化成 JSON 数据。
         /// </summary>
         /// <param name="obj">要序列化的对象。</param>
-        /// <param name="contractResolver">LowercaseContractResolver,CamelCasePropertyNamesContractResolver 等</param>
         /// <returns></returns>
         public static string Serialize(object obj, JsonSerializerSettings settings)
         {
@@ -61,6 +60,13 @@ namespace CSharp.Net.Util.NewtJson
             }
         }
 
+        /// <summary>
+        /// 将指定的对象序列化成 JSON 数据。
+        /// </summary>
+        /// <param name="obj">要序列化的对象。</param>
+        /// <param name="contractResolver">LowercaseContractResolver,CamelCasePropertyNamesContractResolver 等</param>
+        /// <param name="includeDefault">default true</param>
+        /// <returns></returns>
         public static string Serialize(object obj, IContractResolver contractResolver = null, bool includeDefault = true)
         {
             try
@@ -112,7 +118,7 @@ namespace CSharp.Net.Util.NewtJson
         /// <summary>
         /// 将指定的 JSON 数据反序列化成指定对象。
         /// </summary>
-        /// <typeparam name="List<T>">对象集合</typeparam>
+        /// <typeparam name="T">对象集合</typeparam>
         /// <param name="json">JSON 数据</param>
         /// <returns></returns>
         public static List<T> DeserializeList<T>(string json)

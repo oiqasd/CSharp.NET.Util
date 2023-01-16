@@ -9,9 +9,43 @@ namespace CSharp.Net.Util
     /// </summary>
     public enum DateInterval
     {
-        Second, Minute, Hour, Day, Week, Month, Quarter, Year
+        /// <summary>
+        /// 秒
+        /// </summary>
+        Second,
+        /// <summary>
+        /// 分
+        /// </summary>
+        Minute,
+        /// <summary>
+        /// 时
+        /// </summary>
+        Hour,
+        /// <summary>
+        /// 日
+        /// </summary>
+        Day,
+        /// <summary>
+        /// 周
+        /// </summary>
+        Week,
+        /// <summary>
+        /// 月
+        /// </summary>
+        Month,
+        /// <summary>
+        /// 季
+        /// </summary>
+        Quarter,
+        /// <summary>
+        /// 周
+        /// </summary>
+        Year
     }
 
+    /// <summary>
+    /// 时间帮助类
+    /// </summary>
     public class DateTimeHelper
     {
         /// <summary>

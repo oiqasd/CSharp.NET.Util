@@ -47,6 +47,9 @@ namespace CSharp.Net.Util.Cryptography
         /// </summary>
         /// <param name="data">原始数据</param>
         /// <param name="sign">签名</param>
+        /// <param name="publicKey">公钥</param>
+        /// <param name="rsaType">签名类型</param>
+        /// <param name="charset">编码</param>
         /// <returns></returns>
         public static bool CheckSign(string data, string sign, string publicKey, RSAType rsaType = RSAType.MD5, string charset = "utf-8")
         {
@@ -381,6 +384,12 @@ namespace CSharp.Net.Util.Cryptography
         }
 
         #region XML转换
+        /// <summary>
+        /// RSA密钥转xml格式
+        /// </summary>
+        /// <param name="rsa"></param>
+        /// <param name="privateKey"></param>
+        /// <returns></returns>
         public static string ToXmlStirng(System.Security.Cryptography.RSA rsa, bool privateKey)
         {
             RSAParameters parameters = rsa.ExportParameters(privateKey);
@@ -395,7 +404,11 @@ namespace CSharp.Net.Util.Cryptography
                  parameters.DQ != null ? Convert.ToBase64String(parameters.DQ) : null,
                  parameters.InverseQ != null ? Convert.ToBase64String(parameters.InverseQ) : null);
         }
-
+        /// <summary>
+        /// xml转rsa格式
+        /// </summary>
+        /// <param name="rsa"></param>
+        /// <param name="xmlString"></param>
         public static void FromXmlString(System.Security.Cryptography.RSA rsa, string xmlString)
         {
             RSAParameters parameters = new RSAParameters();

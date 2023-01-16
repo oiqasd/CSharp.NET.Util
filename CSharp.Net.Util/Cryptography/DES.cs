@@ -14,11 +14,21 @@ namespace CSharp.Net.Util.Cryptography
         //默认密钥向量
         private static byte[] KeysIV = { 0x12, 0x34, 0x56, 0x78, 0x90, 0xAB, 0xCD, 0xEF };
 
+        /// <summary>
+        /// 加密
+        /// </summary>
+        /// <param name="encryptString"></param>
+        /// <returns></returns>
         public static string Encrypt(string encryptString)
         {
             return Encrypt(encryptString, Encoding.UTF8.GetString(KeysIV));
         }
 
+        /// <summary>
+        /// 解密
+        /// </summary>
+        /// <param name="decryptString"></param>
+        /// <returns></returns>
         public static string Decrypt(string decryptString)
         {
             return Decrypt(decryptString, Encoding.UTF8.GetString(KeysIV));

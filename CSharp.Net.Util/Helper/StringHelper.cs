@@ -1313,12 +1313,12 @@ namespace CSharp.Net.Util
         /// <param name="dataToMatch">The data will use to convert into give enum</param>
         /// <param name="ignorecase">Whether the enum parser will ignore the given data's case or not.</param>
         /// <returns>Converted enum.</returns>
-        /// <example>
-        /// 	<code>
-        /// 		public enum EnumTwo {  None, One,}
-        /// 		object[] items = new object[] { "One".ParseStringToEnum<EnumTwo>(), "Two".ParseStringToEnum<EnumTwo>() };
-        /// 	</code>
-        /// </example>
+        /// <remarks>
+        ///     <example>
+        ///         public enum EnumTwo {  None, One,} <br/>
+        ///         object[] items = new object[] { "One".ParseStringToEnum&lt;EnumTwo&gt;(),"Two".ParseStringToEnum&lt;EnumTwo&gt;() };
+        ///     </example>
+        /// </remarks>
         public static TEnum ParseStringToEnum<TEnum>(string dataToMatch, bool ignorecase = default(bool))
                 where TEnum : struct
         {
