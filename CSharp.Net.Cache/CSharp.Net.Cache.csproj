@@ -4,9 +4,9 @@
 		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Cache</PackageId>
 		<!--<PackageVersion>2.2</PackageVersion>-->
-		<Authors>y</Authors>
+		<Authors>Cs</Authors>
 		<Description>memorycache;redis</Description>
-		<Version>2.2</Version>
+		<Version>5.0.0</Version>
 		<Copyright></Copyright>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
@@ -25,13 +25,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CSharp.Net.Util" Version="5.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="6.0.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.2.88" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <ProjectReference Include="..\CSharp.Net.Util\CSharp.Net.Util.csproj" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.90" />
 	</ItemGroup>
 
 </Project>

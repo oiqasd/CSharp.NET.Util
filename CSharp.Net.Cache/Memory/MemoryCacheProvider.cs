@@ -259,7 +259,10 @@ namespace CSharp.Net.Cache.Memory
         {
             throw new NotImplementedException();
         }
-
+        public bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan)
+        {
+            throw new NotImplementedException();
+        }
         public long SetRemove<T>(string key, params T[] value)
         {
             throw new NotImplementedException();
@@ -300,7 +303,12 @@ namespace CSharp.Net.Cache.Memory
             throw new NotImplementedException();
         }
 
-        public Task<bool> SetAddAsync<T>(string key, T value)
+        public Task<bool> SetAddAsync<T>(string key, T value,TimeSpan? timeSpan=null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
         {
             throw new NotImplementedException();
         }

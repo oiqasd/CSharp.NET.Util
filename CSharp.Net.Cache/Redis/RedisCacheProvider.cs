@@ -4,10 +4,9 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
-using System.Collections.Concurrent;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache.Redis
 {
@@ -336,7 +335,7 @@ namespace CSharp.Net.Cache.Redis
             return Do(db =>
             {
                 var value = db.ListRightPop(key, count);
-                return Deserialize<T>(value);
+                return ConvetList<T>(value);
             });
         }
         /// <summary>
@@ -379,7 +378,7 @@ namespace CSharp.Net.Cache.Redis
             return Do(db =>
             {
                 var value = db.ListLeftPop(key, count);
-                return Deserialize<T>(value);
+                return ConvetList<T>(value);
             });
         }
         /// <summary>
@@ -831,7 +830,17 @@ namespace CSharp.Net.Cache.Redis
                 return data;
             });
         }
-
+        public bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan = null)
+        {
+            key = PrefixKey(key);
+            return Do(db =>
+            {
+                var data = db.SetAdd(key, ConvertRedisValue(value));
+                if (timeSpan.HasValue)
+                    db.KeyExpireAsync(key, timeSpan);
+                return data > 0;
+            });
+        }
         /// <summary>
         /// 删除
         /// </summary>
@@ -964,10 +973,36 @@ namespace CSharp.Net.Cache.Redis
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<bool> SetAddAsync<T>(string key, T value)
+        public async Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null)
         {
             key = PrefixKey(key);
-            return await Do(redis => redis.SetAddAsync(key, Serialize(value)));
+            //return await Do(redis => redis.SetAddAsync(key, Serialize(value)));
+            return await Do(async db =>
+            {
+                var data = await db.SetAddAsync(key, Serialize(value));
+                if (timeSpan.HasValue)
+                    await db.KeyExpireAsync(key, timeSpan);
+                return data;
+            });
+        }
+       /// <summary>
+       /// 
+       /// </summary>
+       /// <typeparam name="T"></typeparam>
+       /// <param name="key"></param>
+       /// <param name="value"></param>
+       /// <param name="timeSpan"></param>
+       /// <returns></returns>
+        public async Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
+        {
+            key = PrefixKey(key);
+            return await Do(async db =>
+           {
+               var data = await db.SetAddAsync(key, ConvertRedisValue(value));
+               if (timeSpan.HasValue)
+                   await db.KeyExpireAsync(key, timeSpan);
+               return data > 0;
+           });
         }
 
         /// <summary>
@@ -1479,15 +1514,6 @@ namespace CSharp.Net.Cache.Redis
             return key = $"{_options.InstanceName}{key}";
         }
 
-        List<T> ConvetList<T>(RedisValue[] values)
-        {
-            List<T> list = new List<T>();
-            if (values == null || values.Length <= 0)
-                return list;
-
-            list = values.Select(x => Deserialize<T>(x)).ToList();
-            return list;
-        }
 
         /// <summary>
         /// 序列化对象
@@ -1517,21 +1543,38 @@ namespace CSharp.Net.Cache.Redis
             return JsonHelper.Deserialize<T>(tValue);
         }
 
-        List<T> Deserialize<T>(RedisValue[] tValue)
+        /// <summary> 
+        /// 将值反系列化成对象集合
+        /// </summary>
+        /// <typeparam name="T"></typeparam> 
+        /// <param name="values"></param> 
+        /// <returns></returns>
+        List<T> ConvetList<T>(RedisValue[] values)
         {
             List<T> list = new List<T>();
-            foreach (var t in tValue)
-            {
-                if (typeof(T) == typeof(string) || CheckIConvertible(default(T)))
-                {
-                    list.Add(ConvertHelper.ConvertTo<T>(t));
-                }
-                else
-                {
-                    list.Add(JsonHelper.Deserialize<T>(t));
-                }
-            }
+            if (values == null || values.Length <= 0)
+                return list;
+
+            list = values.Select(x => Deserialize<T>(x)).ToList();
             return list;
+        }
+
+        /// <summary>  
+        /// 将值集合转换成RedisValue集合 
+        /// </summary> 
+        /// <typeparam name="T"></typeparam>
+        /// <param name="redisValues"></param> 
+        /// <returns></returns>  
+        RedisValue[] ConvertRedisValue<T>(params T[] redisValues) => redisValues.Select(o => (RedisValue)Serialize(o)).ToArray();
+
+        /// <summary>
+        /// key集合转RedisKey集合
+        /// </summary>
+        /// <param name="redisKeys"></param>
+        /// <returns></returns>
+        RedisKey[] ConvertRedisKeys(List<string> redisKeys)
+        {
+            return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
         }
 
         /// <summary>
@@ -1549,7 +1592,6 @@ namespace CSharp.Net.Cache.Redis
 
 
         #endregion 其他
-
 
 
     }

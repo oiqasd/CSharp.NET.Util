@@ -106,12 +106,21 @@ namespace CSharp.Net.Cache
         #region 同步方法
 
         /// <summary>
-        /// 添加
+        /// 添加对象
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
         bool SetAdd<T>(string key, T value, TimeSpan? timeSpan = null);
 
+        /// <summary>
+        /// 向set添加数组
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="timeSpan"></param>
+        /// <returns></returns>
+        bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan = null);
         /// <summary>
         /// 删除
         /// </summary>
@@ -185,8 +194,17 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        Task<bool> SetAddAsync<T>(string key, T value);
-
+        /// <param name="timeSpan"></param>
+        Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null);
+        /// <summary>
+        /// 向set添加数组
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="timeSpan"></param>
+        /// <returns></returns>
+        Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null);
         /// <summary>
         /// 删除
         /// </summary>

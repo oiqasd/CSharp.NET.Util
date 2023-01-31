@@ -4,9 +4,9 @@
 		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
-		<Authors>y</Authors>
+		<Authors>Cs</Authors>
 		<Description>Integrating common util class libraries</Description>
-		<Version>5.0.0</Version>
+		<Version>5.0.1</Version>
 		<Copyright></Copyright>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
@@ -27,15 +27,6 @@
 		<OutputPath>bin\</OutputPath>
 		<DocumentationFile>bin\CSharp.Net.Util.xml</DocumentationFile>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Remove="Cache\**" />
-		<Compile Remove="Pager\**" />
-		<EmbeddedResource Remove="Cache\**" />
-		<EmbeddedResource Remove="Pager\**" />
-		<None Remove="Cache\**" />
-		<None Remove="Pager\**" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />

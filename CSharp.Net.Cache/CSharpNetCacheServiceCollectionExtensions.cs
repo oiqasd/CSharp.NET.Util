@@ -1,5 +1,4 @@
-﻿using CSharp.Net.Cache;
-using CSharp.Net.Cache.Memory;
+﻿using CSharp.Net.Cache.Memory;
 using CSharp.Net.Cache.Redis;
 using CSharp.Net.Util;
 using Microsoft.Extensions.DependencyInjection;

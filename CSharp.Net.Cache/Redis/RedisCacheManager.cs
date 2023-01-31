@@ -2,16 +2,10 @@
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache.Redis
 {
@@ -308,12 +302,7 @@ namespace CSharp.Net.Cache.Redis
                 result.Add(item.Name, model);
             }
             return result;
-        }
-
-        protected RedisKey[] ConvertRedisKeys(List<string> redisKeys)
-        {
-            return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
-        }
+        } 
         #endregion
 
     }
