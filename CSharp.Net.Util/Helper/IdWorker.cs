@@ -23,21 +23,23 @@ namespace CSharp.Net.Util
             if (_IdWorkInstance == null)
             {
                 lock (_obj)
+                {
                     if (_IdWorkInstance == null)
                     {
                         if (options == null)
                         {
-                            options = new IdWorkerOptions() { MachineId = 5 };
-                            //string ip = IpHelper.GetCurrentIP();
-                            //if (IpHelper.CheckIp(ip))
-                            //{
-                            //    options.MachineId = ConvertHelper.ConvertTo<ushort>(ip.Split('.')[3], 1);
-                            //}
-                            //  var  id = ((0x000000FF & (long)mac[mac.length - 2]) | (0x0000FF00 & (((long)mac[mac.length - 1]) << 8))) >> 6;
-                            //  id = id % (maxDatacenterId + 1);
+                            options = new IdWorkerOptions();
+                            string ip = IpHelper.GetCurrentIP();
+                            if (IpHelper.CheckIp(ip))
+                            {
+                                options.MachineId = ConvertHelper.ConvertTo<ushort>(ip.Split('.')[3], 1);
+                            }
+                            //var id = ((0x000000FF & (long)mac[mac.length - 2]) | (0x0000FF00 & (((long)mac[mac.length - 1]) << 8))) >> 6;
+                            //id = id % (maxDatacenterId + 1);
                         }
                         _IdWorkInstance = new IdWorker(options);
                     }
+                }
             }
 
         }
