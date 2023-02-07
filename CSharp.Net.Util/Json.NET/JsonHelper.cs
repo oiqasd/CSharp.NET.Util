@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace CSharp.Net.Util.NewtJson
@@ -223,6 +224,51 @@ namespace CSharp.Net.Util.NewtJson
                 data.Add(i.Name, i.Value.ToObject<T>());
             }
             return data;
+        }
+
+        /// <summary>
+        /// demo 未测试
+        /// </summary>
+        /// <param name="jsonData"></param>
+        /// <param name="field"></param>
+        /// <returns></returns>
+        private static Dictionary<string, object> RequestApiDic(string jsonData, string field = "")
+        {
+            string url = string.Empty;
+            Dictionary<string, object> data = new Dictionary<string, object>();
+            try
+            {
+                JObject obj = JObject.Parse(jsonData);
+                if (obj == null)
+                    return data;
+
+                string[] fileds = field.Split(":");
+                string tmpVal = jsonData;
+                JToken jobj = obj;
+                for (int i = 0; i < fileds.Length; i++)
+                {
+                    if (jobj.Type == JTokenType.Object)
+                        jobj = jobj[fileds[i]];
+                    else if (jobj.Type == JTokenType.Array)
+                    {
+                        jobj = jobj.FirstOrDefault();
+                        jobj = jobj[fileds[i]];
+                    }
+                }
+
+                if (jobj == null) return data;
+
+                if (jobj.Type == JTokenType.Array)
+                {
+                    jobj = jobj.FirstOrDefault();
+                    data = GetJObject<object>(jobj.ToString());
+                }
+                return data;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 
