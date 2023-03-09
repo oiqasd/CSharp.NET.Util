@@ -4,7 +4,9 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -38,7 +40,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         public string GetOrCreate(string key, string defaultValue, int seconds = 30)
         {
-            if (_cache.KeyExists(key))
+            if (_db.KeyExists(key))
                 return StringGet(key);
 
             if (LockTake("lck_" + key))
@@ -141,7 +143,7 @@ namespace CSharp.Net.Cache.Redis
             if (cacheSeconds <= 0)
                 return StringSet(keyValues);
 
-            var batch = _cache.CreateBatch();
+            var batch = _db.CreateBatch();
             Parallel.ForEach(keyValues, str =>
             {
                 if (str.Value == null) return;
@@ -162,7 +164,7 @@ namespace CSharp.Net.Cache.Redis
             if (keys == null || keys.Count() <= 0)
                 throw new ArgumentNullException(nameof(keys));
 
-            var batch = _cache.CreateBatch();
+            var batch = _db.CreateBatch();
 
             Dictionary<string, Task<RedisValue>> redisValueList = new Dictionary<string, Task<RedisValue>>();
             Parallel.ForEach(keys.Distinct(), str =>
@@ -557,16 +559,16 @@ namespace CSharp.Net.Cache.Redis
         }
 
         /// <summary>
-        /// 移除hash中的多个值
+        /// 移除hash多个值
         /// </summary>
         /// <param name="key"></param>
         /// <param name="dataKeys"></param>
         /// <returns></returns>
-        public long HashDelete(string key, List<RedisValue> dataKeys)
+        public long HashDelete(string key, params object[] dataKeys)
         {
             key = PrefixKey(key);
-            //List<RedisValue> dataKeys1 = new List<RedisValue>() {"1","2"};
-            return Do(db => db.HashDelete(key, dataKeys.ToArray()));
+            //List<RedisValue> dataKeys = new List<RedisValue>() {"1","2"};
+            return Do(db => db.HashDelete(key, ConvertRedisValue(dataKeys)));
         }
 
         /// <summary>
@@ -712,13 +714,12 @@ namespace CSharp.Net.Cache.Redis
         /// 移除hash中的多个值
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="dataKeys"></param>
+        /// <param name="dataKey"></param>
         /// <returns></returns>
-        public async Task<long> HashDeleteAsync(string key, List<RedisValue> dataKeys)
+        public async Task<long> HashDeleteAsync(string key, params object[] dataKey)
         {
             key = PrefixKey(key);
-            //List<RedisValue> dataKeys1 = new List<RedisValue>() {"1","2"};
-            return await Do(db => db.HashDeleteAsync(key, dataKeys.ToArray()));
+            return await Do(db => db.HashDeleteAsync(key, ConvertRedisValue(dataKey)));
         }
 
         /// <summary>
@@ -985,14 +986,14 @@ namespace CSharp.Net.Cache.Redis
                 return data;
             });
         }
-       /// <summary>
-       /// 
-       /// </summary>
-       /// <typeparam name="T"></typeparam>
-       /// <param name="key"></param>
-       /// <param name="value"></param>
-       /// <param name="timeSpan"></param>
-       /// <returns></returns>
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="timeSpan"></param>
+        /// <returns></returns>
         public async Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
         {
             key = PrefixKey(key);
@@ -1294,15 +1295,16 @@ namespace CSharp.Net.Cache.Redis
                   .AppendLine(" end")
                   .AppendLine("until c =='0'")
                   .AppendLine("return c");
-            _cache.ScriptEvaluate(LuaScript.Prepare(sb.ToString()), new { keypattern = $"{PrefixKey(pattern)}*" });
+            _db.ScriptEvaluate(LuaScript.Prepare(sb.ToString()), new { keypattern = $"{PrefixKey(pattern)}*" });
 
         }
         /// <summary>
         /// 查询<paramref name="pattern"/>开头的keys
         /// </summary>
         /// <param name="pattern"></param>
+        /// <param name="removePrefix"></param>
         /// <returns></returns>
-        public string[] QueryStartWith(string pattern)
+        public string[] QueryStartWith(string pattern, bool removePrefix = true)
         {
             StringBuilder sbLuaScript = new StringBuilder()
                    .AppendLine("local keys, has, cursor = {}, {},'0';")
@@ -1316,10 +1318,20 @@ namespace CSharp.Net.Cache.Redis
                    .AppendLine("until cursor =='0'")
                    .AppendLine("return keys");
 
-            var result = _cache.ScriptEvaluate(LuaScript.Prepare(sbLuaScript.ToString()), new { keypattern = PrefixKey(pattern) + "*" });
+            var result = _db.ScriptEvaluate(LuaScript.Prepare(sbLuaScript.ToString()), new { keypattern = PrefixKey(pattern) + "*" });
 
             if (!result.IsNull)
-                return (string[])result;
+            {
+                var arr = (string[])result;
+
+                if (!removePrefix) return arr;
+
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    arr[i] = arr[i].Remove(0, _options.InstanceName.Length);
+                }
+                return arr;
+            }
 
             return new string[0];
         }
@@ -1390,7 +1402,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         public bool LockTake(string key, string value = "", int cacheSeconds = 10)
         {
-            return _cache.LockTake(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
+            return _db.LockTake(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
         }
 
         /// <summary>
@@ -1401,7 +1413,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         public bool LockRelease(string key, string value = "")
         {
-            return _cache.LockRelease(PrefixKey(key), value);
+            return _db.LockRelease(PrefixKey(key), value);
         }
 
         /// <summary>
@@ -1421,7 +1433,7 @@ namespace CSharp.Net.Cache.Redis
             var allKeys = GetAllKeys();
             foreach (var key in allKeys)
             {
-                string objValue = _cache.StringGet(key);
+                string objValue = _db.StringGet(key);
 
                 if (tmp == objValue)
                 {
@@ -1448,16 +1460,28 @@ namespace CSharp.Net.Cache.Redis
         }
 
         /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="action"></param>
+        public void Subscribe(string subChannel, Action<string> action)
+        {
+            Subscribe(subChannel, (c, h) =>
+            {
+                action(h);
+            });
+        }
+
+        /// <summary>
         /// Redis发布订阅  订阅
         /// </summary>
         /// <param name="subChannel"></param>
         /// <param name="handler"></param>
-        public void Subscribe(string subChannel, Action<RedisChannel, RedisValue> handler = null)
+        protected void Subscribe(string subChannel, Action<RedisChannel, RedisValue> handler = null)
         {
             ISubscriber sub = _connection.GetSubscriber();
             sub.Subscribe(PrefixKey(subChannel), (channel, message) =>
             {
-
                 if (handler == null)
                 {
                     Console.WriteLine(subChannel + " 订阅收到消息：" + message);
@@ -1577,6 +1601,11 @@ namespace CSharp.Net.Cache.Redis
             return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
         }
 
+        RedisKey[] ConvertRedisKeys(object[] redisKeys)
+        {
+            return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
+        }
+
         /// <summary>
         /// null不能判断，所以string和可空类型不能用这个
         /// </summary>
@@ -1590,7 +1619,27 @@ namespace CSharp.Net.Cache.Redis
             return false;
         }
 
+        protected T Do<T>(Func<IDatabase, T> func)
+        {
+            return func(_db);
+        }
 
+        /// <summary>
+        /// hash转换成Dic
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        protected Dictionary<string, T> ConvetDic<T>(HashEntry[] values)
+        {
+            Dictionary<string, T> result = new Dictionary<string, T>();
+            foreach (var item in values)
+            {
+                var model = JsonHelper.Deserialize<T>(item.Value);
+                result.Add(item.Name, model);
+            }
+            return result;
+        }
         #endregion 其他
 
 

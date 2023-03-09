@@ -172,7 +172,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.GetExcetionMessage());
+                Console.WriteLine(url);
                 throw ex;
             }
 
@@ -237,7 +237,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.GetExcetionMessage());
+                Console.WriteLine(url);
                 throw ex;
             }
 
@@ -298,7 +298,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.GetExcetionMessage());
+                Console.WriteLine(url);
                 throw ex;
             }
 
@@ -315,38 +315,12 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static async Task<string> GetAsync(string url, Dictionary<string, string> prams, Dictionary<string, string> headers = null, int timeOutSecond = 5)
         {
-            //string result = string.Empty;
-            //try
-            //{
-            //SetHeader(headers);
-
             StringBuilder sb = new StringBuilder();
             if (prams != null)
             {
                 prams.ForEach(x => { if (!string.IsNullOrEmpty(x.Value)) sb.Append(x.Key).Append("=").Append(x.Value).Append("&"); });
-                //if (!url.Contains("?"))
-                //    url += "?";
-                //if (url.Contains("&"))
-                //    url += "&";
-                //url = $"{url}{sb.ToString().TrimEnd('&')}";
             }
-
             return await GetAsync(url, sb.ToString(), headers, timeOutSecond);
-
-            //    using (var response = await _httpClient.GetAsync(url))
-            //    {
-            //        response.EnsureSuccessStatusCode();
-
-            //        result = await response.Content.ReadAsStringAsync();
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine(ex.GetExcetionMessage());
-            //    throw ex;
-            //}
-
-            //return result;
         }
         /// <summary>
         /// http get
@@ -404,11 +378,12 @@ namespace CSharp.Net.Util
             }
             catch (TaskCanceledException ex)
             {
+                Console.WriteLine(ex.Message + url);
                 throw new TimeoutException();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.GetExcetionMessage());
+                Console.WriteLine(url);
                 throw ex;
             }
 

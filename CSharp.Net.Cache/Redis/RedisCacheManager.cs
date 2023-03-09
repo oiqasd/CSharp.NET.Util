@@ -13,7 +13,7 @@ namespace CSharp.Net.Cache.Redis
     {
 
         protected volatile IConnectionMultiplexer _connection;
-        protected IDatabase _cache;
+        protected IDatabase _db;
         private bool _disposed;
 
         protected readonly RedisCacheOptions _options;
@@ -50,7 +50,7 @@ namespace CSharp.Net.Cache.Redis
         private void Connect()
         {
             CheckDisposed();
-            if (_cache != null)
+            if (_db != null)
             {
                 return;
             }
@@ -58,7 +58,7 @@ namespace CSharp.Net.Cache.Redis
             _connectionLock.Wait();
             try
             {
-                if (_cache == null)
+                if (_db == null)
                 {
                     if (_options.ConnectionMultiplexerFactory == null)
                     {
@@ -88,7 +88,7 @@ namespace CSharp.Net.Cache.Redis
                     }
 
                     TryRegisterProfiler();
-                    _cache = _connection.GetDatabase(_options.DefaultDB);
+                    _db = _connection.GetDatabase(_options.DefaultDB);
                 }
             }
             catch (Exception ex)
@@ -142,7 +142,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         protected ITransaction CreateTransaction()
         {
-            return _cache.CreateTransaction();
+            return _db.CreateTransaction();
         }
 
         /// <summary>
@@ -278,32 +278,6 @@ namespace CSharp.Net.Cache.Redis
         }
 
         #endregion 事件
-
-
-        #region extend
-
-        protected T Do<T>(Func<IDatabase, T> func)
-        {
-            return func(_cache);
-        }
-
-        /// <summary>
-        /// hash转换成Dic
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="values"></param>
-        /// <returns></returns>
-        protected Dictionary<string, T> ConvetDic<T>(HashEntry[] values)
-        {
-            Dictionary<string, T> result = new Dictionary<string, T>();
-            foreach (var item in values)
-            {
-                var model = JsonHelper.Deserialize<T>(item.Value);
-                result.Add(item.Name, model);
-            }
-            return result;
-        } 
-        #endregion
 
     }
 }

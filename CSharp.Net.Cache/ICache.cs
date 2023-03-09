@@ -80,7 +80,7 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="pattern"></param>
         /// <returns></returns>
-        string[] QueryStartWith(string pattern);
+        string[] QueryStartWith(string pattern, bool removePrefix = true);
         /// <summary>
         /// 判断key是否存储
         /// </summary>
@@ -273,6 +273,42 @@ namespace CSharp.Net.Cache
 
         #endregion Set 无序集合
 
+
+        #region 发布订阅
+
+        /// <summary>
+        /// Redis发布订阅  订阅
+        /// </summary>
+        /// <param name="subChannel"></param>
+        void Subscribe(string subChannel);
+
+        /// <summary>
+        /// 发布订阅 
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="action"></param>
+        void Subscribe(string subChannel, Action<string> action);
+
+        /// <summary>
+        /// Redis发布订阅  发布
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="channel"></param>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        long Publish<T>(string channel, T msg);
+
+        /// <summary>
+        /// Redis发布订阅  取消订阅
+        /// </summary>
+        /// <param name="channel"></param>
+        void Unsubscribe(string channel);
+
+        /// <summary>
+        /// [慎重调用]Redis发布订阅  取消全部订阅
+        /// </summary>
+        void UnsubscribeAll();
+        #endregion
     }
 }
 

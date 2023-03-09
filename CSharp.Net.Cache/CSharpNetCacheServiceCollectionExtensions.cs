@@ -76,18 +76,19 @@ class RedisPreHoldService : BackgroundService
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //#pragma warning disable CS4014
-        //        Task.Factory.StartNew(() =>
-        //        {
-        //            while (true)
-        //            {
-        //                Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
-        //                AppDomainHelper.GetThreadPoolStats();
-        //                Thread.Sleep(2000); 
-        //            }
-        //        }, TaskCreationOptions.LongRunning);
-        //#pragma warning restore CS4014
-        //        return;
+//#pragma warning disable CS4014
+//        Task.Factory.StartNew(async () =>
+//        {
+//            while (true)
+//            {
+//                Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
+//                AppDomainHelper.GetThreadPoolStats();
+
+//                await Task.Delay(1000 * 3);
+//            }
+//        }, TaskCreationOptions.LongRunning);
+//#pragma warning restore CS4014
+//        return;
 
         if (!stoppingToken.IsCancellationRequested)
         {

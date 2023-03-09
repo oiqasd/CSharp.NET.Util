@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 /// <summary>
@@ -11,8 +12,9 @@ public static class ExceptionExtension
     /// 获取异常信息和堆栈信息
     /// </summary>
     /// <param name="ex"></param>
+    /// <param name="memberName">调用者方法名</param>
     /// <returns></returns>
-    public static string GetExcetionMessage(this Exception ex)
+    public static string GetExcetionMessage(this Exception ex, [CallerMemberName] string memberName = null)
     {
         string exceMsg = "";
         if (ex != null)

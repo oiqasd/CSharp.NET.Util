@@ -11,7 +11,7 @@ namespace CSharp.Net.Cache.Memory
 {
     public class MemoryCacheProvider : IMemoryCache
     {
-        private static readonly MemoryCache _cache = new MemoryCache(new MemoryCacheOptions());
+        private static readonly MemoryCache _cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 102400 });
 
         /// <summary>
         /// 读取缓存
@@ -55,7 +55,7 @@ namespace CSharp.Net.Cache.Memory
             {
                 //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
                 c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
-                c.SetValue(defaultValue); 
+                c.SetValue(defaultValue);
                 return defaultValue;
             });
         }
@@ -250,12 +250,12 @@ namespace CSharp.Net.Cache.Memory
             RemoveAll();
         }
 
-        public string[] QueryStartWith(string pattern)
+        public string[] QueryStartWith(string pattern, bool removePrefix = true)
         {
             throw new NotImplementedException();
         }
 
-        public bool SetAdd<T>(string key, T value,TimeSpan? timeSpan)
+        public bool SetAdd<T>(string key, T value, TimeSpan? timeSpan)
         {
             throw new NotImplementedException();
         }
@@ -303,7 +303,7 @@ namespace CSharp.Net.Cache.Memory
             throw new NotImplementedException();
         }
 
-        public Task<bool> SetAddAsync<T>(string key, T value,TimeSpan? timeSpan=null)
+        public Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null)
         {
             throw new NotImplementedException();
         }
@@ -349,6 +349,31 @@ namespace CSharp.Net.Cache.Memory
         }
 
         public Task<long> SetLengthAsync(string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Subscribe(string subChannel, Action<string> action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Subscribe(string subChannel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long Publish<T>(string channel, T msg)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Unsubscribe(string channel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UnsubscribeAll()
         {
             throw new NotImplementedException();
         }

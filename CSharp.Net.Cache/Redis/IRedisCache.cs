@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache.Redis
@@ -219,7 +217,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="key"></param>
         /// <param name="dataKeys"></param>
         /// <returns></returns>
-        //long HashDelete(string key, List<RedisValue> dataKeys);
+        long HashDelete(string key, params object[] dataKeys);
 
         /// <summary>
         /// 从hash表获取数据
@@ -403,33 +401,6 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         //List<string> GetKeys<T>(T value);
         #endregion
-
-        #region 发布订阅
-
-        /// <summary>
-        /// Redis发布订阅  订阅
-        /// </summary>
-        /// <param name="subChannel"></param>
-        void Subscribe(string subChannel);
-        /// <summary>
-        /// Redis发布订阅  发布
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="channel"></param>
-        /// <param name="msg"></param>
-        /// <returns></returns>
-        long Publish<T>(string channel, T msg);
-        /// <summary>
-        /// Redis发布订阅  取消订阅
-        /// </summary>
-        /// <param name="channel"></param>
-        void Unsubscribe(string channel);
-        /// <summary>
-        /// [慎重调用]Redis发布订阅  取消全部订阅
-        /// </summary>
-        void UnsubscribeAll();
-        #endregion
-
 
     }
 }
