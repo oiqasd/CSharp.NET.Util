@@ -13,18 +13,37 @@ namespace CSharp.Net.Util.Validate
     /// </summary>
     public class IntAttribute : BaseValidateAttribute
     {
+        int Max { get; set; }
+        int Min { get; set; }
+
+        public IntAttribute(int max = int.MaxValue, int min = int.MinValue)
+        {
+            this.Min = min;
+            this.Max = max;
+        }
+
         public override bool ValidateAction(object value, PropertyInfo property)
         {
             Regex rx = new Regex(@"^[1-9]\d*$");
-            if (value == null || rx.IsMatch(value.ToString()))
-            {
-                return true;
-            }
-            if (string.IsNullOrEmpty(this.ErrorMessage))
+
+            if (value == null) return true;
+            if (!rx.IsMatch(value.ToString()))
             {
                 this.ErrorMessage = $"字段格式需要是正整数";
+                return false;
             }
-            return false;
+            var v = ConvertHelper.ConvertTo(value, 0);
+            if (v > Max)
+            {
+                this.ErrorMessage = $"字段不能大于{Max}";
+                return false;
+            }
+            if (v < Min)
+            {
+                this.ErrorMessage = $"字段不能小于{Min}";
+                return false;
+            }
+            return true;
         }
     }
 }

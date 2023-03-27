@@ -664,7 +664,6 @@ namespace CSharp.Net.Cache.Redis
             });
         }
 
-
         #endregion 同步方法
 
         #region 异步方法
@@ -850,7 +849,7 @@ namespace CSharp.Net.Cache.Redis
         public long SetRemove<T>(string key, params T[] value)
         {
             key = PrefixKey(key);
-            RedisValue[] valueList = value.Select(u => (RedisValue)Serialize(value)).ToArray();
+            RedisValue[] valueList = value.Select(v => (RedisValue)Serialize(v)).ToArray();
             return Do(redis => redis.SetRemove(key, valueList));
         }
 
@@ -965,6 +964,54 @@ namespace CSharp.Net.Cache.Redis
             return Do(redis => redis.SetLength(key));
         }
 
+
+        /// <summary>
+        /// 并集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public List<T> SetUnion<T>(params string[] key)
+        {
+            return Do(redis =>
+            {
+                key = key.Select(k => PrefixKey(k)).ToArray();
+                var values = redis.SetCombine(SetOperation.Union, ConvertRedisKeys(key));
+                return ConvetList<T>(values);
+            });
+        }
+
+        /// <summary>
+        /// 交集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public List<T> SetIntersect<T>(params string[] key)
+        {
+            return Do(redis =>
+            {
+                key = key.Select(k => PrefixKey(k)).ToArray();
+                var values = redis.SetCombine(SetOperation.Intersect, ConvertRedisKeys(key));
+                return ConvetList<T>(values);
+            });
+        }
+
+        /// <summary>
+        /// 差集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public List<T> SetDifference<T>(params string[] key)
+        {
+            return Do(redis =>
+            {
+                key = key.Select(k => PrefixKey(k)).ToArray();
+                var values = redis.SetCombine(SetOperation.Difference, ConvertRedisKeys(key));
+                return ConvetList<T>(values);
+            });
+        }
         #endregion 同步方法
 
         #region 异步方法
@@ -1014,7 +1061,7 @@ namespace CSharp.Net.Cache.Redis
         public async Task<long> SetRemoveAsync<T>(string key, params T[] value)
         {
             key = PrefixKey(key);
-            RedisValue[] valueList = value.Select(u => (RedisValue)Serialize(value)).ToArray();
+            RedisValue[] valueList = value.Select(v => (RedisValue)Serialize(v)).ToArray();
             return await Do(redis => redis.SetRemoveAsync(key, valueList));
         }
 
@@ -1262,7 +1309,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns>成功删除的个数</returns>
         public long KeyDelete(List<string> keys)
         {
-            List<string> newKeys = keys.Select(x => PrefixKey(x)).ToList();
+            string[] newKeys = keys.Select(x => PrefixKey(x)).ToArray();
             return Do(db => db.KeyDelete(ConvertRedisKeys(newKeys)));
         }
 
@@ -1272,37 +1319,36 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="pattern"></param>
         public void KeyDeleteStartWith(string pattern)
         {
+            var keys = QueryStartWith(pattern, false);
+            if (keys.IsNullOrEmpty()) return;
+            Do(db => db.KeyDeleteAsync(ConvertRedisKeys(keys)));
             //string luaScript = $"redis.call('del', unpack(redis.call('keys','{pattern}*')))";
-            //string luaScript = @"local keys = redis.call('keys', @keypattern) 
-            //                        for i=1,#keys,5000 do 
-            //                            redis.call('del', unpack(keys, i, math.min(i+4999, #keys))) 
-            //                        end 
-            //                     return true ";
-            //_cache.ScriptEvaluate(LuaScript.Prepare(luaScript), new { keypattern = PrefixKey(pattern) + "*" });
 
-            //mock一批数据
+            //mock数据
             // eval "for i = 1, 100000 do redis.call('SET','mockKeys:' .. i,i) end" 0
-            StringBuilder sb = new StringBuilder()
-                  .AppendLine("local c = '0'")
-                  .AppendLine("repeat")
-                  .AppendLine($" local resp = redis.call('SCAN', c, 'MATCH', @keypattern, 'COUNT', 100)")
-                  .AppendLine(" c = resp[1]")
-                  .AppendLine(" for _, key in ipairs(resp[2]) do")
-                  .AppendLine("    local ttl = redis.call('TTL', key)")
-                  .AppendLine("    if ttl == -1 then")
-                  .AppendLine("        redis.call('DEL', key)")
-                  .AppendLine("    end")
-                  .AppendLine(" end")
-                  .AppendLine("until c =='0'")
-                  .AppendLine("return c");
-            _db.ScriptEvaluate(LuaScript.Prepare(sb.ToString()), new { keypattern = $"{PrefixKey(pattern)}*" });
+
+            // 2023/03/27 del
+            //StringBuilder sb = new StringBuilder()
+            //      .AppendLine("local c = '0'")
+            //      .AppendLine("repeat")
+            //      .AppendLine($" local resp = redis.call('SCAN', c, 'MATCH', @keypattern, 'COUNT', 100)")
+            //      .AppendLine(" c = resp[1]")
+            //      .AppendLine(" for _, key in ipairs(resp[2]) do")
+            //      .AppendLine("    local ttl = redis.call('TTL', key)")
+            //      .AppendLine("    if ttl == -1 then")
+            //      .AppendLine("        redis.call('DEL', key)")
+            //      .AppendLine("    end")
+            //      .AppendLine(" end")
+            //      .AppendLine("until c =='0'")
+            //      .AppendLine("return c");
+            //_db.ScriptEvaluate(LuaScript.Prepare(sb.ToString()), new { keypattern = $"{PrefixKey(pattern)}*" });
 
         }
         /// <summary>
         /// 查询<paramref name="pattern"/>开头的keys
         /// </summary>
         /// <param name="pattern"></param>
-        /// <param name="removePrefix"></param>
+        /// <param name="removePrefix">默认移除实例前缀</param>
         /// <returns></returns>
         public string[] QueryStartWith(string pattern, bool removePrefix = true)
         {
@@ -1323,7 +1369,6 @@ namespace CSharp.Net.Cache.Redis
             if (!result.IsNull)
             {
                 var arr = (string[])result;
-
                 if (!removePrefix) return arr;
 
                 for (int i = 0; i < arr.Length; i++)
@@ -1473,6 +1518,17 @@ namespace CSharp.Net.Cache.Redis
         }
 
         /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="action"></param>
+        public async Task SubscribeAsync(string subChannel, Func<string, Task> action)
+        {
+            ISubscriber sub = _connection.GetSubscriber();
+            await sub.SubscribeAsync(PrefixKey(subChannel), async (channel, message) => await action?.Invoke(message));
+        }
+
+        /// <summary>
         /// Redis发布订阅  订阅
         /// </summary>
         /// <param name="subChannel"></param>
@@ -1579,7 +1635,7 @@ namespace CSharp.Net.Cache.Redis
             if (values == null || values.Length <= 0)
                 return list;
 
-            list = values.Select(x => Deserialize<T>(x)).ToList();
+            list = values.Select(o => Deserialize<T>(o)).ToList();
             return list;
         }
 
@@ -1596,7 +1652,7 @@ namespace CSharp.Net.Cache.Redis
         /// </summary>
         /// <param name="redisKeys"></param>
         /// <returns></returns>
-        RedisKey[] ConvertRedisKeys(List<string> redisKeys)
+        RedisKey[] ConvertRedisKeys(string[] redisKeys)
         {
             return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
         }
@@ -1641,7 +1697,6 @@ namespace CSharp.Net.Cache.Redis
             return result;
         }
         #endregion 其他
-
 
     }
 }

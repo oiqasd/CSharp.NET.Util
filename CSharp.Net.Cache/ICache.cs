@@ -79,6 +79,7 @@ namespace CSharp.Net.Cache
         /// 查询<paramref name="pattern"/>开头的keys
         /// </summary>
         /// <param name="pattern"></param>
+        /// <param name="removePrefix">默认移除实例前缀</param>
         /// <returns></returns>
         string[] QueryStartWith(string pattern, bool removePrefix = true);
         /// <summary>
@@ -184,7 +185,27 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <returns></returns>
         long SetLength(string key);
-
+        /// <summary>
+        /// 并集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        List<T> SetUnion<T>(params string[] key);
+        /// <summary>
+        /// 交集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        List<T> SetIntersect<T>(params string[] key);
+        /// <summary>
+        /// 差集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        List<T> SetDifference<T>(params string[] key);
         #endregion 同步方法
 
         #region 异步方法
@@ -288,6 +309,7 @@ namespace CSharp.Net.Cache
         /// <param name="subChannel"></param>
         /// <param name="action"></param>
         void Subscribe(string subChannel, Action<string> action);
+        Task SubscribeAsync(string subChannel, Func<string, Task> action);
 
         /// <summary>
         /// Redis发布订阅  发布

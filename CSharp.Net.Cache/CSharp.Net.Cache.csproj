@@ -6,7 +6,7 @@
 		<!--<PackageVersion>2.2</PackageVersion>-->
 		<Authors>Cs</Authors>
 		<Description>memorycache;redis</Description>
-		<Version>5.1.1</Version>
+		<Version>5.1.3</Version>
 		<Copyright></Copyright>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
@@ -14,7 +14,7 @@
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<OutputPath>bin\</OutputPath>
 		<DocumentationFile>bin\CSharp.Net.Util.xml</DocumentationFile>
 	</PropertyGroup>

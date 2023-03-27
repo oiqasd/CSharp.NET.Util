@@ -377,6 +377,26 @@ namespace CSharp.Net.Cache.Memory
         {
             throw new NotImplementedException();
         }
+
+        public Task SubscribeAsync(string subChannel, Func<string, Task> action)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<T> SetUnion<T>(params string[] key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<T> SetIntersect<T>(params string[] key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<T> SetDifference<T>(params string[] key)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

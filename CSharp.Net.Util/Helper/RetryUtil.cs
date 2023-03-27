@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Util.Helper
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 重试类
