@@ -6,7 +6,7 @@
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Cs</Authors>
 		<Description>Integrating common util class libraries</Description>
-		<Version>5.1.0</Version>
+		<Version>5.1.1</Version>
 		<Copyright></Copyright>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>

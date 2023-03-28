@@ -20,9 +20,7 @@ namespace CSharp.Net.Util
         public static string GetCallingMethodName(int depth = 1)
         {
             StackTrace stack = new StackTrace();
-            return stack.GetFrame(depth)?.GetMethod()?.Name;
-
-
+            return stack.GetFrame(depth)?.GetMethod()?.Name;  
             //获取当前
             //System.Reflection.MethodBase.GetCurrentMethod().Name;
         }
@@ -36,10 +34,11 @@ namespace CSharp.Net.Util
         {
             StackTrace stack = new StackTrace();
             return stack.GetFrame(depth)?.GetMethod()?.DeclaringType?.ToString();
-
+            //System.Reflection.Assembly.GetCallingAssembly();
             //获取当前
             //this.GetType().Name
         }
+
 
         /// <summary>
         /// 判断值类型或者无参构造函数
