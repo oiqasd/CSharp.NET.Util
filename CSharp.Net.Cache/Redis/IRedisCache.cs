@@ -387,6 +387,13 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         bool LockTake(string key, string value = "", int cacheSeconds = 10);
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cacheSeconds"></param>
+        /// <returns></returns>
+        bool LockTake(string key, int cacheSeconds);
+        /// <summary>
         /// 释放锁
         /// </summary>
         /// <param name="key">锁名称</param>

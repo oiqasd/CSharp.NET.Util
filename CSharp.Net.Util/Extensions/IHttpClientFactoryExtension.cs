@@ -19,7 +19,12 @@ public static class IHttpClientFactoryExtension
     /// <param name="timeOut">default 3s.</param>
     /// <param name="connectionClose">default true.</param>
     /// <returns></returns>
-    public static async Task<HttpResponseDto> SendAsync(this IHttpClientFactory clientFactory, string url, HttpMethod httpMethod, HttpContent httpContent = null, uint timeOut = 3, bool connectionClose = true)
+    public static async Task<HttpResponseDto> SendAsync(
+        this IHttpClientFactory clientFactory,
+        string url, HttpMethod httpMethod,
+        HttpContent httpContent = null,
+        uint timeOut = 3,
+        bool connectionClose = true)
     {
         HttpResponseDto ret = new HttpResponseDto();
         var client = clientFactory.CreateClient();

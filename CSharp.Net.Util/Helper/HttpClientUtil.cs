@@ -22,6 +22,11 @@ namespace CSharp.Net.Util
     {
         private static readonly HttpClient _httpClient = null;
         static object _obj = new object();
+        /// <summary>
+        /// 打印请求失败控制台日志
+        /// </summary>
+        public static bool PrintRequestErrorConsoleLog = false;
+
         static HttpClientUtil()
         {
             if (_httpClient == null)
@@ -75,7 +80,7 @@ namespace CSharp.Net.Util
                         };
 
                         _httpClient = new HttpClient(handler);
-#if NET6
+#if NET6||NET7
                         //var socketsHttpHandler = new SocketsHttpHandler()
                         //{
                         //    ConnectTimeout = TimeSpan.FromSeconds(20),
@@ -172,7 +177,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine(url);
+                DoPrintRequestErrorConsoleLog(ex, url);
                 throw ex;
             }
 
@@ -237,7 +242,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine(url);
+                DoPrintRequestErrorConsoleLog(ex, url);
                 throw ex;
             }
 
@@ -298,7 +303,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine(url);
+                DoPrintRequestErrorConsoleLog(ex, url);
                 throw ex;
             }
 
@@ -378,12 +383,12 @@ namespace CSharp.Net.Util
             }
             catch (TaskCanceledException ex)
             {
-                Console.WriteLine(ex.Message + url);
+                DoPrintRequestErrorConsoleLog(ex, url);
                 throw new TimeoutException();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(url);
+                DoPrintRequestErrorConsoleLog(ex, url);
                 throw ex;
             }
 
@@ -422,6 +427,12 @@ namespace CSharp.Net.Util
                 return;
 
             headers.ForEach(x => _httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
+        }
+
+        static void DoPrintRequestErrorConsoleLog(Exception ex, string url)
+        {
+            if (PrintRequestErrorConsoleLog)
+                Console.WriteLine(ex.Message + url);
         }
 
         #region Common Request

@@ -1449,6 +1449,10 @@ namespace CSharp.Net.Cache.Redis
         {
             return _db.LockTake(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
         }
+        public bool LockTake(string key, int cacheSeconds)
+        {
+            return _db.LockTake(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds));
+        }
 
         /// <summary>
         /// 释放锁

@@ -91,9 +91,10 @@ public static class QueryableExtension
     /// <summary>
     /// 使用自定义的方式拼接两个 System.Linq.Expression。
     /// </summary>
-    /// <typeparam name="T">表达式方法类型</typeparam>
+    /// <typeparam name="T">表达式中的元素类型</typeparam>
     /// <param name="left">左边的 System.Linq.Expression 。</param>
     /// <param name="right">右边的 System.Linq.Expression。</param>
+    /// <param name="func"></param>
     /// <returns>拼接完成的 System.Linq.Expression。</returns>
     public static Expression<T> MakeBinary<T>(this Expression<T> left, Expression<T> right, Func<Expression, Expression, Expression> func)
     {
@@ -103,7 +104,6 @@ public static class QueryableExtension
     /// <summary>
     /// 拼接两个 <paramref name="System.Linq.Expression"/> ，两个 <paramref name="System.Linq.Expression"/> 的参数必须完全相同。
     /// </summary>
-    /// <typeparam name="T">表达式中的元素类型</typeparam>
     /// <param name="left">左边的 <paramref name="System.Linq.Expression"/></param>
     /// <param name="right">右边的 <paramref name="System.Linq.Expression"/></param>
     /// <param name="func">表达式拼接的具体逻辑</param>

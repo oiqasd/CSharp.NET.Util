@@ -436,7 +436,6 @@ namespace CSharp.Net.Util
             }
             return model;
         }
-
     }
 
     /// <summary>
@@ -463,6 +462,124 @@ namespace CSharp.Net.Util
                 }
             }
             return map;
+        }
+
+        /// <summary>
+        /// 对象拷贝
+        /// </summary>
+        /// <typeparam name="Tsource">源</typeparam>
+        /// <typeparam name="Ttarget">目标</typeparam>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        public static void MapObject<Tsource, Ttarget>(Tsource source, Ttarget target) where Ttarget : new()
+        {
+            if (source == null) throw new ArgumentNullException("source can't be null");
+            if (target == null) target = new Ttarget();
+            PropertyInfo[] sourceProperties = typeof(Tsource).GetProperties();
+            PropertyInfo[] targetProperties = typeof(Ttarget).GetProperties();
+
+            foreach (var sourceProperty in sourceProperties)
+            {
+                foreach (var targetProperty in targetProperties)
+                {
+                    if (sourceProperty.Name == targetProperty.Name && sourceProperty.PropertyType == targetProperty.PropertyType && targetProperty.CanWrite)
+                    {
+                        targetProperty.SetValue(target, sourceProperty.GetValue(source, null), null);
+                        break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 对象拷贝
+        /// </summary>
+        /// <typeparam name="Ttarget">目标</typeparam>
+        /// <param name="source">源</param>
+        public static Ttarget MapObject<Ttarget>(object source) where Ttarget : new()
+        {
+            if (source == null) throw new ArgumentNullException("source can't be null");
+
+            Type targetType = typeof(Ttarget);
+            Type sourceType = source.GetType();
+            PropertyInfo[] sourceProperties = sourceType.GetProperties();
+            Ttarget target = new Ttarget();
+
+            foreach (var sourceProperty in sourceProperties)
+            {
+                PropertyInfo targetProperty = targetType.GetProperty(sourceProperty.Name);
+                if (targetProperty.CanWrite)
+                {
+                    targetProperty.SetValue(target, sourceProperty.GetValue(source));
+                }
+            }
+
+            return target;
+        }
+
+        /// <summary>
+        /// 对象列表拷贝
+        /// </summary>
+        /// <typeparam name="Tsource"></typeparam>
+        /// <typeparam name="Ttarget"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        public static void MapObjects<Tsource, Ttarget>(List<Tsource> source, List<Ttarget> target)
+        {
+            if (source.IsNullOrEmpty()) throw new ArgumentNullException("source can't be null");
+            if (target == null) target = new List<Ttarget>();
+
+            PropertyInfo[] sourceProperties = typeof(Tsource).GetProperties();
+            PropertyInfo[] targetProperties = typeof(Ttarget).GetProperties();
+
+            foreach (var sourceItem in source)
+            {
+                var targetItem = Activator.CreateInstance<Ttarget>();
+                foreach (var sourceProperty in sourceProperties)
+                {
+                    foreach (var targetProperty in targetProperties)
+                    {
+                        if (sourceProperty.Name == targetProperty.Name && sourceProperty.PropertyType == targetProperty.PropertyType && targetProperty.CanWrite)
+                        {
+                            var value = sourceProperty.GetValue(sourceItem, null);
+                            targetProperty.SetValue(targetItem, value, null);
+                            break;
+                        }
+                    }
+                }
+                target.Add(targetItem);
+            }
+        }
+
+        /// <summary>
+        /// 对象列表拷贝
+        /// </summary>
+        /// <typeparam name="Ttarget"></typeparam>
+        /// <param name="source"></param>
+        public static List<Ttarget> MapObjects<Ttarget>(List<object> source)
+        {
+            if (source.IsNullOrEmpty()) throw new ArgumentNullException("source can't be null");
+            List<Ttarget> target = new List<Ttarget>();
+
+            Type targetType = typeof(Ttarget);
+            Type sourceType = source[0].GetType();
+            PropertyInfo[] sourceProperties = sourceType.GetProperties();
+
+            foreach (var sourceItem in source)
+            {
+                var targetItem = Activator.CreateInstance<Ttarget>();
+                foreach (var property in sourceProperties)
+                {
+                    PropertyInfo targetProperty = targetType.GetProperty(property.Name);
+                    if (targetProperty.CanWrite)
+                    {
+                        targetProperty.SetValue(targetItem, property.GetValue(sourceItem, null), null);
+                    }
+                }
+                target.Add(targetItem);
+            }
+
+            return target;
         }
     }
 }
