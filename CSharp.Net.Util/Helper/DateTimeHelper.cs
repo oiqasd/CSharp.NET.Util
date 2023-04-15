@@ -49,6 +49,19 @@ namespace CSharp.Net.Util
     public class DateTimeHelper
     {
         /// <summary>
+        /// 默认时区转换
+        /// 适用无明确时区的时间
+        /// </summary>
+        /// <param name="datetime"></param>
+        /// <returns></returns>
+        public static DateTime ResolveZoneInfo(DateTime datetime)
+        {
+            TimeZoneInfo tzi = datetime.Kind == DateTimeKind.Unspecified ? TimeZoneInfo.Local : TimeZoneInfo.Utc;
+            var converted = TimeZoneInfo.ConvertTime(datetime, tzi);
+            return converted;
+        }
+
+        /// <summary>
         /// 返回当前标准日期格式
         /// yyyy-MM-dd
         /// </summary>
