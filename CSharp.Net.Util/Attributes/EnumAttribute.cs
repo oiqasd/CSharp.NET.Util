@@ -56,7 +56,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="order"></param>
+        /// <param name="eDescription"></param>
         public EDescriptionAttribute(string eDescription)
         {
             EDescription = eDescription;

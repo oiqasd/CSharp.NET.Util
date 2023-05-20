@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
-namespace CSharp.Net.Util.Log
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 客户端写日志帮助文件
@@ -17,6 +18,8 @@ namespace CSharp.Net.Util.Log
         /// </summary>
         /// <param name="title"></param>
         /// <param name="message"></param>
+        /// <param name="ex"></param>
+        /// <param name="beginTime"></param>
         public static void Debug(string title, string message, Exception ex, DateTime? beginTime = null)
         {
             ISystemLog log = new SystemLog();
@@ -40,6 +43,7 @@ namespace CSharp.Net.Util.Log
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
+        /// <param name="beginTime"></param>
         public static void Info(string title, string message, Exception ex, DateTime? beginTime = null)
         {
             ISystemLog log = new SystemLog();
@@ -110,6 +114,7 @@ namespace CSharp.Net.Util.Log
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
+        /// <param name="beginTime"></param>
         public static void Fatal(string title, string message, Exception ex, DateTime? beginTime = null)
         {
             ISystemLog log = new SystemLog();
@@ -132,8 +137,10 @@ namespace CSharp.Net.Util.Log
         /// 执行记录日志
         /// </summary>
         /// <param name="log"></param>
+        /// <param name="beginTime"></param>
         private static void WriteLog(ISystemLog log, DateTime? beginTime = null)
         {
+            if (log.Level == LogLevel.None) return;
             log.AppId = Appid;
             //如果当前日志不能记日志则不记录
             if (!IsAllowLog(log.Level))
@@ -144,6 +151,8 @@ namespace CSharp.Net.Util.Log
                 msg += string.IsNullOrEmpty(log.Message) ? "" : (log.Message + "\t");
                 msg += string.IsNullOrEmpty(log.Exception) ? "" : (log.Exception + "\t");
                 // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
+                var path = FileHelper.GetFilePath(Path.Combine(AppDomainHelper.GetRunRoot, "logs", log.Level.GetDescription().ToLower()), DateTime.Now.ToString(2) + ".log");
+                FileHelper.AppendWrittenFile(path, msg);
             }
             catch (Exception ex)
             {
@@ -172,8 +181,8 @@ namespace CSharp.Net.Util.Log
             if (AllowLogLists == null)
             {
                 AllowLogLists = new List<LogLevel>();
-                string logs = Log_Level.Trim();
-                if (logs == "*")
+                string logs = Log_Level?.Trim();
+                if (logs.IsNullOrEmpty() || logs == "*")
                 {
                     List<EnumItem> levels = EnumHelper.GetEnumItems(typeof(LogLevel));
                     foreach (var item in levels)

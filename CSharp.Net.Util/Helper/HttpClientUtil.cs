@@ -21,11 +21,20 @@ namespace CSharp.Net.Util
     public class HttpClientUtil
     {
         private static readonly HttpClient _httpClient = null;
-        static object _obj = new object();
+        private static object _obj = new object();
+
         /// <summary>
         /// 打印请求失败控制台日志
         /// </summary>
         public static bool PrintRequestErrorConsoleLog = false;
+        /// <summary>
+        /// 异常处理模式
+        /// </summary>
+        public static ThrowExceptionMode ThrowExceptionMode = ThrowExceptionMode.Default;
+        /// <summary>
+        /// 日志记录级别
+        /// </summary>
+        public static LogLevel LogLevel = LogLevel.None;
 
         static HttpClientUtil()
         {
@@ -58,13 +67,10 @@ namespace CSharp.Net.Util
                                else
                                {
                                    if ((SslPolicyErrors.RemoteCertificateNameMismatch & sslPolicyErrors) == SslPolicyErrors.RemoteCertificateNameMismatch)
-                                   {
                                        Console.WriteLine("HttpClientUtil:cert name not match: {0}.", sslPolicyErrors);
-                                   }
 
                                    if ((SslPolicyErrors.RemoteCertificateChainErrors & sslPolicyErrors) == SslPolicyErrors.RemoteCertificateChainErrors)
                                    {
-
                                        foreach (X509ChainStatus status in chain.ChainStatus)
                                        {
                                            Console.WriteLine("HttpClientUtil:status code = {0}.", status.Status);
@@ -74,11 +80,9 @@ namespace CSharp.Net.Util
                                    }
                                    Console.WriteLine("HttpClientUtil:cert check failed: {0}.", sslPolicyErrors);
                                }
-
                                return false;
                            }
                         };
-
                         _httpClient = new HttpClient(handler);
 #if NET6||NET7
                         //var socketsHttpHandler = new SocketsHttpHandler()
@@ -103,9 +107,13 @@ namespace CSharp.Net.Util
         /// <param name="dataDic">参数</param>
         /// <param name="headers">header</param>
         /// <param name="httpContentType"></param>
+        /// <param name="timeOutSecond">超时时间</param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static async Task<string> PostAsync(string url, Dictionary<string, string> dataDic = null, HttpContentType httpContentType = HttpContentType.JSON, Dictionary<string, string> headers = null, string encoding = "utf-8", int timeOutSecond = -1)
+        public static async Task<string> PostAsync(string url, Dictionary<string, string> dataDic = null,
+            HttpContentType httpContentType = HttpContentType.JSON, Dictionary<string, string> headers = null,
+            string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true)
         {
             string result = string.Empty;
             try
@@ -142,29 +150,22 @@ namespace CSharp.Net.Util
                 }
 
                 if ((httpContentType == HttpContentType.x_www_form_urlEncoded) && dataDic != null)
-                {
                     httpContent = new FormUrlEncodedContent(dataDic);
-                }
 
                 if (httpContentType == HttpContentType.JSON && dataDic != null)
-                {
-                    var pamstr = JsonHelper.Serialize(dataDic);
-                    httpContent = new StringContent(pamstr, Encoding.GetEncoding(encoding), "application/json");
-                }
+                    httpContent = new StringContent(JsonHelper.Serialize(dataDic), Encoding.GetEncoding(encoding), "application/json");
 
                 if (httpContentType == HttpContentType.QueryString && dataDic != null)
                 {
                     StringBuilder sb = new StringBuilder();
                     dataDic.ForEach(x => { if (!string.IsNullOrEmpty(x.Value)) sb.Append(x.Key).Append("=").Append(x.Value).Append("&"); });
 
-                    if (!url.Contains("?"))
-                        url += "?";
-                    if (url.Contains("&"))
-                        url += "&";
+                    if (!url.Contains("?")) url += "?";
+                    if (url.Contains("&")) url += "&";
 
                     url = $"{url}{sb.ToString().TrimEnd('&')}";
                 }
-
+                PrintRequestLog("post", url, dataDic);
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0)
                     cts.CancelAfter(timeOutSecond * 1000);
@@ -177,8 +178,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url);
-                throw ex;
+                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
             }
 
             return result;
@@ -192,8 +192,10 @@ namespace CSharp.Net.Util
         /// <param name="headers"></param>
         /// <param name="encoding"></param>
         /// <param name="timeOutSecond"></param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <returns></returns>
-        public static async Task<string> PostFileAsync(string url, List<PostFileDto> files, Dictionary<string, string> headers = null, string encoding = "utf-8", int timeOutSecond = -1)
+        public static async Task<string> PostFileAsync(string url, List<PostFileDto> files, Dictionary<string, string> headers = null,
+            string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true)
         {
             string result = string.Empty;
             try
@@ -228,7 +230,7 @@ namespace CSharp.Net.Util
                 //boundary.Value = boundary.Value.Replace("\"", string.Empty);
 
                 HttpContent httpContent = fromData;
-
+                PrintRequestLog("post file", url, "file");
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0)
                     cts.CancelAfter(timeOutSecond * 1000);
@@ -242,8 +244,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url);
-                throw ex;
+                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
             }
 
             return result;
@@ -268,14 +269,17 @@ namespace CSharp.Net.Util
         /// <param name="httpContentType"></param>
         /// <param name="headers"></param>
         /// <param name="encoding"></param>
+        /// <param name="timeOutSecond"></param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <returns></returns>
-        public static async Task<string> PostAsync(string url, string dataStr, HttpContentType httpContentType = HttpContentType.JSON, Dictionary<string, string> headers = null, string encoding = "utf-8", int timeOutSecond = -1)
+        public static async Task<string> PostAsync(string url, string dataStr,
+            HttpContentType httpContentType = HttpContentType.JSON, Dictionary<string, string> headers = null,
+            string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true)
         {
             string result = string.Empty;
             try
             {
                 SetHeader(headers);
-
                 HttpContent httpContent = null;
 
                 if (dataStr.IsHasValue() && httpContentType != HttpContentType.QueryString)
@@ -286,10 +290,11 @@ namespace CSharp.Net.Util
                 }
                 if (dataStr.IsHasValue() && httpContentType == HttpContentType.QueryString)
                 {
-                    if (!url.Contains("?") && !dataStr.StartsWith("?"))
-                        url += "?";
+                    if (!url.Contains("?") && !dataStr.StartsWith("?")) url += "?";
                     url = url + dataStr;
                 }
+
+                PrintRequestLog("post", url, dataStr);
 
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0)
@@ -303,8 +308,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url);
-                throw ex;
+                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
             }
 
             return result;
@@ -317,15 +321,16 @@ namespace CSharp.Net.Util
         /// <param name="headers"></param>
         /// <param name="prams"></param>
         /// <param name="timeOutSecond">default 5 second</param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, Dictionary<string, string> prams, Dictionary<string, string> headers = null, int timeOutSecond = 5)
+        public static async Task<string> GetAsync(string url, Dictionary<string, string> prams, Dictionary<string, string> headers = null, int timeOutSecond = 5, bool throwEx = true)
         {
             StringBuilder sb = new StringBuilder();
             if (prams != null)
             {
                 prams.ForEach(x => { if (!string.IsNullOrEmpty(x.Value)) sb.Append(x.Key).Append("=").Append(x.Value).Append("&"); });
             }
-            return await GetAsync(url, sb.ToString(), headers, timeOutSecond);
+            return await GetAsync(url, sb.ToString(), headers, timeOutSecond, throwEx);
         }
         /// <summary>
         /// http get
@@ -333,15 +338,18 @@ namespace CSharp.Net.Util
         /// <param name="url"></param>
         /// <param name="pramstr"></param>
         /// <param name="timeOutSecond">default 5 second</param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, string pramstr, int timeOutSecond = 5) => await GetAsync(url, pramstr, headers: null, timeOutSecond);
+        public static async Task<string> GetAsync(string url, string pramstr, int timeOutSecond = 5, bool throwEx = true) => await GetAsync(url, pramstr, headers: null, timeOutSecond, throwEx);
+
         /// <summary>
         /// http get
         /// </summary>
         /// <param name="url"></param>
         /// <param name="timeOutSecond"></param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, int timeOutSecond) => await GetAsync(url, null, timeOutSecond);
+        public static async Task<string> GetAsync(string url, int timeOutSecond, bool throwEx = true) => await GetAsync(url, null, timeOutSecond, throwEx);
 
         /// <summary>
         /// Get请求
@@ -350,8 +358,9 @@ namespace CSharp.Net.Util
         /// <param name="pramstr"></param>
         /// <param name="headers"></param>
         /// <param name="timeOutSecond">default 5 second</param>
+        /// <param name="throwEx">是否抛出异常</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeOutSecond = 5)
+        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeOutSecond = 5, bool throwEx = true)
         {
             string result = string.Empty;
             try
@@ -360,20 +369,16 @@ namespace CSharp.Net.Util
 
                 if (pramstr.IsHasValue())
                 {
-                    if (!url.Contains("?") && !pramstr.Contains("?"))
-                        url += "?";
-                    if (!url.Contains("?") && pramstr.Contains("?") && (!pramstr.StartsWith("?") || !pramstr.StartsWith("/")))
-                        url += "/";
-                    if (url.Contains("&") && !pramstr.StartsWith("&"))
-                        url += "&";
+                    if (!url.Contains("?") && !pramstr.Contains("?")) url += "?";
+                    if (!url.Contains("?") && pramstr.Contains("?") && (!pramstr.StartsWith("?") || !pramstr.StartsWith("/"))) url += "/";
+                    if (url.Contains("&") && !pramstr.StartsWith("&")) url += "&";
                     url = $"{url}{pramstr}";
                 }
 
+                PrintRequestLog("get", url);
+
                 CancellationTokenSource cts = new CancellationTokenSource();
-                if (timeOutSecond > 0)
-                {
-                    cts.CancelAfter(timeOutSecond * 1000);
-                }
+                if (timeOutSecond > 0) cts.CancelAfter(timeOutSecond * 1000);
 
                 using (var response = await _httpClient.GetAsync(url, cts.Token))
                 {
@@ -383,20 +388,26 @@ namespace CSharp.Net.Util
             }
             catch (TaskCanceledException ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url);
-                throw new TimeoutException();
+                DoPrintRequestErrorConsoleLog(new TimeoutException(), url, throwEx);
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url);
-                throw ex;
+                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
             }
 
             return result;
         }
 
+        /// <summary>
+        /// 发送数据
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="httpMethod"></param>
+        /// <param name="content"></param>
+        /// <returns></returns>
         public static async Task<HttpResponseDto> SendAsync(string url, HttpMethod httpMethod, HttpContent content)
         {
+            PrintRequestLog("send", url);
             HttpResponseDto ret = new HttpResponseDto();
             var request = new HttpRequestMessage(httpMethod, url);
             //request.Content = new FormUrlEncodedContent(kv);
@@ -418,8 +429,11 @@ namespace CSharp.Net.Util
             return ret;
         }
 
-
-        static void SetHeader(Dictionary<string, string> headers)
+        /// <summary>
+        /// 设置表头
+        /// </summary>
+        /// <param name="headers"></param>
+        private static void SetHeader(Dictionary<string, string> headers)
         {
             _httpClient.DefaultRequestHeaders.Clear();
 
@@ -429,10 +443,28 @@ namespace CSharp.Net.Util
             headers.ForEach(x => _httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
         }
 
-        static void DoPrintRequestErrorConsoleLog(Exception ex, string url)
+        /// <summary>
+        /// 打印日志
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="url"></param>
+        /// <param name="throwEx"></param>
+        private static void DoPrintRequestErrorConsoleLog(Exception ex, string url, bool throwEx)
         {
+            string msg = DateTime.Now.ToString(1) + ex.Message + url;
             if (PrintRequestErrorConsoleLog)
-                Console.WriteLine(ex.Message + url);
+                Console.WriteLine(msg);
+            if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw ex;
+            if (ThrowExceptionMode == ThrowExceptionMode.Always) throw ex;
+
+            if (LogLevel != LogLevel.None)
+                LogHelper.Fatal(nameof(HttpClientUtil), msg, ex);
+        }
+
+        private static void PrintRequestLog(string method, string url, object data = null)
+        {
+            if (LogLevel == LogLevel.None || LogLevel >= LogLevel.Info) return;
+            LogHelper.Debug(nameof(HttpClientUtil), $"{method},{url},data:{JsonHelper.Serialize(data)}");
         }
 
         #region Common Request
@@ -588,6 +620,7 @@ namespace CSharp.Net.Util
         //    FormData = 2
         //}
     }
+
     /// <summary>
     /// 上传文件
     /// </summary>
@@ -623,6 +656,25 @@ namespace CSharp.Net.Util
         /// StatusCode
         /// </summary>
         public string StatusCode { get; set; }
+    }
+
+    /// <summary>
+    /// 异常处理模式
+    /// </summary>
+    public enum ThrowExceptionMode
+    {
+        /// <summary>
+        /// 模式，使用函数参数
+        /// </summary>
+        Default,
+        /// <summary>
+        /// 始终抛出异常
+        /// </summary>
+        Always,
+        /// <summary>
+        /// 从不抛出异常
+        /// </summary>
+        Never
     }
 
     /***

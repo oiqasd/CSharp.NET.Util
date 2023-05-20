@@ -94,7 +94,7 @@ namespace CSharp.Net.Util.Aliyun.Oss
                     OssClient ossClient = OssManager.GetInstance(_model.AccessId, _model.AccessKey, _model.EndPoint);
                     ossClient.SetBucketAcl(_model.BucketName, CannedAccessControlList.PublicRead);
                     //将该文件流保存到OSS中
-                    var ret = ossClient.PutObject(_model.BucketName, dto.FileName, fs);
+                    var ret = ossClient.PutObject(_model.BucketName, Path.Combine(_model.Path, dto.FileName), fs);
                     var uri = ossClient.GeneratePresignedUri(_model.BucketName, dto.FileName);
                     dto.FilePath = $"{uri.Scheme}://{uri.Host}/{dto.FileName}";
                 }
@@ -111,7 +111,7 @@ namespace CSharp.Net.Util.Aliyun.Oss
         private string GenerateFileName(string filename)
         {
             var ext = Path.GetExtension(filename);
-            return $"{Utils.CreateOrderId()}{ext}";
+            return $"{Utils.GuidToLongID()}{ext}";
         }
 
         private Stream FileToStream(string fileName)

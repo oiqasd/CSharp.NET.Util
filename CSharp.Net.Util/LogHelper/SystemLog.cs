@@ -1,9 +1,9 @@
 ﻿using CSharp.Net.Util.NewtJson;
 using System;
 
-namespace CSharp.Net.Util.Log
+namespace CSharp.Net.Util
 {
-    public class SystemLog : ISystemLog
+    class SystemLog : ISystemLog
     {
         public SystemLog()
         {

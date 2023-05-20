@@ -7,6 +7,7 @@ namespace CSharp.Net.Util.Aliyun.Oss
 {
     /// <summary>
     /// OssManager对象
+    /// https://github.com/aliyun/aliyun-oss-csharp-sdk
     /// </summary>
     public class OssManager
     {

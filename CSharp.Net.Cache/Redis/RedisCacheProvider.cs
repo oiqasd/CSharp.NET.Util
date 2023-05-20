@@ -12,10 +12,10 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache.Redis
 {
-    internal class RedisCacheProvider : RedisCacheManager, IRedisCache
+    public class RedisCacheProvider : RedisCacheManager, IRedisCache
     {
 
-        public RedisCacheProvider(IOptions<RedisCacheOptions> optionsAccessor) : base(optionsAccessor)
+        public RedisCacheProvider(IOptions<RedisCacheOptions> options) : base(options)
         {
 
         }

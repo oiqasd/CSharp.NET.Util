@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace CSharp.Net.Util.Log
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 程序操作日志
     /// </summary>
-    public interface ISystemLog
+    interface ISystemLog
     {
         /// <summary>
         /// 事务ID

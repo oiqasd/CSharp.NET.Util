@@ -1,5 +1,4 @@
-﻿using CSharp.Net.Util.NewtJson;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ using System.Threading;
 
 namespace CSharp.Net.Cache.Redis
 {
-    internal class RedisCacheManager : IDisposable
+    public class RedisCacheManager : IDisposable
     {
 
         protected volatile IConnectionMultiplexer _connection;
@@ -24,18 +23,18 @@ namespace CSharp.Net.Cache.Redis
         //多库配置
         //private readonly ConcurrentDictionary<string, Lazy<IConnectionMultiplexer>> ConnectionCache = new ConcurrentDictionary<string, Lazy<IConnectionMultiplexer>>();
 
-        public RedisCacheManager(IOptions<RedisCacheOptions> optionsAccessor)
+        public RedisCacheManager(IOptions<RedisCacheOptions> options)
         {
             try
             {
                 Monitor.Enter(this);
 
-                if (optionsAccessor == null)
+                if (options == null)
                 {
-                    throw new ArgumentNullException(nameof(optionsAccessor));
+                    throw new ArgumentNullException(nameof(options));
                 }
 
-                _options = optionsAccessor.Value;
+                _options = options.Value;
                 _instance = _options.InstanceName ?? string.Empty;
 
                 Connect();
@@ -185,7 +184,7 @@ namespace CSharp.Net.Cache.Redis
             }
             return keys;
         }
-         
+
         /// <summary>
         /// 删除当前数据库所有key
         /// </summary>

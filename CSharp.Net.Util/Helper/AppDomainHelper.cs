@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -150,6 +151,7 @@ namespace CSharp.Net.Util
             //if (gc == 2) GC.Collect(GC.MaxGeneration);
             return sb.ToString();
         }
+
         /// <summary>
         /// 获取当前服务器IP
         /// </summary>
@@ -272,5 +274,36 @@ namespace CSharp.Net.Util
         //docker ps
         //4.安装 ssh client： #更新源:apt-get update -y   #安装:apt-get install openssh-client -y
 
+        /// <summary>
+        /// 获取AppDomain下所有程序集
+        /// </summary>
+        /// <returns></returns>
+        public static List<Assembly> GetAssemblies()
+        {
+            Action<Assembly, List<Assembly>> action = null;
+            action = new Action<Assembly, List<Assembly>>((assembly, _list) =>
+            {
+                assembly.GetReferencedAssemblies().ForEach(a =>
+                {
+                    var ass = Assembly.Load(a);
+                    if (!_list.Contains(ass))
+                    {
+                        _list.Add(ass);
+                    }
+                });
+            });
+
+            var list = new List<Assembly>();
+            AppDomain.CurrentDomain.GetAssemblies().ForEach(assembly =>
+            {
+                if (list.Contains(assembly))
+                    return;
+
+                list.Add(assembly);
+
+                //action(assembly, list);
+            });
+            return list;
+        }
     }
 }
