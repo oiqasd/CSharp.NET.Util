@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace CSharp.Net.Util.Validate
 {
@@ -16,7 +11,7 @@ namespace CSharp.Net.Util.Validate
         int Max { get; set; }
         int Min { get; set; }
 
-        public IntAttribute(int max = int.MaxValue, int min = int.MinValue)
+        public IntAttribute(int max = 99999999, int min = 0)
         {
             this.Min = min;
             this.Max = max;

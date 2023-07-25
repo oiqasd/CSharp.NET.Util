@@ -1,4 +1,6 @@
 ﻿using CSharp.Net.Util;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
@@ -64,5 +66,17 @@ public static class DictionaryExtension
         var sdValue = sd.GetValue(key);
         var retValue = ConvertHelper.ConvertTo(sdValue, defaultValue);
         return retValue;
+    }
+
+    /// <summary>
+    /// Dictionary排序
+    /// </summary>
+    /// <param name="dictionary"></param>
+    /// <returns>ArgumentNullException</returns>
+    public static SortedDictionary<TKey,TValue> Sort<TKey, TValue>(this IDictionary<TKey, TValue> dictionary)
+    {
+        if (dictionary == null) 
+            throw new ArgumentNullException("dictionary");
+        return new SortedDictionary<TKey, TValue>(dictionary);
     }
 }

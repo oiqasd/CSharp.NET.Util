@@ -1,4 +1,5 @@
-﻿using CSharp.Net.Cache.Memory;
+﻿using CSharp.Net.Cache;
+using CSharp.Net.Cache.Memory;
 using CSharp.Net.Cache.Redis;
 using CSharp.Net.Util;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,9 +48,7 @@ public static class CSharpNetCacheServiceCollectionExtensions
         {
             throw new ArgumentNullException(nameof(services));
         }
-
         services.Add(ServiceDescriptor.Singleton<IMemoryCache, MemoryCacheProvider>());
-
         return services;
     }
 }
@@ -76,20 +75,21 @@ class RedisPreHoldService : BackgroundService
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-//#pragma warning disable CS4014
-//        Task.Factory.StartNew(async () =>
-//        {
-//            while (true)
-//            {
-//                Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
-//                AppDomainHelper.GetThreadPoolStats();
+        /**
+#pragma warning disable CS4014
+        Task.Factory.StartNew(async () =>
+        {
+            while (true)
+            {
+                Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
+                AppDomainHelper.GetThreadPoolStats();
 
-//                await Task.Delay(1000 * 3);
-//            }
-//        }, TaskCreationOptions.LongRunning);
-//#pragma warning restore CS4014
-//        return;
-
+                await Task.Delay(1000 * 3);
+            }
+        }, TaskCreationOptions.LongRunning);
+#pragma warning restore CS4014
+        return;
+        **/
         if (!stoppingToken.IsCancellationRequested)
         {
             timer = new Timer(call =>
@@ -112,7 +112,6 @@ class RedisPreHoldService : BackgroundService
         }
 
         await Task.CompletedTask;
-
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)

@@ -28,9 +28,43 @@ namespace CSharp.Net.Cache.Redis
 
         public int Count => GetAllKeys().Count;
 
+        private static readonly object _lockObj = new object();
+
         #region String
 
         #region 同步方法
+
+        /// <summary>
+        /// 获取或添加key
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="func"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) where T : new()
+        {
+            var value = StringGet<T>(key);
+            if (value != null)
+            {
+                return value;
+            }
+            lock (_lockObj)
+            {
+                value = StringGet<T>(key);
+                if (value != null)
+                {
+                    return value;
+                }
+                value = func().Result;
+                if (value != null)
+                {
+                    StringSet(key, value, expiry);
+                }
+            }
+            return value;
+        }
+
         /// <summary>
         /// 获取或添加key
         /// </summary>
@@ -38,17 +72,16 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="defaultValue"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public string GetOrCreate(string key, string defaultValue, int seconds = 30)
+        public string GetOrSet(string key, string defaultValue, int seconds = 30)
         {
             if (_db.KeyExists(key))
                 return StringGet(key);
 
-            if (LockTake("lck_" + key))
+            //if (LockTake("lck_" + key))
+            lock (_lockObj)
             {
-
+                StringSet(key, defaultValue, seconds);
             }
-
-            StringSet(key, defaultValue, seconds);
             return defaultValue;
         }
 
@@ -104,29 +137,13 @@ namespace CSharp.Net.Cache.Redis
         /// <summary>
         /// 保存一个对象
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="obj"></param>
         /// <param name="cacheSeconds"></param>
-        /// <param name="isSliding"></param>
         /// <returns></returns>
-        public bool StringSet<T>(string key, T obj, int cacheSeconds = 0, bool isSliding = true) where T : new()
+        public bool StringSet(string key, object obj, int cacheSeconds = 0)
         {
             return StringSet(key, Serialize(obj), cacheSeconds);
-        }
-
-        /// <summary>
-        /// 批量添加 无过期时间
-        /// </summary>
-        public bool StringSet(Dictionary<string, string> keyValues)
-        {
-            if (keyValues == null || keyValues.Count <= 0)
-                throw new ArgumentNullException(nameof(keyValues));
-
-            List<KeyValuePair<RedisKey, RedisValue>> newkeyValues =
-              keyValues.Select(p => new KeyValuePair<RedisKey, RedisValue>(PrefixKey(p.Key), p.Value)).ToList();
-
-            return Do(db => db.StringSet(newkeyValues.ToArray()));
         }
 
         /// <summary>
@@ -135,7 +152,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="keyValues"></param>
         /// <param name="cacheSeconds"></param>
         /// <returns></returns>
-        public bool StringSet(Dictionary<string, string> keyValues, int cacheSeconds)
+        public bool StringSet(Dictionary<string, string> keyValues, int cacheSeconds = 0)
         {
             if (keyValues == null || keyValues.Count <= 0)
                 throw new ArgumentNullException(nameof(keyValues));
@@ -143,11 +160,17 @@ namespace CSharp.Net.Cache.Redis
             if (cacheSeconds <= 0)
                 return StringSet(keyValues);
 
+            /**
+            List<KeyValuePair<RedisKey, RedisValue>> newkeyValues =
+            keyValues.Select(p => new KeyValuePair<RedisKey, RedisValue>(PrefixKey(p.Key), p.Value)).ToList();
+            return Do(db => db.StringSet(newkeyValues.ToArray()));
+             */
+
             var batch = _db.CreateBatch();
             Parallel.ForEach(keyValues, str =>
             {
                 if (str.Value == null) return;
-                batch.StringSetAsync(str.Key, str.Value, TimeSpan.FromSeconds(cacheSeconds));
+                batch.StringSetAsync(str.Key, str.Value, cacheSeconds > 0 ? TimeSpan.FromSeconds(cacheSeconds) : TimeSpan.FromSeconds(-1));
             });
             batch.Execute();
 

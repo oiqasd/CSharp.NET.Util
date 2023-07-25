@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace CSharp.Net.Util.Validate
 {
@@ -13,7 +7,6 @@ namespace CSharp.Net.Util.Validate
     /// </summary>
     public class MobileAttribute : BaseValidateAttribute
     {
-
         public override bool ValidateAction(object value, PropertyInfo property)
         {
             if (value == null)

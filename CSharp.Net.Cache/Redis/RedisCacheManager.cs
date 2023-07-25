@@ -45,7 +45,6 @@ namespace CSharp.Net.Cache.Redis
             }
         }
 
-
         private void Connect()
         {
             CheckDisposed();

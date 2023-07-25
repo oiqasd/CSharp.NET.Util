@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 
@@ -447,7 +448,7 @@ namespace CSharp.Net.Util
         /// 将对象属性转换为key-value对
         /// </summary>
         /// <returns></returns>
-        public static SortedDictionary<string, object> EntityToMap(object t)
+        public static SortedDictionary<string, object> EntityToMap<T>(T t) where T : new()
         {
             SortedDictionary<string, object> map = new SortedDictionary<string, object>();
             Type type = t.GetType();
@@ -494,6 +495,20 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 对象拷贝
         /// </summary>
+        /// <typeparam name="Tsource">源</typeparam>
+        /// <typeparam name="Ttarget">目标</typeparam>
+        /// <param name="source"></param>
+        public static Ttarget MapObject<Tsource, Ttarget>(Tsource source) where Ttarget : new()
+        {
+            if (source == null) throw new ArgumentNullException("source can't be null");
+            Ttarget target = new Ttarget();
+            MapObject(source, target);
+            return target;
+        }
+
+        /// <summary>
+        /// 对象拷贝
+        /// </summary>
         /// <typeparam name="Ttarget">目标</typeparam>
         /// <param name="source">源</param>
         public static Ttarget MapObject<Ttarget>(object source) where Ttarget : new()
@@ -513,7 +528,30 @@ namespace CSharp.Net.Util
                     targetProperty.SetValue(target, sourceProperty.GetValue(source));
                 }
             }
+            return target;
+        }
 
+        /// <summary>
+        /// 对象拷贝
+        /// </summary>
+        /// <typeparam name="Ttarget">目标</typeparam>
+        /// <param name="source">源</param>
+        public static Ttarget MapObject<Ttarget>(Ttarget source) where Ttarget : new()
+        {
+            if (source == null) throw new ArgumentNullException("source can't be null");
+
+            Type targetType = typeof(Ttarget);
+            PropertyInfo[] sourceProperties = targetType.GetProperties();
+            Ttarget target = new Ttarget();
+
+            foreach (var sourceProperty in sourceProperties)
+            {
+                PropertyInfo targetProperty = targetType.GetProperty(sourceProperty.Name);
+                if (targetProperty.CanWrite)
+                {
+                    targetProperty.SetValue(target, sourceProperty.GetValue(source));
+                }
+            }
             return target;
         }
 
@@ -524,7 +562,7 @@ namespace CSharp.Net.Util
         /// <typeparam name="Ttarget"></typeparam>
         /// <param name="source"></param>
         /// <param name="target"></param>
-        public static void MapObjects<Tsource, Ttarget>(List<Tsource> source, List<Ttarget> target)
+        public static void MapObjects<Tsource, Ttarget>(IEnumerable<Tsource> source, List<Ttarget> target)
         {
             if (source.IsNullOrEmpty()) throw new ArgumentNullException("source can't be null");
             if (target == null) target = new List<Ttarget>();
@@ -554,16 +592,29 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 对象列表拷贝
         /// </summary>
+        /// <typeparam name="Tsource"></typeparam>
         /// <typeparam name="Ttarget"></typeparam>
         /// <param name="source"></param>
-        public static List<Ttarget> MapObjects<Ttarget>(List<object> source)
+        public static IEnumerable<Ttarget> MapObjects<Tsource, Ttarget>(IEnumerable<Tsource> source)
+        {
+            if (source.IsNullOrEmpty()) throw new ArgumentNullException("source can't be null");
+            var target = new List<Ttarget>();
+            MapObjects(source.ToList(), target);
+            return target;
+        }
+
+        /// <summary>
+        /// 对象列表拷贝
+        /// </summary>
+        /// <typeparam name="Ttarget"></typeparam>
+        /// <param name="source"></param>
+        public static IEnumerable<Ttarget> MapObjects<Ttarget>(IEnumerable<Ttarget> source)
         {
             if (source.IsNullOrEmpty()) throw new ArgumentNullException("source can't be null");
             List<Ttarget> target = new List<Ttarget>();
 
             Type targetType = typeof(Ttarget);
-            Type sourceType = source[0].GetType();
-            PropertyInfo[] sourceProperties = sourceType.GetProperties();
+            PropertyInfo[] sourceProperties = targetType.GetProperties();
 
             foreach (var sourceItem in source)
             {
@@ -578,7 +629,6 @@ namespace CSharp.Net.Util
                 }
                 target.Add(targetItem);
             }
-
             return target;
         }
     }

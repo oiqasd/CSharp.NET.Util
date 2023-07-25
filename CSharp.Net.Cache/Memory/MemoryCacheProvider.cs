@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CSharp.Net.Util;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 
 namespace CSharp.Net.Cache.Memory
 {
@@ -42,14 +44,38 @@ namespace CSharp.Net.Cache.Memory
             return _cache.Get(key);
         }
 
-
+        /// <summary>
+        /// 获取或添加key
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="func"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) where T : new()
+        {
+            return _cache.GetOrCreate<T>(key, c =>
+            {
+                var data = func().Result;
+                //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
+                c.AbsoluteExpiration = TimeSpanToTimeOffset(expiry);
+                c.SetValue(data);
+                return data;
+            });
+        }
+        DateTimeOffset? TimeSpanToTimeOffset(TimeSpan? expiry)
+        {
+            if (!expiry.HasValue)
+                return null;
+            return DateTimeOffset.Now.AddSeconds(expiry.Value.TotalSeconds);
+        }
         /// <summary>
         /// 获取或创建一个key
         /// </summary>
         /// <param name="key">key</param>
         /// <param name="defaultValue">不存在则使用该值创建</param>
         /// <returns></returns>
-        public string GetOrCreate(string key, string defaultValue, int seconds = 30)
+        public string GetOrSet(string key, string defaultValue, int seconds = 30)
         {
             return _cache.GetOrCreate<string>(key, c =>
             {
@@ -130,62 +156,6 @@ namespace CSharp.Net.Cache.Memory
         }
 
         /// <summary>
-        /// 删除匹配到的缓存
-        /// </summary>
-        /// <param name="pattern"></param>
-        /// <returns></returns>
-        public void RemoveStartWith(string pattern)
-        {
-            IList<string> keys = SearchCachePre(x => x.StartsWith(pattern));
-            foreach (var s in keys)
-            {
-                Remove(s);
-            }
-        }
-
-        /// <summary>
-        /// 搜索匹配到的缓存
-        /// </summary>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        IList<string> SearchCachePre(Func<string, bool> predicate)
-        {
-            var cacheKeys = GetCacheKeys();
-            var l = cacheKeys.Where(predicate).ToList();
-            return l.AsReadOnly();
-        }
-
-        /// <summary>
-        /// 搜索匹配到的缓存
-        /// </summary>
-        /// <param name="pattern"></param>
-        /// <returns></returns>
-        public IList<string> SearchCacheRegex(string pattern)
-        {
-            var cacheKeys = GetCacheKeys();
-            var l = cacheKeys.Where(k => Regex.IsMatch(k, pattern)).ToList();
-            return l.AsReadOnly();
-        }
-
-        /// <summary>
-        /// 获取所有缓存键
-        /// </summary>
-        /// <returns></returns>
-        private List<string> GetCacheKeys()
-        {
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
-            var entries = _cache.GetType().GetField("_entries", flags).GetValue(_cache);
-            var cacheItems = entries as IDictionary;
-            var keys = new List<string>();
-            if (cacheItems == null) return keys;
-            foreach (DictionaryEntry cacheItem in cacheItems)
-            {
-                keys.Add(cacheItem.Key.ToString());
-            }
-            return keys;
-        }
-
-        /// <summary>
         /// 通过值获取所有的Key,
         /// </summary>
         /// <param name="value"></param>
@@ -218,9 +188,9 @@ namespace CSharp.Net.Cache.Memory
             return true;
         }
 
-        public bool StringSet<T>(string key, T obj, int cacheSeconds = 0, bool isSliding = true) where T : new()
+        public bool StringSet(string key, object obj, int cacheSeconds = 0)
         {
-            Add(key, obj, cacheSeconds, isSliding);
+            Add(key, obj, cacheSeconds);
             return true;
         }
 
@@ -235,9 +205,17 @@ namespace CSharp.Net.Cache.Memory
             return true;
         }
 
+        /// <summary>
+        /// 匹配删除
+        /// </summary>
+        /// <param name="pattern"></param>
         public void KeyDeleteStartWith(string pattern)
         {
-            RemoveStartWith(pattern);
+            IList<string> keys = SearchCachePre(x => x.StartsWith(pattern));
+            foreach (var s in keys)
+            {
+                Remove(s);
+            }
         }
 
         public bool KeyExists(string key)
@@ -250,153 +228,145 @@ namespace CSharp.Net.Cache.Memory
             RemoveAll();
         }
 
+        /// <summary>
+        /// 匹配查询
+        /// </summary>
+        /// <param name="pattern"></param>
+        /// <param name="removePrefix"></param>
+        /// <returns></returns>
         public string[] QueryStartWith(string pattern, bool removePrefix = true)
         {
-            throw new NotImplementedException();
+            IList<string> keys = SearchCachePre(x => x.StartsWith(pattern));
+            if (keys.IsNullOrEmpty()) return null;
+            return keys.ToArray();
         }
 
-        public bool SetAdd<T>(string key, T value, TimeSpan? timeSpan)
+        public bool SetAdd<T>(string key, T value, TimeSpan? timeSpan= null)
         {
-            throw new NotImplementedException();
+            if (value == null) return false;
+            var data = _cache.Get<List<T>>(key) ?? new List<T>();
+            data.Add(value);
+            var options = timeSpan.HasValue ? new MemoryCacheEntryOptions().SetAbsoluteExpiration(timeSpan.Value) : null;
+            _cache.Set(key, data, options);
+            return true;
         }
         public bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan)
         {
-            throw new NotImplementedException();
+            if (value.IsNullOrEmpty()) return false;
+            var data = _cache.Get<List<T>>(key) ?? new List<T>();
+            data.AddRange(value);
+            var options = timeSpan.HasValue ? new MemoryCacheEntryOptions().SetAbsoluteExpiration(timeSpan.Value) : null;
+            _cache.Set(key, data, options);
+            return true;
         }
         public long SetRemove<T>(string key, params T[] value)
         {
-            throw new NotImplementedException();
+            if (value.IsNullOrEmpty()) return 0;
+            var data = _cache.Get<List<T>>(key);
+            if (data.IsNullOrEmpty()) return 0;
+
+            var newdata = data.Where(x => !value.Contains(x)).ToList();
+            _cache.Set(key, newdata);
+            return data.Count - newdata.Count;
         }
 
         public List<T> SetMembers<T>(string key)
         {
-            throw new NotImplementedException();
+            var data = _cache.Get<List<T>>(key);
+            return data;
         }
 
         public T SetRandomMember<T>(string key)
         {
-            throw new NotImplementedException();
+            var data = _cache.Get<List<T>>(key);
+            if (data.IsNullOrEmpty()) return default(T);
+
+            return data[Utils.GetRandom(0, data.Count)];
         }
 
         public List<T> SetRandomMembers<T>(string key, long count = 1)
         {
-            throw new NotImplementedException();
+            var data = _cache.Get<List<T>>(key);
+            if (data.IsNullOrEmpty()) return null;
+            if (count < 1) count = 1;
+            if (count >= data.Count) return data;
+
+            if ((data.Count / count) <= 10)
+            {
+                data = Utils.GetRandomList(data).Take((int)count).ToList();
+                return data;
+            }
+
+            return GetRandomMembers(data, (int)count).ToList();
+        }
+        IEnumerable<T> GetRandomMembers<T>(List<T> data, int count)
+        {
+            int[] tmps = new int[count];
+            for (int i = 0; i < count; i++)
+            {
+                var r = Utils.GetRandom(0, data.Count) + 1;
+                if (tmps.Contains(r))
+                {
+                    count--;
+                    continue;
+                }
+                tmps[i] = r;
+                yield return data[r - 1];
+            }
         }
 
         public bool SetContains<T>(string key, T value)
         {
-            throw new NotImplementedException();
+            var data = _cache.Get<List<T>>(key);
+            if (data.IsNullOrEmpty()) return false;
+            if (data.Contains(value)) return true;
+            return false;
         }
 
-        public T SetPop<T>(string key)
+        #region private
+
+        /// <summary>
+        /// 搜索匹配到的缓存
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        IList<string> SearchCachePre(Func<string, bool> predicate)
         {
-            throw new NotImplementedException();
+            var cacheKeys = GetCacheKeys();
+            var l = cacheKeys.Where(predicate).ToList();
+            return l.AsReadOnly();
         }
 
-        public List<T> SetPop<T>(string key, long count)
+        /// <summary>
+        /// 搜索匹配到的缓存
+        /// </summary>
+        /// <param name="pattern"></param>
+        /// <returns></returns>
+        public IList<string> SearchCacheRegex(string pattern)
         {
-            throw new NotImplementedException();
+            var cacheKeys = GetCacheKeys();
+            var l = cacheKeys.Where(k => Regex.IsMatch(k, pattern)).ToList();
+            return l.AsReadOnly();
         }
 
-        public long SetLength(string key)
+        /// <summary>
+        /// 获取所有缓存键
+        /// </summary>
+        /// <returns></returns>
+        List<string> GetCacheKeys()
         {
-            throw new NotImplementedException();
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+            var entries = _cache.GetType().GetField("_entries", flags).GetValue(_cache);
+            var cacheItems = entries as IDictionary;
+            var keys = new List<string>();
+            if (cacheItems == null) return keys;
+            foreach (DictionaryEntry cacheItem in cacheItems)
+            {
+                keys.Add(cacheItem.Key.ToString());
+            }
+            return keys;
         }
-
-        public Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<long> SetRemoveAsync<T>(string key, params T[] value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<T>> SetMembersAsync<T>(string key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<T> SetRandomMemberAsync<T>(string key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<T>> SetRandomMembersAsync<T>(string key, long count = 1)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> SetContainsAsync<T>(string key, T value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<T> SetPopAsync<T>(string key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<T>> SetPopAsync<T>(string key, long count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<long> SetLengthAsync(string key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Subscribe(string subChannel, Action<string> action)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Subscribe(string subChannel)
-        {
-            throw new NotImplementedException();
-        }
-
-        public long Publish<T>(string channel, T msg)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Unsubscribe(string channel)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void UnsubscribeAll()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task SubscribeAsync(string subChannel, Func<string, Task> action)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<T> SetUnion<T>(params string[] key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<T> SetIntersect<T>(params string[] key)
-        {
-            throw new NotImplementedException();
-        }
-
-        public List<T> SetDifference<T>(params string[] key)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
     }
 }
 

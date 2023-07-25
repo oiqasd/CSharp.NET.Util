@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -42,7 +44,7 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="number">号码</param>
         /// <returns></returns>
-        public static bool CheckMobilPhone(string number)
+        public static bool CheckMobilePhone(string number)
         {
             string str = @"^1[\d]{10}$";
             string str1 = @"^([0-9]{3,4}-)?[0-9]{7,8}$";
@@ -116,7 +118,7 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 落验证身份证号
+        /// 校验证身份证号
         /// 推荐使用IDCardHelper.CheckIDCard
         /// </summary>
         /// <param name="cardno"></param>
@@ -192,29 +194,32 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 验证密码的正确性
-        /// 密码长度6-16位，不能输入除字母和数字以外的字符，且必须包含数字和字母
+        /// 验证密码
         /// </summary>
-        public static bool CheckPwd(string pwd, out string strouput)
+        /// <param name="pwd"></param>
+        /// <param name="strong"><para>校验强弱</para>
+        /// <para>默认 False：6-16位,不能输入除字母和数字以外的字符，且必须包含数字和字母</para>
+        /// True：8-16位,数字+字母+特殊符号组合
+        /// </param>
+        /// <returns>True:校验成功，False:失败 <para>ArgumentNullException</para></returns>
+        public static bool CheckPwd(string pwd, bool strong = false)
         {
-            strouput = string.Empty;
-            bool flag = true;
             if (string.IsNullOrEmpty(pwd))
             {
-                flag = false;
-                strouput = "密码不能为空";
+                throw new ArgumentNullException("密码不能为空");
             }
             else
             {
-
-                Regex regex = new Regex("^(?=.*?[a-zA-Z])(?=.*?[0-9])[a-zA-Z0-9]{6,16}$");
+                string strRgx = string.Empty;
+                if (!strong) strRgx = "^(?=.*?[a-zA-Z])(?=.*?[0-9])[a-zA-Z0-9]{6,16}$";
+                else strRgx = "^(?=.*?[a-zA-Z])(?=.*?[0-9])(?=.*?[^\\w\\s]).{8,16}$";
+                Regex regex = new Regex(strRgx);
                 if (!regex.IsMatch(pwd))
                 {
-                    flag = false;
-                    strouput = "密码长度6-16位，不能输入除字母和数字以外的字符，且必须包含数字和字母。";
+                    return false;
                 }
             }
-            return flag;
+            return true;
         }
 
         /// <summary>
@@ -222,7 +227,7 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static List<string> GetHangZiList(string text)
+        public static List<string> GetHanZiList(string text)
         {
             List<string> list = new List<string>();
             var regex = new Regex(@"[\u4e00-\u9fa5]+");
@@ -231,6 +236,20 @@ namespace CSharp.Net.Util
                 list.Add(str.ToString());
             }
             return list;
+        }
+
+        /// <summary>
+        /// QueryString转Dictionany
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns>value需自行转码,如:HttpUtility.UrlDecode(Value) <para>空返回NULL</para></returns>
+        public static Dictionary<string, object> QueryStringToDictionany(string value)
+        {
+            if (string.IsNullOrEmpty(value)) { return null; }
+            var data = Regex.Matches(value, "([^?=&]+)(=([^&]*))?")
+                            .Cast<Match>()
+                            .ToDictionary(x => x.Groups[1].Value, x => (object)x.Groups[3].Value);
+            return data;
         }
     }
 }

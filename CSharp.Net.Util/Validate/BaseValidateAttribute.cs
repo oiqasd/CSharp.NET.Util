@@ -13,7 +13,6 @@ namespace CSharp.Net.Util.Validate
         /// </summary>
         public string ErrorMessage { get; set; }
 
-
         /// <summary>
         /// 执行验证
         /// </summary>
@@ -21,7 +20,6 @@ namespace CSharp.Net.Util.Validate
         /// <param name="property">对应的属性对象</param>
         /// <returns></returns>
         public abstract bool ValidateAction(object value, PropertyInfo property);
-
 
     }
 }

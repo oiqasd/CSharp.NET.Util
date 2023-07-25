@@ -201,46 +201,42 @@ namespace CSharp.Net.Util
             try
             {
                 SetHeader(headers);
-                var fromData = new MultipartFormDataContent("----" + Guid.NewGuid().ToString().Replace("-", ""));
-
-                foreach (var f in files)
+                using (var fromData = new MultipartFormDataContent())//"----" + Guid.NewGuid().ToString().Replace("-", "")
                 {
-                    int len = (int)f.Stream.Length;
+                    foreach (var f in files)
+                    {
+                        int len = (int)f.Stream.Length;
+                        byte[] bt = new byte[len];
+                        //byte[] bt = ArrayPool<byte>.Shared.Rent(len);
+                        f.Stream.Read(bt, 0, len);
 
-                    //byte[] bt = new byte[len];
-                    byte[] bt = ArrayPool<byte>.Shared.Rent(len);
-                    f.Stream.Read(bt, 0, len);
+                        var fileContent = new ByteArrayContent(bt);
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(f.ContentType);
 
-                    var fileContent = new ByteArrayContent(bt);
-                    fileContent.Headers.ContentType = new MediaTypeHeaderValue(f.ContentType);
+                        //解决中文乱码
+                        var hv = $"form-data; name=\"file\"; filename=\"{f.FileName}\"";
+                        byte[] bdis = Encoding.GetEncoding(encoding).GetBytes(hv);
+                        hv = "";
+                        foreach (byte b in bdis)
+                            hv += (char)b;
 
-                    //解决中文乱码
-                    var hv = $"form-data; name=\"file\"; filename=\"{f.FileName}\"";
-                    byte[] bdis = Encoding.GetEncoding(encoding).GetBytes(hv);
-                    hv = "";
-                    foreach (byte b in bdis)
-                        hv += (char)b;
+                        fileContent.Headers.Add("Content-Disposition", hv);
+                        fromData.Add(fileContent, f.FileName, f.FileName);
 
-                    fileContent.Headers.Add("Content-Disposition", hv);
-                    fromData.Add(fileContent, f.FileName, f.FileName);
+                        //ArrayPool<byte>.Shared.Return(bt, true);
+                    }
+                    HttpContent httpContent = fromData;
+                    PrintRequestLog("post file", url, "file");
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    if (timeOutSecond > 0)
+                        cts.CancelAfter(timeOutSecond * 1000);
 
-                    ArrayPool<byte>.Shared.Return(bt, true);
+                    using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent, cts.Token))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        result = await response.Content.ReadAsStringAsync();
+                    }
                 }
-                //var boundary = fromData.Headers.ContentType.Parameters.Single(p => p.Name == "boundary");
-                //boundary.Value = boundary.Value.Replace("\"", string.Empty);
-
-                HttpContent httpContent = fromData;
-                PrintRequestLog("post file", url, "file");
-                CancellationTokenSource cts = new CancellationTokenSource();
-                if (timeOutSecond > 0)
-                    cts.CancelAfter(timeOutSecond * 1000);
-
-                using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent, cts.Token))
-                {
-                    response.EnsureSuccessStatusCode();
-                    result = await response.Content.ReadAsStringAsync();
-                }
-
             }
             catch (Exception ex)
             {
@@ -632,7 +628,8 @@ namespace CSharp.Net.Util
         public string FileName { get; set; }
         /// <summary>
         /// image/jpeg
-        /// if (!new FileExtensionContentTypeProvider().Mappings.TryGetValue(Path.GetExtension(f.FileName), out var contenttype)) throw new Exception("文件格式不存在");
+        /// if (!new FileExtensionContentTypeProvider().Mappings.TryGetValue(Path.GetExtension(f.FileName), out var contenttype)) 
+        /// throw new Exception("文件格式不存在");
         /// </summary>
         public string ContentType { get; set; }
         /// <summary>

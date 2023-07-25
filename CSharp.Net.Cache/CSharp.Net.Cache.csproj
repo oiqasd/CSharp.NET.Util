@@ -4,9 +4,9 @@
 		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Cache</PackageId>
 		<!--<PackageVersion>2.2</PackageVersion>-->
-		<Authors>Yes</Authors>
+		<Authors>Utiler</Authors>
 		<Description>memorycache;redis</Description>
-		<Version>5.1.10</Version>
+		<Version>5.1.12</Version>
 		<Copyright></Copyright>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>

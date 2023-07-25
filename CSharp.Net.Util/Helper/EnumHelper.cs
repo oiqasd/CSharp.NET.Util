@@ -80,7 +80,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 通过字符串获取枚举成员实例
         /// </summary>
-        /// <typeparam name="T">枚举名,比如Enum1</typeparam>
+        /// <typeparam name="TEnum">枚举名,比如Enum1</typeparam>
         /// <param name="member">枚举成员的常量名或常量值,
         /// 范例:Enum1枚举有两个成员A=0,B=1,则传入"A"或"0"获取 Enum1.A 枚举类型</param>
         public static TEnum GetInstance<TEnum>(string member)
@@ -121,10 +121,10 @@ namespace CSharp.Net.Util
 
             //获取枚举实例
             T instance = GetInstance<T>(memberName);
-
-            //获取枚举成员的值
-            return ConvertHelper.ConvertTo(underlyingType, instance);
+            var da = Convert.ChangeType(instance, underlyingType);
+            return da;
         }
+
         #endregion
 
         #region 获取枚举的基础类型
@@ -154,31 +154,24 @@ namespace CSharp.Net.Util
         #region 获取Enum集合
 
         /// <summary>
-        /// 获得某个Enum类型的绑定列表
+        /// 获得Enum类型的绑定列表
         /// </summary>
         /// <param name="enumType">枚举的类型，例如：typeof(Sex)</param>
-        /// <returns>
-        /// 返回一个DataTable
-        /// DataTable 有两列： "Text" : System.String;
-        ///                    "Value": System.Char
-        /// </returns>
-        public static DataTable GetEnumList(Type enumType)
+        /// <param name="preferDescriptionForKey">是否优先取Description描述作为key</param>
+        /// <returns></returns>
+        public static Dictionary<string, object> GetEnumList(Type enumType, bool preferDescriptionForKey = false)
         {
             if (enumType.IsEnum != true)
             {    //不是枚举的要报错
                 throw new InvalidOperationException();
             }
 
-            //建立DataTable的列信息
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Text", typeof(System.String));
-            dt.Columns.Add("Value", typeof(System.String));
-
+            Dictionary<string, object> data = new Dictionary<string, object>();
             //获得特性Description的类型信息
             Type typeDescription = typeof(DescriptionAttribute);
 
             //获得枚举的字段信息（因为枚举的值实际上是一个static的字段的值）
-            System.Reflection.FieldInfo[] fields = enumType.GetFields();
+            System.Reflection.FieldInfo[] fields = enumType.GetFields(BindingFlags.Static | BindingFlags.Public);
 
             //检索所有字段
             try
@@ -188,27 +181,28 @@ namespace CSharp.Net.Util
                     //过滤掉一个不是枚举值的，记录的是枚举的源类型
                     if (field.FieldType.IsEnum == true)
                     {
-                        DataRow dr = dt.NewRow();
-
+                        if (Attribute.GetCustomAttribute(field, typeof(ObsoleteAttribute), false) == null) continue;
+                        string key;
                         // 通过字段的名字得到枚举的值
-                        // 枚举的值如果是long的话，ToChar会有问题，但这个不在本文的讨论范围之内
-                        dr["Value"] = Convert.ToString((int)enumType.InvokeMember(field.Name, BindingFlags.GetField, null, null, null));
+                        object value = enumType.InvokeMember(field.Name, BindingFlags.GetField, null, null, null);
 
                         //获得这个字段的所有自定义特性，这里只查找Description特性
                         object[] arr = field.GetCustomAttributes(typeDescription, true);
-                        if (arr.Length > 0)
+                        if (preferDescriptionForKey && arr.Length > 0)
                         {
                             //因为Description这个自定义特性是不允许重复的，所以我们只取第一个就可以了！
                             DescriptionAttribute aa = (DescriptionAttribute)arr[0];
                             //获得特性的描述值，也就是‘男’‘女’等中文描述
-                            dr["Text"] = aa.Description;
+                            key = aa.Description;
+                            if (data.ContainsKey(key))
+                                key = field.Name;
                         }
                         else
                         {
-                            //如果没有特性描述（-_-!忘记写了吧~）那么就显示英文的字段名
-                            dr["Text"] = field.Name;
+                            //如果没有特性描述就显示英文的字段名
+                            key = field.Name;
                         }
-                        dt.Rows.Add(dr);
+                        data.Add(key, value);
                     }
                 }
             }
@@ -216,7 +210,7 @@ namespace CSharp.Net.Util
             {
             }
 
-            return dt;
+            return data;
         }
 
         /// <summary>

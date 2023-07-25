@@ -143,6 +143,7 @@ namespace CSharp.Net.Util.NewtJson
         /// <returns></returns>
         public static SortedDictionary<string, object> DeserializeLower(string json)
         {
+            if (json.IsNullOrEmpty()) return new SortedDictionary<string, object>();
             var obj = Deserialize<SortedDictionary<string, object>>(json);
             SortedDictionary<string, object> nobj = new SortedDictionary<string, object>();
 
