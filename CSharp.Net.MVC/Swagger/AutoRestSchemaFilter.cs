@@ -4,7 +4,7 @@
 // * 备注：
 // ****************************************************
 
-using CSharp.Net.Util.NewtJson;
+using CSharp.Net.Util;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System;

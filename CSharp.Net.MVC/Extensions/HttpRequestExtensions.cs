@@ -5,7 +5,6 @@
 // ****************************************************
 
 using CSharp.Net.Util;
-using CSharp.Net.Util.NewtJson;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.WebUtilities;

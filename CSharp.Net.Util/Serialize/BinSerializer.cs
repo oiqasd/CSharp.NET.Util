@@ -40,13 +40,14 @@ namespace CSharp.Net.Util.Serialize
         /// <typeparam name="T">序列化、反序列化对象的类型</typeparam>
         /// <param name="source">T类型的流</param>
         /// <returns>T类型对象</returns>
-        public virtual T Deserialize<T>(System.IO.Stream source)
-            where T : class
+        public virtual T Deserialize<T>(Stream source) where T : class
         {
             try
             {
                 IFormatter formatter = GetSerializer(typeof(T));
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
                 T t = (T)formatter.Deserialize(source);
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
                 return t;
             }
             catch
@@ -90,7 +91,9 @@ namespace CSharp.Net.Util.Serialize
             using (FileStream fs = new FileStream(fileName, FileMode.Open))
             {
                 IFormatter formatter = GetSerializer(typeof(T));
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
                 t = (T)formatter.Deserialize(fs);
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
             }
             return t;
         }
@@ -123,7 +126,9 @@ namespace CSharp.Net.Util.Serialize
             where T : class
         {
             IFormatter formatter = GetSerializer(typeof(T));
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
             formatter.Serialize(destination, t);
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
         }
 
         /// <summary>
@@ -157,7 +162,9 @@ namespace CSharp.Net.Util.Serialize
             using (FileStream fs = new FileStream(fileName, FileMode.Create))
             {
                 IFormatter formatter = GetSerializer(typeof(T));
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
                 formatter.Serialize(fs, t);
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
             }
         }
 

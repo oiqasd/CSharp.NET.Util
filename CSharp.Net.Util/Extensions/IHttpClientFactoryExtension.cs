@@ -5,7 +5,9 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-
+/**
+ *  引用 Microsoft.Extensions.Http 即可
+ * 
 public static class IHttpClientFactoryExtension
 {
     /// <summary>
@@ -51,3 +53,4 @@ public static class IHttpClientFactoryExtension
     }
 }
 
+*/

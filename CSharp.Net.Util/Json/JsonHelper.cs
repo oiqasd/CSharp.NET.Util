@@ -1,10 +1,14 @@
-﻿using System;
+﻿#if NET6_0_OR_GREATER
+
+using CSharp.Net.Util.Json;
+using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
-namespace CSharp.Net.Standard.Util
+namespace CSharp.Net.Util
 {
     /// <summary>
     /// 使用System.Text.Json序列化
@@ -13,37 +17,41 @@ namespace CSharp.Net.Standard.Util
     /// </summary>
     public class JsonHelper
     {
-        static JsonSerializerOptions serializeOptions;
+        static JsonSerializerOptions _serializeOptions;
 
         static JsonHelper()
         {
-            serializeOptions = new JsonSerializerOptions
+            _serializeOptions = new JsonSerializerOptions
             {
-                //PropertyNamingPolicy = JsonNamingPolicy.CamelCase,//使用 camel 大小写 
-                NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.WriteAsString,//允许或写入带引号的数字,例如:"23"
-                //ReferenceHandler = ReferenceHandler.Preserve,//保留引用并处理循环引用
-                //WriteIndented = true,//对JSON输出进行优质打印
-                DefaultIgnoreCondition=JsonIgnoreCondition.WhenWritingNull,//等同NullValueHandling.Ignore
-
+                PropertyNameCaseInsensitive = false,//反序列化时不区分属性大小写
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,//使用 camel 大小写 
+                NumberHandling = JsonNumberHandling.AllowReadingFromString,// | JsonNumberHandling.WriteAsString,//允许或写入带引号的数字,例如:"23"
+                //ReferenceHandler = ReferenceHandler.Preserve,//保留引用并处理循环引用 
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                //WriteIndented = true, //格式化输出
+                //ReadCommentHandling = JsonCommentHandling.Skip,//允许有注释
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,//等同NullValueHandling.Ignore
+                //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),//不unicode转换
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             };
-            serializeOptions.Converters.Add(new IsoDateTimeOffsetConverter());
-            serializeOptions.Converters.Add(new VersionConverter());
+            _serializeOptions.Converters.Add(new IsoDateTimeOffsetConverter());
+            _serializeOptions.Converters.Add(new IsoDateTimeConverter());
+            _serializeOptions.Converters.Add(new VersionConverter());
+            //serializeOptions.Converters.Add(new StringOrIntConverter());
         }
-
 
         /// <summary>
         /// 将指定的对象序列化成 JSON 数据
         /// </summary>
         /// <param name="obj">要序列化的对象</param>
+        /// <param name="options">自定义配置</param>
         /// <returns></returns>
-        public static string Serialize(object obj)
+        public static string Serialize(object obj, JsonSerializerOptions options = null)
         {
             try
             {
-                if (null == obj)
-                    return null;
-
-                return JsonSerializer.Serialize(obj, serializeOptions);
+                if (null == obj) return null;
+                return JsonSerializer.Serialize(obj, options ?? _serializeOptions);
             }
             catch (Exception ex)
             {
@@ -63,56 +71,106 @@ namespace CSharp.Net.Standard.Util
                 return default(T);
             try
             {
-                return JsonSerializer.Deserialize<T>(json, serializeOptions);
+                return JsonSerializer.Deserialize<T>(json, _serializeOptions);
             }
             catch (Exception ex)
             {
                 throw ex;
             }
         }
-    }
 
-
-
-
-    /// <summary>
-    /// 内置支持的唯一格式是 ISO 8601-1:2019
-    /// 2020-11-11T21:08:18
-    /// 所以需要重写
-    /// </summary>
-    internal sealed class IsoDateTimeOffsetConverter : JsonConverter<DateTimeOffset>
-    {
-        public override DateTimeOffset Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        /// <summary>
+        /// 将指定的 JSON 数据反序列化成指定对象。
+        /// </summary>
+        /// <typeparam name="T">对象集合</typeparam>
+        /// <param name="json">JSON 数据</param>
+        /// <returns></returns>
+        public static List<T> DeserializeList<T>(string json)
         {
-            return DateTime.Parse(reader.GetString());
-        }
-
-        public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
-        {
-            writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss"));
-        }
-    }
-
-    /// <summary>
-    /// .NET 7 允许使用空格的 Version 类型添加自定义转换器
-    /// </summary>
-    internal sealed class VersionConverter : JsonConverter<Version>
-    {
-        public override Version Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            string? versionString = reader.GetString();
-            if (Version.TryParse(versionString, out Version? result))
+            if (string.IsNullOrEmpty(json))
+                return default(List<T>);
+            try
             {
-                return result;
+                return JsonSerializer.Deserialize<List<T>>(json, _serializeOptions);
             }
-
-            ThrowHelper.ThrowJsonException();
-            return null;
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
-        public override void Write(Utf8JsonWriter writer, Version value, JsonSerializerOptions options)
+        ///// <summary>
+        ///// 将转换后的Key全部设置为小写
+        ///// </summary>
+        ///// <param name="json"></param>
+        ///// <returns></returns>
+        //public static SortedDictionary<string, object> DeserializeLower(string json)
+        //{
+        //    if (json.IsNullOrEmpty()) return new SortedDictionary<string, object>();
+        //    var obj = Deserialize<SortedDictionary<string, object>>(json);
+        //    SortedDictionary<string, object> nobj = new SortedDictionary<string, object>();
+
+        //    foreach (var item in obj)
+        //    {
+        //        nobj[item.Key.ToLower()] = item.Value;
+        //    }
+        //    obj.Clear();
+        //    obj = null;
+        //    return nobj;
+        //}
+
+        /// <summary>
+        /// 将value中的 双引号替换为中文双引号
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public static string ToJsonString(string str)
         {
-            writer.WriteStringValue(value.ToString());
+            char[] tempArr = str.ToCharArray();
+            int tempLength = tempArr.Length;
+            for (int i = 0; i < tempLength; i++)
+            {
+                if (tempArr[i] == ':' && tempArr[i + 1] == '"')
+                {
+                    for (int j = i + 2; j < tempLength; j++)
+                    {
+                        if (tempArr[j] == '"')
+                        {
+                            if (tempArr[j + 1] != ',' && tempArr[j + 1] != '}')
+                            {
+                                tempArr[j] = '”'; // 将value中的 双引号替换为中文双引号
+                            }
+                            else if (tempArr[j + 1] == ',' || tempArr[j + 1] == '}')
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return new string(tempArr);
         }
+
+        /// <summary>
+        /// 动态获取json数据,在不确定key场景可用此方法
+        /// </summary>
+        /// <param name="jsonData"></param>
+        /// <returns></returns>
+        public static Dictionary<string, T> GetJObject<T>(string jsonData)
+        {
+            Dictionary<string, T> data = new Dictionary<string, T>();
+            JsonObject obj = JsonNode.Parse(jsonData).AsObject();
+            foreach (var item in obj)
+            {
+                if (data.ContainsKey(item.Key)) continue;
+                if (item.Value is JsonObject || item.Value is JsonArray)
+                    data.Add(item.Key, ConvertHelper.ConvertTo<T>(item.Value.ToJsonString()));
+                else
+                    data.Add(item.Key, item.Value.GetValue<T>());
+            }
+            return data;
+        }
+
     }
 }
+#endif

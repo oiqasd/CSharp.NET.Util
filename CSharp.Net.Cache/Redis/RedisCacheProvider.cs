@@ -1,5 +1,4 @@
 ﻿using CSharp.Net.Util;
-using CSharp.Net.Util.NewtJson;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
@@ -507,7 +506,6 @@ namespace CSharp.Net.Cache.Redis
         #endregion 异步方法
 
         #endregion List
-
 
         #region Hash
 

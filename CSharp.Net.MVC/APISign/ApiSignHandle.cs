@@ -116,9 +116,6 @@ namespace CSharp.Net.Mvc
             SortedList<string, string> list = new SortedList<string, string>();
             var parmObjProp = parmObj?.GetType().GetProperties();
             if (parmObjProp.IsNullOrEmpty()) return list;
-            //PropertyInfo parmPro = parmObjProp.FirstOrDefault(q => q.Name.ToLower() == "parameter");
-            //var fields = parmObjProp.Where(x => x.GetCustomAttributes<SignFieldAttribute>().Any()).ToList();
-            //if (fields.IsNullOrEmpty()) return list;
 
             foreach (var col in parmObjProp)
             {

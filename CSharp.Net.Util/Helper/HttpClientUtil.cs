@@ -1,6 +1,4 @@
-﻿using CSharp.Net.Util.NewtJson;
-using System;
-using System.Buffers;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -11,7 +9,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 
 namespace CSharp.Net.Util
 {
@@ -84,7 +81,7 @@ namespace CSharp.Net.Util
                            }
                         };
                         _httpClient = new HttpClient(handler);
-#if NET6||NET7
+#if NET6_0_OR_GREATER
                         //var socketsHttpHandler = new SocketsHttpHandler()
                         //{
                         //    ConnectTimeout = TimeSpan.FromSeconds(20),
@@ -249,10 +246,8 @@ namespace CSharp.Net.Util
         //public static async Task Download(string url)
         //{
         //    var stream = await _httpClient.GetStreamAsync(url);
-
         //    var count = 0;
         //    var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
-
         //    stream.Read(buffer, 0, buffer.Length);
         //    pool.Return(buffer);
         //}
@@ -277,7 +272,6 @@ namespace CSharp.Net.Util
             {
                 SetHeader(headers);
                 HttpContent httpContent = null;
-
                 if (dataStr.IsHasValue() && httpContentType != HttpContentType.QueryString)
                 {
                     Encoding _encoding = Encoding.GetEncoding(encoding);
@@ -291,7 +285,6 @@ namespace CSharp.Net.Util
                 }
 
                 PrintRequestLog("post", url, dataStr);
-
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0)
                     cts.CancelAfter(timeOutSecond * 1000);
@@ -362,7 +355,6 @@ namespace CSharp.Net.Util
             try
             {
                 SetHeader(headers);
-
                 if (pramstr.IsHasValue())
                 {
                     if (!url.Contains("?") && !pramstr.Contains("?")) url += "?";
@@ -372,7 +364,6 @@ namespace CSharp.Net.Util
                 }
 
                 PrintRequestLog("get", url);
-
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0) cts.CancelAfter(timeOutSecond * 1000);
 
@@ -432,10 +423,8 @@ namespace CSharp.Net.Util
         private static void SetHeader(Dictionary<string, string> headers)
         {
             _httpClient.DefaultRequestHeaders.Clear();
-
             if (headers == null || headers.Count <= 0)
                 return;
-
             headers.ForEach(x => _httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
         }
 
@@ -608,11 +597,8 @@ namespace CSharp.Net.Util
         /// </summary>
         //public enum HttpContentType
         //{
-
         //    QueryString = 0,
-
         //    JSON = 1,
-
         //    FormData = 2
         //}
     }

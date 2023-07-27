@@ -23,7 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\ant-vue_-net-core\WebApi\CSharp.Net.Util\CSharp.Net.Util.csproj" />
+	  <ProjectReference Include="..\CSharp.Net.Util\CSharp.Net.Util.csproj" />
 	</ItemGroup>
 
 </Project>

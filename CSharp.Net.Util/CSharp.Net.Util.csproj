@@ -1,31 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net5.0;net6.0;</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
-		<Authors>Utiler</Authors>
-		<Description>Integrating common util class libraries</Description>
-		<Version>5.6.0</Version>
+		<Authors>Util</Authors>
+		<Description>.NET util</Description>
+		<Version>7.0.0</Version>
 		<Copyright></Copyright>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageReleaseNotes></PackageReleaseNotes>
-		<!--<AssemblyVersion>2.2.1.0</AssemblyVersion>
-		<FileVersion>2.2.1.0</FileVersion>-->
+		<!--<FileVersion>2.2.1.0</FileVersion>-->
+		<AssemblyVersion>7.0.*</AssemblyVersion>
+		<Deterministic>False</Deterministic>
+		<Tags>.net,util</Tags>
 		<Company />
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<OutputPath>bin\</OutputPath>
-		<DocumentationFile>bin\CSharp.Net.Util.xml</DocumentationFile>
+		<DocumentationFile>bin\Release\$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<OutputPath>bin\</OutputPath>
-		<DocumentationFile>bin\CSharp.Net.Util.xml</DocumentationFile>
+		<DocumentationFile>bin\Debug\$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
@@ -33,18 +35,38 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
-		<Compile Remove="Json\JsonHelper.cs" />
+	  <Compile Remove="Json.NET\**" />
+	  <EmbeddedResource Remove="Json.NET\**" />
+	  <None Remove="Json.NET\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
+	</ItemGroup>
+ 
+	<!-- 在 .NET Framework 4.0 目标框架下需要引用的项目 -->
+	<!--<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+		<Reference Include="System.Net" />
+		<COMReference Include="NetFwTypeLib">
+			<Guid>{58FBCF7C-E7A9-467C-80B3-FC65E8FCCA08}</Guid>
+			<VersionMajor>1</VersionMajor>
+			<VersionMinor>0</VersionMinor>
+			<Lcid>0</Lcid>
+			<WrapperTool>tlbimp</WrapperTool>
+			<Isolated>False</Isolated>
+			<EmbedInteropTypes>True</EmbedInteropTypes>
+		</COMReference>
+	</ItemGroup>	-->
+	<!-- 在 .NET Standard 2.0 目标框架下需要引用的项目 -->
+	<!--<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
+	</ItemGroup>-->
+	
+	<!--
+	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Json\" />
-		<Folder Include="Validate\" />
+	-->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' ">
 	</ItemGroup>
-
 </Project>
