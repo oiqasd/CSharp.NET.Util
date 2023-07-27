@@ -9,8 +9,8 @@
 		<Description>.NET Cache:Memorycache and Redis</Description>
 		<Version>7.0.0</Version>
 		<Copyright></Copyright>
-		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
-		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
+		<ProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</ProjectUrl>
+		<License>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</License>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<Tags>Memorycache;Redis</Tags>
 	</PropertyGroup>
