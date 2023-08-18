@@ -1,5 +1,4 @@
-﻿#define WinX
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -31,14 +30,12 @@ namespace CSharp.Net.Util.Cryptography
             }
             byte[] bt = Encoding.GetEncoding(charset).GetBytes(data);
 
-            using (System.Security.Cryptography.RSA rsa = CreateRsaProviderFromPrivateKey(privateKey))
+            using (System.Security.Cryptography.RSA rsa = CreateRSAProviderFromPrivateKey(privateKey))
             {
                 if (rsa == null) throw new Exception("Private key is error");
                 var signatureBytes = rsa.SignData(bt, DicAlgorithmName[rsaType], RSASignaturePadding.Pkcs1);
                 return Convert.ToBase64String(signatureBytes);
             }
-
-
         }
 
 
@@ -51,7 +48,7 @@ namespace CSharp.Net.Util.Cryptography
         /// <param name="rsaType">签名类型</param>
         /// <param name="charset">编码</param>
         /// <returns></returns>
-        public static bool CheckSign(string data, string sign, string publicKey, RSAType rsaType = RSAType.MD5, string charset = "utf-8")
+        public static bool Verify(string data, string sign, string publicKey, RSAType rsaType = RSAType.MD5, string charset = "utf-8")
         {
             if (string.IsNullOrEmpty(publicKey))
             {
@@ -60,13 +57,18 @@ namespace CSharp.Net.Util.Cryptography
             byte[] bt = Encoding.GetEncoding(charset).GetBytes(data);
             byte[] signBytes = Convert.FromBase64String(sign);
 
-            using (System.Security.Cryptography.RSA rsa = CreateRsaProviderFromPublicKey(publicKey))
+            using (RSACryptoServiceProvider rsa = CreateRSAProviderFromPublicKey(publicKey))
             {
-                if (rsa == null) throw new Exception("Public key is error");
                 var verify = rsa.VerifyData(bt, signBytes, DicAlgorithmName[rsaType], RSASignaturePadding.Pkcs1);
                 return verify;
             }
 
+            //using (System.Security.Cryptography.RSA rsa = CreateRsaProviderFromPublicKey(publicKey))
+            //{
+            //    if (rsa == null) throw new Exception("Public key is error");
+            //    var verify = rsa.VerifyData(bt, signBytes, DicAlgorithmName[rsaType], RSASignaturePadding.Pkcs1);
+            //    return verify;
+            //}
         }
 
         #endregion
@@ -78,32 +80,90 @@ namespace CSharp.Net.Util.Cryptography
         /// </summary>
         /// <param name="decryptData"></param>
         /// <param name="privateKey"></param>
+        /// <param name="charset"></param>
         /// <returns></returns>
         public static string Decrypt(string decryptData, string privateKey, string charset = "utf-8")
         {
-            using (var rsa = CreateRsaProviderFromPrivateKey(privateKey))
+            using (RSACryptoServiceProvider rsa = CreateRSAProviderFromPrivateKey(privateKey))
             {
-                return Encoding.GetEncoding(charset).GetString(rsa.Decrypt(Convert.FromBase64String(decryptData), RSAEncryptionPadding.Pkcs1));
+                var dataArr = Convert.FromBase64String(decryptData);
+                var maxBufferSize = rsa.KeySize / 8;
+
+                if (dataArr.Length < maxBufferSize)
+                    return Encoding.GetEncoding(charset).GetString(rsa.Decrypt(dataArr, false));
+
+                using (MemoryStream msread = new MemoryStream(dataArr))
+                {
+                    using (MemoryStream mswrite = new MemoryStream())
+                    {
+                        var buffer = new byte[maxBufferSize];
+                        var len = msread.Read(buffer, 0, buffer.Length);
+                        while (len > 0)
+                        {
+                            mswrite.Write(rsa.Decrypt(buffer, false));
+                            buffer = new byte[maxBufferSize];
+                            len = msread.Read(buffer, 0, buffer.Length);
+                        }
+                        var resStr = Encoding.GetEncoding(charset).GetString(mswrite.ToArray());
+                        return resStr;
+                    }
+                }
             }
         }
 
         #endregion
 
         #region 加密
+        static RSACryptoServiceProvider CreateRSAProviderFromPublicKey(string publicKey)
+        {
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            var bt = Convert.FromBase64String(publicKey);
+            rsa.ImportRSAPublicKey(bt, out int bytesreadPublic);
+            return rsa;
+        }
+        static RSACryptoServiceProvider CreateRSAProviderFromPrivateKey(string privateKey)
+        {
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            var bt = Convert.FromBase64String(privateKey);
+            rsa.ImportRSAPrivateKey(bt, out int bytesreadPrivate);
+            return rsa;
+        }
 
         /// <summary>
         /// 加密
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">超过密钥长度/8 将会分段处理</param>
+        /// <param name="publicKey"></param>
+        /// <param name="charset">默认：utf-8</param>
         /// <returns></returns>
         public static string Encrypt(string text, string publicKey, string charset = "utf-8")
         {
-            using (var rsa = CreateRsaProviderFromPublicKey(publicKey))
+            using (RSACryptoServiceProvider rsa = CreateRSAProviderFromPublicKey(publicKey))
             {
-                var data = rsa.Encrypt(Encoding.GetEncoding(charset).GetBytes(text), RSAEncryptionPadding.Pkcs1);
-                return Convert.ToBase64String(data);
-            }
+                var dataArr = Encoding.GetEncoding(charset).GetBytes(text);
+                var maxBufferSize = rsa.KeySize / 8 - 11;
+                if (dataArr.Length < maxBufferSize)
+                {
+                    return Convert.ToBase64String(rsa.Encrypt(dataArr, false));
+                }
 
+                using (MemoryStream msread = new MemoryStream(dataArr))
+                {
+                    using (MemoryStream mswrite = new MemoryStream())
+                    {
+                        var buffer = new byte[maxBufferSize];
+                        var len = msread.Read(buffer, 0, buffer.Length);
+                        while (len > 0)
+                        {
+                            mswrite.Write(rsa.Encrypt(buffer, false));
+                            buffer = new byte[maxBufferSize];
+                            len = msread.Read(buffer, 0, buffer.Length);
+                        }
+                        var resStr = Convert.ToBase64String(mswrite.ToArray());
+                        return resStr;
+                    }
+                }
+            }
         }
 
         #endregion
@@ -115,13 +175,12 @@ namespace CSharp.Net.Util.Cryptography
         /// </summary>
         /// <param name="privateKey"></param>
         /// <returns></returns>
-        private static System.Security.Cryptography.RSA CreateRsaProviderFromPrivateKey(string privateKey)
+        private static RSACryptoServiceProvider CreateRsaProviderFromPrivateKey(string privateKey)
         {
             var privateKeyBits = Convert.FromBase64String(privateKey);
 
-            var rsa = System.Security.Cryptography.RSA.Create();
+            var rsa = new RSACryptoServiceProvider();
             var rsaParameters = new RSAParameters();
-
             try
             {
                 using (BinaryReader binr = new BinaryReader(new MemoryStream(privateKeyBits)))
@@ -280,17 +339,17 @@ namespace CSharp.Net.Util.Cryptography
             string priKey = string.Empty;
 
 
-#if false // UNITY_EDITOR_WIN||UNITY_STANDALONE_WIN||WinX||NETSTANDARD2_0        
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || WinX || NETSTANDARD2_0
             using (var rsa = new RSACryptoServiceProvider())
 #else
             using (var rsa = System.Security.Cryptography.RSA.Create())
 #endif
             {
-#if NETSTANDARD2_0 
+#if NETSTANDARD2_0
                 priKey = ExportKeyToPEMFormat(rsa, true);
                 pubKey = ExportKeyToPEMFormat(rsa, false);
 #else
-         
+
                 priKey = rsa.ToXmlString(true);
                 pubKey = rsa.ToXmlString(false);
 #endif
@@ -508,6 +567,8 @@ namespace CSharp.Net.Util.Cryptography
                 }
             }
         }
+
+
         #endregion
 
         #endregion
@@ -522,31 +583,32 @@ namespace CSharp.Net.Util.Cryptography
         private static int GetIntegerSize(BinaryReader binr)
         {
             byte bt = 0;
+            byte lowbyte = 0x00;
+            byte highbyte = 0x00;
             int count = 0;
             bt = binr.ReadByte();
-            if (bt != 0x02) //expect integer
+            if (bt != 0x02)        //expect integer
                 return 0;
             bt = binr.ReadByte();
 
             if (bt == 0x81)
-                count = binr.ReadByte(); // data size in next byte
+                count = binr.ReadByte();    // data size in next byte
             else if (bt == 0x82)
             {
-                var highbyte = binr.ReadByte(); // data size in next 2 bytes
-                var lowbyte = binr.ReadByte();
+                highbyte = binr.ReadByte();    // data size in next 2 bytes
+                lowbyte = binr.ReadByte();
                 byte[] modint = { lowbyte, highbyte, 0x00, 0x00 };
                 count = BitConverter.ToInt32(modint, 0);
             }
             else
             {
-                count = bt;  // we already have the data size
+                count = bt;        // we already have the data size
             }
-
             while (binr.ReadByte() == 0x00)
-            {
-                count -= 1;//remove high order zeros in data
+            {    //remove high order zeros in data
+                count -= 1;
             }
-            binr.BaseStream.Seek(-1, SeekOrigin.Current); //last ReadByte wasn't a removed zero, so back up a byte
+            binr.BaseStream.Seek(-1, SeekOrigin.Current);        //last ReadByte wasn't a removed zero, so back up a byte
             return count;
         }
 
@@ -581,9 +643,117 @@ namespace CSharp.Net.Util.Cryptography
             { RSAType.SHA256, HashAlgorithmName.SHA256 },
             { RSAType.SHA512, HashAlgorithmName.SHA512 }
         };
-        #endregion
-    }
 
+        #endregion
+
+        #region 解析Pem
+        /// <summary>
+        /// 解析pem 公钥
+        /// </summary>
+        /// <param name="pemFileConent"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        private static RSAParameters ConvertFromPemPublicKey(string pemFileConent)
+        {
+            byte[] keyData = Convert.FromBase64String(pemFileConent);
+            if (keyData.Length < 162)
+            {
+                throw new ArgumentException("pem file content is incorrect.");
+            }
+            byte[] pemModulus = new byte[128];
+            byte[] pemPublicExponent = new byte[3];
+            Array.Copy(keyData, 29, pemModulus, 0, 128);
+            Array.Copy(keyData, 159, pemPublicExponent, 0, 3);
+            RSAParameters para = new RSAParameters();
+            para.Modulus = pemModulus;
+            para.Exponent = pemPublicExponent;
+            return para;
+        }
+
+        /// <summary>
+        /// 解析pem私钥
+        /// </summary>
+        /// <param name="pemFileConent"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        private static RSAParameters ConvertFromPrivateKey(string pemFileConent)
+        {
+            byte[] keyData = Convert.FromBase64String(pemFileConent);
+            if (keyData.Length < 609)
+            {
+                throw new ArgumentException("pem file content is incorrect.");
+            }
+
+            int index = 11;
+            byte[] pemModulus = new byte[128];
+            Array.Copy(keyData, index, pemModulus, 0, 128);
+
+            index += 128;
+            index += 2;//141
+            byte[] pemPublicExponent = new byte[3];
+            Array.Copy(keyData, index, pemPublicExponent, 0, 3);
+
+            index += 3;
+            index += 4;//148
+            byte[] pemPrivateExponent = new byte[128];
+            Array.Copy(keyData, index, pemPrivateExponent, 0, 128);
+
+            index += 128;
+            index += ((int)keyData[index + 1] == 64 ? 2 : 3);//279
+            byte[] pemPrime1 = new byte[64];
+            Array.Copy(keyData, index, pemPrime1, 0, 64);
+
+            index += 64;
+            index += ((int)keyData[index + 1] == 64 ? 2 : 3);//346
+            byte[] pemPrime2 = new byte[64];
+            Array.Copy(keyData, index, pemPrime2, 0, 64);
+
+            index += 64;
+            index += ((int)keyData[index + 1] == 64 ? 2 : 3);//412/413
+            byte[] pemExponent1 = new byte[64];
+            Array.Copy(keyData, index, pemExponent1, 0, 64);
+
+            index += 64;
+            index += ((int)keyData[index + 1] == 64 ? 2 : 3);//479/480
+            byte[] pemExponent2 = new byte[64];
+            Array.Copy(keyData, index, pemExponent2, 0, 64);
+
+            index += 64;
+            index += ((int)keyData[index + 1] == 64 ? 2 : 3);//545/546
+            byte[] pemCoefficient = new byte[64];
+            Array.Copy(keyData, index, pemCoefficient, 0, 64);
+
+            RSAParameters para = new RSAParameters();
+            para.Modulus = pemModulus;
+            para.Exponent = pemPublicExponent;
+            para.D = pemPrivateExponent;
+            para.P = pemPrime1;
+            para.Q = pemPrime2;
+            para.DP = pemExponent1;
+            para.DQ = pemExponent2;
+            para.InverseQ = pemCoefficient;
+            return para;
+        }
+        #endregion
+
+        /// <summary>
+        /// 补全密文
+        /// </summary>
+        /// <param name="strCiphertext">密文</param>
+        /// <param name="keySize">秘钥长度</param>
+        /// <returns>补全后的密文</returns>
+        private static string CorrectionCiphertext(string strCiphertext, int keySize = 1024)
+        {
+            int ciphertextLength = keySize / 8;
+            byte[] data = Convert.FromBase64String(strCiphertext);
+            var newData = new List<byte>(data);
+            while (newData.Count < ciphertextLength)
+            {
+                newData.Insert(0, 0x00);
+            }
+            return Convert.ToBase64String(newData.ToArray());
+        }
+    }
     /// <summary>
     /// RSA算法类型
     /// </summary>

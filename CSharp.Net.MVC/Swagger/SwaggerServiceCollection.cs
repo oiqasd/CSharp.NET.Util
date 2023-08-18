@@ -1,13 +1,10 @@
-﻿using CSharp.Net.AspNetCore.Swagger;
+﻿using CSharp.Net.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+namespace CSharp.Net.Mvc;
 
 public static class SwaggerServiceCollection
 {
@@ -30,17 +27,18 @@ public static class SwaggerServiceCollection
             //c.IncludeXmlComments(Path.Combine(System.AppContext.BaseDirectory, "ZJHW_Common_System.WebApi.xml"));
             //c.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/App_Data/ApiXml/ZJHW_Common_System.WebApi.xml", true);// true表示显示控制器注释
             //c.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/App_Data/ApiXml/ZJHW_Common_System.Model.xml");
-            //添加自定义配置 
-            //c.OperationFilter<SwaggerConfig>();
+            var name = AppDomainHelper.AppName.Split('.')[0];
+            var xmls = Directory.GetFiles(Environment.CurrentDirectory, $"{name}.*.xml",
+                new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).ToList();
 
-            var xmls = Directory.GetFiles(Environment.CurrentDirectory, "M3.*.xml", new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).ToList();
             xmls.ForEach(x => c.IncludeXmlComments(x, true));
 
             c.OrderActionsBy(q => q.RelativePath.Length.ToString());
             c.OrderActionsBy(api => api.HttpMethod);
             c.CustomSchemaIds(type => type.FullName);
+            //添加自定义配置 
+            c.OperationFilter<SwaggerConfig>();
 
-            c.OperationFilter<SwaggerApiOperation>();
             c.SchemaFilter<AutoRestSchemaFilter>();
             c.AddSecurityDefinition("Auth", new OpenApiSecurityScheme
             {

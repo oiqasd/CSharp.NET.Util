@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace CSharp.Net.Util
@@ -49,6 +50,12 @@ namespace CSharp.Net.Util
     public class DateTimeHelper
     {
         /// <summary>
+        /// 时间戳最大秒数
+        /// 9999/12/31 23:59:59
+        /// </summary>
+        public static readonly long MaxUnixSeconds = 253402300799;
+
+        /// <summary>
         /// 默认时区转换
         /// 适用无明确时区的时间
         /// </summary>
@@ -89,15 +96,6 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 返回相对于当前时间的相对天数时间
-        /// yyyy-MM-dd HH:mm:ss
-        /// </summary>
-        public static string GetDateTime(int relativeday)
-        {
-            return DateTime.Now.AddDays(relativeday).ToString("yyyy-MM-dd HH:mm:ss");
-        }
-
-        /// <summary>
         /// 返回标准时间格式
         /// yyyy-MM-dd HH:mm:ss:fffffff
         /// </summary>
@@ -119,7 +117,7 @@ namespace CSharp.Net.Util
 
             try
             {
-                datetimestr = Convert.ToDateTime(datetimestr).ToString("yyyy-MM-dd").Replace("1900-01-01", replacestr);
+                datetimestr = System.Convert.ToDateTime(datetimestr).ToString("yyyy-MM-dd").Replace("1900-01-01", replacestr);
             }
             catch
             {
@@ -175,10 +173,10 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 返回相差的秒数
+        /// 返回与当前时间相差的秒数
         /// </summary>
-        /// <param name="time"></param>
-        /// <param name="Sec"></param>
+        /// <param name="time">计算的时间</param>
+        /// <param name="Sec">计算的时间加上的指定秒数</param>
         /// <returns></returns>
         public static int StrDateDiffSeconds(string time, int Sec)
         {
@@ -199,10 +197,10 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 返回相差的分钟数
+        /// 返回与当前时间相差的分钟数
         /// </summary>
-        /// <param name="time"></param>
-        /// <param name="minutes"></param>
+        /// <param name="time">计算的时间</param>
+        /// <param name="minutes">计算的时间加上的指定分钟数</param>
         /// <returns></returns>
         public static int StrDateDiffMinutes(string time, int minutes)
         {
@@ -222,10 +220,10 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 返回相差的小时数
+        /// 返回与当前时间相差的小时数
         /// </summary>
-        /// <param name="time"></param>
-        /// <param name="hours"></param>
+        /// <param name="time">计算的时间</param>
+        /// <param name="hours">计算的时间加上的指定小时数</param>
         /// <returns></returns>
         public static int StrDateDiffHours(string time, int hours)
         {
@@ -248,7 +246,10 @@ namespace CSharp.Net.Util
         /// 将8位日期型整型数据转换为日期字符串数据
         /// </summary>
         /// <param name="date">整型日期</param>
-        /// <param name="chnType">是否以中文年月日输出</param>
+        /// <param name="chnType">是否以中文年月日输出，默认否
+        /// <para>是：xxxx年xx月xx日</para>
+        /// <para>否：xxxx-xx-xx</para>
+        /// </param>
         /// <returns></returns>
         public static string FormatDate(int date, bool chnType = false)
         {
@@ -316,7 +317,7 @@ namespace CSharp.Net.Util
                         break;
                 }
             }
-            return GetStandardDate(Convert.ToString(BeginDate));
+            return GetStandardDate(System.Convert.ToString(BeginDate));
         }
 
         /// <summary>
@@ -416,8 +417,8 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static int DateDiff(DateTime dateStart, DateTime dateEnd)
         {
-            DateTime start = Convert.ToDateTime(dateStart.ToShortDateString());
-            DateTime end = Convert.ToDateTime(dateEnd.ToShortDateString());
+            DateTime start = System.Convert.ToDateTime(dateStart.ToShortDateString());
+            DateTime end = System.Convert.ToDateTime(dateEnd.ToShortDateString());
             TimeSpan sp = end.Subtract(start);
             return sp.Days;
         }
@@ -425,14 +426,16 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 时间戳转为本地时间
         /// </summary>
-        /// <param name="timeStamp">10或13位时间戳</param>
+        /// <param name="timeStamp">时间戳(秒或者毫秒)
+        /// <para>默认秒,大于 <see cref="DateTimeHelper.MaxUnixSeconds"/> 自动转换成毫秒</para></param>
         /// <returns></returns>
         public static DateTime GetDateTimeFromTimeStamp(string timeStamp)
         {
-            if (timeStamp.Length != 10 && timeStamp.Length != 13)
-                throw new ArgumentOutOfRangeException();
-            long lTime = long.Parse(timeStamp);
-            var dto = timeStamp.Length == 10 ? DateTimeOffset.FromUnixTimeSeconds(lTime) : DateTimeOffset.FromUnixTimeMilliseconds(lTime);
+            //if (timeStamp.Length != 10 && timeStamp.Length != 13)
+            if (!long.TryParse(timeStamp, out long val))
+                throw new ArgumentException($"Could not parse String '{timeStamp}' to DateTime.");
+
+            var dto = val > MaxUnixSeconds ? DateTimeOffset.FromUnixTimeMilliseconds(val) : DateTimeOffset.FromUnixTimeSeconds(val);
             return dto.ToLocalTime().DateTime;
             //DateTime dtStart = TimeZoneInfo.ConvertTimeToUtc(new DateTime(1970, 1, 1));
             //long lTime = long.Parse(timeStamp + "0000000");
@@ -440,16 +443,29 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
+        /// 时间戳转为本地时间
+        /// </summary>
+        /// <param name="timeStamp">时间戳(秒或者毫秒)
+        /// <para>默认秒,大于 <see cref="DateTimeHelper.MaxUnixSeconds"/> 自动转换成毫秒</para></param>
+        /// <returns></returns>
+        public static DateTime GetDateTimeFromTimeStamp(long timeStamp)
+        {
+            var dto = timeStamp > MaxUnixSeconds ? DateTimeOffset.FromUnixTimeMilliseconds(timeStamp) : DateTimeOffset.FromUnixTimeSeconds(timeStamp);
+            return dto.ToLocalTime().DateTime;
+        }
+
+        /// <summary>
         /// DateTime时间格式转换为Unix时间戳格式,秒级
         /// </summary>
         /// <param name="time">默认当前时间</param>
         /// <returns></returns>
-        public static int GetTimeStampInt(System.DateTime? time = null)
+        public static long GetTimeStampInt(DateTime? time = null)
         {
             if (time == null)
-                time = DateTime.Now;
-            //System.DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(new System.DateTime(1970, 1, 1));
-            return (int)(time.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+                return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            DateTimeOffset localtime = DateTime.SpecifyKind(time.Value, DateTimeKind.Local);
+            return localtime.ToUnixTimeSeconds();
+            //return (int)(time.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
         }
 
         /// <summary>
@@ -487,6 +503,72 @@ namespace CSharp.Net.Util
             {
                 return new DateTime(1901, 1, 1);
             }
+        }
+
+        /// <summary>
+        /// 当前月第一天
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static DateTime GetMonthFirstDay(DateTime date)
+        {
+            //var dt = DateTime.Parse(date.ToString("yyyy-MM-dd") + " 00:00:00");
+            //return dt.AddDays(1 - dt.Day);
+            var dt = DateTime.Parse($"{date.Year}/{date.Month}/01 00:00:00");
+            return dt;
+        }
+
+        /// <summary>
+        /// 当前月最后一天
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static DateTime GetMonthLastDay(DateTime date)
+        {
+            return GetMonthFirstDay(date).AddMonths(1).AddSeconds(-1);
+        }
+
+        /// <summary>
+        /// 日期格式转换
+        /// <para>支持常规日期格式、yyyy-MM-dd HH:mm:ss、yyyy-MM-dd'T'HH:mm:sszzz、时间戳</para>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="format">自定义格式</param>
+        /// <returns></returns>
+        public static DateTime Parse(string value, string format = null)
+        {
+            if (value.IsNullOrEmpty()) throw new ArgumentNullException("value");
+            if (format.IsNotNullOrEmpty() &&
+                DateTime.TryParseExact(value, format, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out DateTime d))
+                return d;
+            if (DateTime.TryParse(value, out d))
+                return d;
+            if (DateTime.TryParseExact(value, "yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
+                return d;
+            if (DateTime.TryParseExact(value, "yyyy-MM-dd'T'HH:mm:sszzz", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
+                return d;
+            return GetDateTimeFromTimeStamp(value);
+            throw new FormatException($"Could not parse String '{value}' to DateTime.");
+        }
+
+        /// <summary>
+        /// 时间戳转换本地时间
+        /// </summary>
+        /// <param name="timestamp">时间戳</param>
+        /// <param name="isSecond">default: auto select, true: second, false: millisecond </param>
+        /// <returns></returns>
+        public static DateTime Parse(long timestamp, bool? isSecond = null)
+        {
+            if (timestamp < 0) throw new ArgumentNullException("timestamp");
+            if (isSecond == null)
+                return GetDateTimeFromTimeStamp(timestamp);
+
+            DateTime dateTime;
+            if (isSecond.Value)
+                dateTime = DateTimeOffset.FromUnixTimeSeconds(timestamp).LocalDateTime;
+            else
+                dateTime = DateTimeOffset.FromUnixTimeMilliseconds(timestamp).LocalDateTime;
+            return dateTime;
         }
     }
 }

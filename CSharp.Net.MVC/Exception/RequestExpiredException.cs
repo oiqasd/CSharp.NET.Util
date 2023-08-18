@@ -6,10 +6,9 @@
 
 using CSharp.Net.Util;
 
-namespace CSharp.Net.Mvc
+namespace CSharp.Net.Mvc;
+
+public class RequestExpiredException : BaseErrorException
 {
-    public class RequestExpiredException : BaseErrorException
-    {
-        public RequestExpiredException(string message="请求已过期") : base(message) { }
-    }
+    public RequestExpiredException(string message="请求已过期") : base(message) { }
 }

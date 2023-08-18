@@ -4,12 +4,12 @@
 // * 备注：
 // ****************************************************
 
-using System;
+namespace CSharp.Net.Mvc;
 
-namespace CSharp.Net.Mvc
+/// <summary>
+/// 签名字段
+/// </summary>
+[AttributeUsage(AttributeTargets.Field|AttributeTargets.Parameter| AttributeTargets.Property, Inherited = true)]
+public class SignFieldAttribute : Attribute
 {
-    [AttributeUsage(AttributeTargets.Field|AttributeTargets.Parameter| AttributeTargets.Property, Inherited = true)]
-    public class SignFieldAttribute : Attribute
-    {
-    }
 }

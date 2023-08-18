@@ -5,19 +5,20 @@
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
-		<Description>.NET util</Description>
-		<Version>7.0.0</Version>
-		<Copyright></Copyright>
-		<ProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</ProjectUrl>
-		<License>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</License>
+		<Description>.NET Util</Description>
+		<Version>7.0.2</Version>
+		<Copyright></Copyright> 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<!--<FileVersion>2.2.1.0</FileVersion>-->
 		<AssemblyVersion>7.0.*</AssemblyVersion>
 		<Deterministic>False</Deterministic>
-		<Tags>.net,util</Tags>
-		<Company />
+		<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
+		<PackageTags>.NET;Util</PackageTags>
+		<Title>.NET 通用帮助类</Title>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -68,5 +69,9 @@
 	</ItemGroup>
 	-->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' ">
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="System" />
 	</ItemGroup>
 </Project>

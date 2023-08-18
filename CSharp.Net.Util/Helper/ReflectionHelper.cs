@@ -23,6 +23,7 @@ namespace CSharp.Net.Util
             return stack.GetFrame(depth)?.GetMethod()?.Name;
             //获取当前
             //System.Reflection.MethodBase.GetCurrentMethod().Name;
+            //Assembly.GetExecutingAssembly().GetName().Name
         }
 
         /// <summary>

@@ -16,7 +16,6 @@ namespace CSharp.Net.Util.Json.NET
     /// </summary>
     public class NullToInitContractResolver : CamelCasePropertyNamesContractResolver
     {
-
         protected override IList<Newtonsoft.Json.Serialization.JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
             var data = type.GetProperties().Select(c =>
@@ -28,7 +27,6 @@ namespace CSharp.Net.Util.Json.NET
 
             return data.ToList();
         }
-
     }
 
     public class NullToInitValueProvider : IValueProvider

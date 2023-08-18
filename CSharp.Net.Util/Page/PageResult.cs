@@ -65,17 +65,20 @@ public static class PageResult
     /// <returns></returns>
     public static async Task<PageList<T>> ToPageListAsync<T>(this IQueryable<T> allItems, PageArgument page, bool pageIndexRange = false, IEnumerable<SortModel> sortModels = null)
     {
-        page = page ?? new PageArgument();
-        var itemIndex = (page.PageIndex - 1) * page.PageSize;
-        var pageOfItems = allItems.OrderBy(sortModels).Skip(itemIndex).Take(page.PageSize);
-        var totalItemCount = allItems.Count();
-        if (totalItemCount <= 0)
-            return new PageList<T>(page);
+        var resultAsync = Task.Run(() =>
+        {
+            page = page ?? new PageArgument();
+            var itemIndex = (page.PageIndex - 1) * page.PageSize;
+            var pageOfItems = allItems.OrderBy(sortModels).Skip(itemIndex).Take(page.PageSize);
+            var totalItemCount = allItems.Count();
+            if (totalItemCount <= 0)
+                return new PageList<T>(page);
 
-        if (pageIndexRange)
-            page.ToCurrentPage(totalItemCount);
+            if (pageIndexRange)
+                page.ToCurrentPage(totalItemCount);
 
-        var resultAsync = Task.Run(() => { return new PageList<T>(pageOfItems, page, totalItemCount); });
+            return new PageList<T>(pageOfItems, page, totalItemCount);
+        });
         return await resultAsync;
     }
 
@@ -92,17 +95,20 @@ public static class PageResult
     /// <returns></returns>
     public static async Task<PageList<T>> ToPageListAsync<T>(this IQueryable<T> allItems, int pageIndex, int pageSize, bool pageIndexRange = false, IEnumerable<SortModel> sortModels = null)
     {
-        var page = new PageArgument(pageIndex, pageSize);
-        var itemIndex = (page.PageIndex - 1) * page.PageSize;
-        var pageOfItems = allItems.OrderBy(sortModels).Skip(itemIndex).Take(page.PageSize);
-        var totalItemCount = allItems.Count();
-        if (totalItemCount <= 0)
-            return new PageList<T>(page);
+        var resultAsync = Task.Run(() =>
+        {
+            var page = new PageArgument(pageIndex, pageSize);
+            var itemIndex = (page.PageIndex - 1) * page.PageSize;
+            var pageOfItems = allItems.OrderBy(sortModels).Skip(itemIndex).Take(page.PageSize);
+            var totalItemCount = allItems.Count();
+            if (totalItemCount <= 0)
+                return new PageList<T>(page);
 
-        if (pageIndexRange)
-            page.ToCurrentPage(totalItemCount);
+            if (pageIndexRange)
+                page.ToCurrentPage(totalItemCount);
 
-        var resultAsync = Task.Run(() => { return new PageList<T>(pageOfItems, page, totalItemCount); });
+            return new PageList<T>(pageOfItems, page, totalItemCount);
+        });
         return await resultAsync;
     }
 

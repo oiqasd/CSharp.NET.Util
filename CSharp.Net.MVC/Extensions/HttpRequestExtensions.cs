@@ -16,16 +16,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+namespace CSharp.Net.Mvc;
+
 public static class HttpRequestExtensions
 {
     /// <summary>
-    /// 读取请求数据
+    /// 读取请求数据，暂不支持文件读取
     /// get请求取Url
     /// post请求取body或者form
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    public static async Task<Dictionary<string, object>> ReadDataAsync(this HttpRequest request)
+    public static async Task<Dictionary<string, string>> ReadDataAsync(this HttpRequest request)
     {
         if (request == null) return null;
         if (request.Method == HttpMethods.Get)
@@ -37,17 +39,42 @@ public static class HttpRequestExtensions
         if (request.Method == HttpMethods.Post && request.ContentType.Contains("json"))
         {
             var str = await ReadBodyAsync(request);
-            return JsonHelper.GetJObject<object>(str);
+            return JsonHelper.GetJObject(str);
         }
 
         if (request.Method == HttpMethods.Post && request.ContentType.Contains("form-data"))
         {
             var form = await request.ReadFormAsync().ConfigureAwait(false);
             if (form == null) return null;
-            var data = form.ToDictionary(p => p.Key, p => (object)p.Value);
+            var data = form.ToDictionary(p => p.Key, p => p.Value.ToString());
             return data;
         }
         return null;
+    }
+
+    /// <summary>
+    /// 读取文件bytes[]
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    public static async Task<List<byte[]>> ReadFileBytesAsync(this HttpRequest request)
+    {
+        if (request == null) return null;
+        if (request.Form.Files.Count == 0)
+            return null;
+        List<byte[]> list = new List<byte[]>();
+
+        for (int i = 0; i < request.Form.Files.Count; i++)
+        {
+            using (Stream stream = request.Form.Files[i].OpenReadStream())
+            {
+                long len = request.Form.Files[i].Length;
+                byte[] buffer = new byte[len];
+                await stream.ReadAsync(buffer, 0, Convert.ToInt32(len)).ConfigureAwait(false);
+                list.Add(buffer);
+            }
+        }
+        return list;
     }
 
     /// <summary>

@@ -4,22 +4,18 @@
 // * 备注：
 // ****************************************************
 
-namespace CSharp.Net.Mvc.ApiSign.Cryp
+namespace CSharp.Net.Mvc.ApiSign.Cryp;
+
+internal class CrypFactory
 {
-    internal class CrypFactory
+    public static ICryp SetCryp(string crypType = "md5")
     {
-        public static ICryp SetCryp(string crypType="md5")
+        switch (crypType?.ToLower())
         {
-            switch (crypType?.ToLower())
-            {
-                case "md5":
-                    return new MD5Cryp();
-
-                default:
-                    return new MD5Cryp();
-            }
+            case "md5":
+                return new MD5Cryp();
+            default:
+                return new MD5Cryp();
         }
-
-        
     }
 }

@@ -6,10 +6,9 @@
 
 using CSharp.Net.Util;
 
-namespace CSharp.Net.Mvc
+namespace CSharp.Net.Mvc;
+
+public class SignErrorException : BaseErrorException
 {
-    public class SignErrorException : BaseErrorException
-    {
-        public SignErrorException(string message) : base(message) { }
-    }
+    public SignErrorException(string message) : base(message) { }
 }

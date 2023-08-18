@@ -4,12 +4,11 @@
 // * 备注：
 // ****************************************************
 
-namespace CSharp.Net.Mvc.ApiSign.Cryp
-{
-    internal interface ICryp
-    {
-        void Check();
+namespace CSharp.Net.Mvc.ApiSign.Cryp;
 
-        string Encrypt(string data,string appKey);
-    }
+internal interface ICryp
+{
+    void Check();
+
+    string Encrypt(string data,string appKey);
 }

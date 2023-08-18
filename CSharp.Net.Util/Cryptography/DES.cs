@@ -42,16 +42,18 @@ namespace CSharp.Net.Util.Cryptography
         /// <returns></returns>
         public static string Encrypt(string encryptString, string encryptKey)
         {
-            DESCryptoServiceProvider des = new DESCryptoServiceProvider();
-            byte[] inputByteArray = Encoding.UTF8.GetBytes(encryptString);
-            des.Key = Encoding.UTF8.GetBytes(encryptKey);
-            des.IV = KeysIV;// Encoding.UTF8.GetBytes(encryptKey);// 初始化向量
-            MemoryStream ms = new MemoryStream();
-            CryptoStream cs = new CryptoStream(ms, des.CreateEncryptor(), CryptoStreamMode.Write);
-            cs.Write(inputByteArray, 0, inputByteArray.Length);
-            cs.FlushFinalBlock();
-            return Convert.ToBase64String(ms.ToArray());
-
+            //DESCryptoServiceProvider des = new DESCryptoServiceProvider();
+            using (var des = System.Security.Cryptography.DES.Create())
+            {
+                byte[] inputByteArray = Encoding.UTF8.GetBytes(encryptString);
+                des.Key = Encoding.UTF8.GetBytes(encryptKey);
+                des.IV = KeysIV;// Encoding.UTF8.GetBytes(encryptKey);// 初始化向量
+                MemoryStream ms = new MemoryStream();
+                CryptoStream cs = new CryptoStream(ms, des.CreateEncryptor(), CryptoStreamMode.Write);
+                cs.Write(inputByteArray, 0, inputByteArray.Length);
+                cs.FlushFinalBlock();
+                return Convert.ToBase64String(ms.ToArray());
+            }
         }
 
         /// <summary>
@@ -64,16 +66,19 @@ namespace CSharp.Net.Util.Cryptography
         {
             try
             {
-                DESCryptoServiceProvider des = new DESCryptoServiceProvider();
-                byte[] inputByteArray = Convert.FromBase64String(decryptString);
-                des.Key = Encoding.UTF8.GetBytes(decryptKey);
-                des.IV = KeysIV;
-                MemoryStream ms = new MemoryStream();
-                CryptoStream cs = new CryptoStream(ms, des.CreateDecryptor(), CryptoStreamMode.Write);
-                cs.Write(inputByteArray, 0, inputByteArray.Length);
-                // 如果两次密匙不一样，这一步可能会引发异常
-                cs.FlushFinalBlock();
-                return Encoding.UTF8.GetString(ms.ToArray());
+                //DESCryptoServiceProvider des = new DESCryptoServiceProvider();
+                using (var des = System.Security.Cryptography.DES.Create())
+                {
+                    byte[] inputByteArray = Convert.FromBase64String(decryptString);
+                    des.Key = Encoding.UTF8.GetBytes(decryptKey);
+                    des.IV = KeysIV;
+                    MemoryStream ms = new MemoryStream();
+                    CryptoStream cs = new CryptoStream(ms, des.CreateDecryptor(), CryptoStreamMode.Write);
+                    cs.Write(inputByteArray, 0, inputByteArray.Length);
+                    // 如果两次密匙不一样，这一步可能会引发异常
+                    cs.FlushFinalBlock();
+                    return Encoding.UTF8.GetString(ms.ToArray());
+                }
             }
             catch
             {

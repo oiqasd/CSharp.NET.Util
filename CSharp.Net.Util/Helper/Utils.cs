@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Text;
 
@@ -99,7 +97,6 @@ namespace CSharp.Net.Util
                 IdWorkerHelper.GeneratorIdWorker();
             }
             return IdWorkerHelper.IdWorkInstance.nextId();
-
         }
 
         /// <summary>  

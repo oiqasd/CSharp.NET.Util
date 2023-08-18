@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace CSharp.Net.Util
 {
@@ -73,9 +75,9 @@ namespace CSharp.Net.Util
         /// 读取所有文本
         /// </summary>
         /// <param name="file"></param>
-        /// <param name="encoding"></param>
+        /// <param name="encoding">default:utf-8</param>
         /// <returns></returns>
-        public static string ReadFileText(string file, Encoding encoding)
+        public static string ReadFileText(string file, string encoding = "utf-8")
         {
             if (!CheckFileExists(file))
             {
@@ -87,7 +89,7 @@ namespace CSharp.Net.Util
             {
                 byte[] b = new byte[fs.Length];
                 fs.Read(b, 0, b.Length);
-                return encoding.GetString(b);
+                return Encoding.GetEncoding(encoding).GetString(b);
             }
         }
 
@@ -95,17 +97,18 @@ namespace CSharp.Net.Util
         /// 读取所有行
         /// </summary>
         /// <param name="file"></param>
+        /// <param name="encoding">default:utf-8</param>
         /// <returns></returns>
-        public static IEnumerable<string> ReadAllLines(string file)
+        public static async IAsyncEnumerable<string> ReadAllLines(string file, string encoding = "utf-8")
         {
             if (!CheckFileExists(file))
                 yield break;
 
             using (Stream stream = File.OpenRead(file))
             {
-                StreamReader reader = new StreamReader(stream);
+                StreamReader reader = new StreamReader(stream, Encoding.GetEncoding(encoding));
                 while (!reader.EndOfStream)
-                    yield return reader.ReadLine();
+                    yield return await reader.ReadLineAsync();
             }
         }
 
@@ -114,10 +117,11 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="file"></param>
         /// <param name="contents"></param>
-        public static void OverWrittenFile(string file, string contents)
+        /// <param name="encoding">default:utf-8</param>
+        public static void OverWrittenFile(string file, string contents, string encoding = "utf-8")
         {
             //File.WriteAllText(fullName, contents); 
-            using (System.IO.StreamWriter sw = new StreamWriter(file, false))
+            using (System.IO.StreamWriter sw = new StreamWriter(file, false, Encoding.GetEncoding(encoding)))
             {
                 sw.WriteLine(contents);
             }
@@ -128,14 +132,29 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="file"></param>
         /// <param name="contents"></param>
-        public static void AppendWrittenFile(string file, string contents)
+        /// <param name="encoding">default:utf-8</param>
+        public static void AppendWrittenFile(string file, string contents, string encoding = "utf-8")
         {
             //File.AppendAllText(fullName, contents + "\n");
-            using (System.IO.StreamWriter sw = new StreamWriter(file, true))
+            using (System.IO.StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
             {
                 sw.BaseStream.Seek(0, System.IO.SeekOrigin.End);
                 sw.WriteLine(contents);
             }
+        }
+        public static async Task WriteTextAsync(string filePath, string fileName, string text, CancellationToken cancellationToken)
+        {
+            foreach (char c in Path.GetInvalidFileNameChars())
+                fileName = fileName.Replace(c.ToString(), "");
+
+            try
+            {
+                if (!Directory.Exists(filePath))
+                    Directory.CreateDirectory(filePath);
+            }
+            catch (NotSupportedException) { }
+
+            await File.WriteAllTextAsync(path: Path.Combine(filePath, fileName), contents: text, cancellationToken);
         }
     }
 }

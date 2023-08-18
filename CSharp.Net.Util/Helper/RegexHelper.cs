@@ -243,12 +243,12 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="value"></param>
         /// <returns>value需自行转码,如:HttpUtility.UrlDecode(Value) <para>空返回NULL</para></returns>
-        public static Dictionary<string, object> QueryStringToDictionany(string value)
+        public static Dictionary<string, string> QueryStringToDictionany(string value)
         {
             if (string.IsNullOrEmpty(value)) { return null; }
             var data = Regex.Matches(value, "([^?=&]+)(=([^&]*))?")
                             .Cast<Match>()
-                            .ToDictionary(x => x.Groups[1].Value, x => (object)x.Groups[3].Value);
+                            .ToDictionary(x => x.Groups[1].Value, x => x.Groups[3].Value);
             return data;
         }
     }

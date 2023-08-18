@@ -40,12 +40,18 @@ namespace CSharp.Net.Cache.Redis
 
         /// <summary>
         /// 默认数据库
+        /// <para>default:-1</para>
         /// </summary>
-        public int DefaultDB { get; set; }
+        public int DefaultDB { get; set; } = -1;
         /// <summary>
         /// 最小线程运行数
+        /// <para>最小8，默认100</para>
         /// </summary>
         public int MinWorkThread { get; set; } = 100;
+        /// <summary>
+        /// 最小io线程数
+        /// <para >最小1，默认10</para>
+        /// </summary>
         public int MinIOThread { get; set; } = 10;
         /// <summary>
         /// 最新线程监控间隔时间

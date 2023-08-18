@@ -5,20 +5,18 @@
 // ****************************************************
 
 using CSharp.Net.Util.Cryptography;
-using System;
 
-namespace CSharp.Net.Mvc.ApiSign.Cryp
+namespace CSharp.Net.Mvc.ApiSign.Cryp;
+
+internal class MD5Cryp : ICryp
 {
-    internal class MD5Cryp : ICryp
+    public void Check()
     {
-        public void Check()
-        {
-            throw new NotImplementedException();
-        }
+        throw new NotImplementedException();
+    }
 
-        public string Encrypt(string data,string solt)
-        {
-           return MD5.Md5Encrypt16X(data+solt);
-        }
+    public string Encrypt(string data,string solt)
+    {
+       return MD5.Md5Encrypt16X(data+solt);
     }
 }

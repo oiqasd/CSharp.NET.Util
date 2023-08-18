@@ -6,10 +6,9 @@
 
 using CSharp.Net.Util;
 
-namespace CSharp.Net.Mvc
+namespace CSharp.Net.Mvc;
+
+public class SignNotExistException : BaseErrorException
 {
-    public class SignNotExistException : BaseErrorException
-    {
-        public SignNotExistException(string message = "签名信息不存在") : base(message) { }
-    }
+    public SignNotExistException(string message = "签名信息不存在") : base(message) { }
 }

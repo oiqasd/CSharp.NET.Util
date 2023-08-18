@@ -4,13 +4,9 @@
 // * 备注：
 // ****************************************************
 
-using CSharp.Net.AspNetCore.Swagger;
 using Microsoft.AspNetCore.Builder;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+namespace CSharp.Net.Mvc;
 
 public static class SwaggerMiddleware
 {
@@ -25,9 +21,8 @@ public static class SwaggerMiddleware
         app.UseSwaggerUI(c =>
         {
             //foreach (FieldInfo field in typeof(ApiVersionInfo).GetFields())
-            //{
             //    c.SwaggerEndpoint($"/swagger/{field.Name}/swagger.json", $"{field.Name}");
-            //}
+
             c.SwaggerEndpoint($"{virPath}/swagger/v1/swagger.json", title);
             c.InjectJavascript($"/swagger_translator.js");
         });

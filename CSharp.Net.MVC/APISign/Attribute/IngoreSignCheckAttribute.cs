@@ -4,12 +4,11 @@
 // * 备注：
 // ****************************************************
 
-using System;
 
-namespace CSharp.Net.Mvc
-{
-    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = true)]
-    public class IngoreSignCheckAttribute : Attribute
-    {
-    }
-}
+namespace CSharp.Net.Mvc;
+
+/// <summary>
+/// 不校验签名特性
+/// </summary>
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = true)]
+public class IngoreSignCheckAttribute : Attribute { }

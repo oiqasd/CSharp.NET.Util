@@ -8,12 +8,14 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+namespace CSharp.Net.Mvc;
+
 public static class HttpContextExtensions
 {
-    public static void AddHttpContextAccessor(this IServiceCollection services)
-    {
-        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-    }
+    //public static void AddHttpContextAccessor(this IServiceCollection services)
+    //{
+    //    services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+    //}
 
     public static IApplicationBuilder UseStaticHttpContext(this IApplicationBuilder app)
     {

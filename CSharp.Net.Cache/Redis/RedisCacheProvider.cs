@@ -1317,9 +1317,7 @@ namespace CSharp.Net.Cache.Redis
         public bool KeyDelete(string key)
         {
             if (string.IsNullOrWhiteSpace(key))
-            {
                 return true;
-            }
             return Do(db => db.KeyDelete(PrefixKey(key)));
         }
 

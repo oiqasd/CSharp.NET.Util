@@ -7,7 +7,6 @@ public static class StringExtension
 {
     /// <summary>
     /// 时间格式转换
-    /// </summary>
     /// <param name="time"></param>
     /// <param name="formatType">
     /// 1:yyyy-MM-dd HH:mm:ss 
@@ -21,9 +20,11 @@ public static class StringExtension
     /// 9.yyyy-MM-dd HH:mm
     /// 10.HH:mm:ss
     /// 11.HH:mm
+    /// other return 1.
     /// </param>
     /// <param name="defaultvalue"></param>
     /// <returns></returns>
+    /// </summary>
     public static string ToString(this DateTime time, int formatType, string defaultvalue = "")
     {
         string dateStr = defaultvalue;
@@ -75,7 +76,6 @@ public static class StringExtension
 
     /// <summary>
     /// 时间格式转换
-    /// </summary>
     /// <param name="time"></param>
     /// <param name="formatType">
     /// 1:yyyy-MM-dd HH:mm:ss 
@@ -89,6 +89,7 @@ public static class StringExtension
     /// 9.yyyy-MM-dd HH:mm
     /// </param>
     /// <returns></returns>
+    /// </summary>
     public static string ToString(this DateTime? time, int formatType, string defaultvalue = "")
     {
         if (time == null)
@@ -98,9 +99,9 @@ public static class StringExtension
 
     /// <summary>
     /// 字符串转换
-    /// </summary>
     /// <param name="obj"></param>
     /// <returns>如果obj是null,返回string.Empty </returns>
+    /// </summary>
     public static string ToString(this object obj)
     {
         if (obj == null)
@@ -111,11 +112,11 @@ public static class StringExtension
 
     /// <summary>
     /// 隐藏字符串
-    /// </summary>
     /// <param name="str"></param>
     /// <param name="showStart">显示头几位,默认全部,不够则全显</param>
     /// <param name="showEnd">显示尾几位,默认全部</param>
     /// <returns></returns>
+    /// </summary>
     public static string HideStr(this string str, uint showStart = 0, uint showEnd = 0)
     {
         if (string.IsNullOrWhiteSpace(str)) return "";
@@ -139,9 +140,9 @@ public static class StringExtension
 
     /// <summary>
     /// 扩展，转换为INT32
-    /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
+    /// </summary>
     public static int ToInt(this string s)
     {
         if (s.Contains("."))
@@ -151,9 +152,9 @@ public static class StringExtension
 
     /// <summary>
     /// 转int
-    /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
+    /// </summary>
     public static int TryInt(this string s)
     {
         int.TryParse(s, out int result);
@@ -161,9 +162,9 @@ public static class StringExtension
     }
     /// <summary>
     /// 转decimal
-    /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
+    /// </summary>
     public static decimal TryDecimal(string s)
     {
         decimal.TryParse(s, out decimal result);
@@ -172,9 +173,9 @@ public static class StringExtension
 
     /// <summary>
     /// 字符串转为长整型
-    /// </summary>
     /// <param name="s"></param>
     /// <returns>非:0</returns>
+    /// </summary>
     public static long ToLong(this string s)
     {
         if (s.Contains("."))
@@ -185,9 +186,9 @@ public static class StringExtension
 
     /// <summary>
     /// 扩展，转换为Decimal
-    /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
+    /// </summary>
     public static decimal ToDecimal(this string s)
     {
         if (s.IsNullOrEmpty())
@@ -196,9 +197,9 @@ public static class StringExtension
     }
     /// <summary>
     /// 扩展，转换为DateTime
-    /// </summary>
     /// <param name="val"></param>
     /// <returns></returns>
+    /// </summary>
     public static DateTime ToDateTime(this string val)
     {
         return DateTime.Parse(val);
@@ -206,9 +207,10 @@ public static class StringExtension
 
     /// <summary>
     /// 时间转换
+    /// <param name="val">yyyyMMdd、yyyy-MM-dd、yyyyMM、yyyyMMddHHmmss、
+    /// yyyy-MM-dd HH:mm:ss、yyyyMMdd HH:mm:ss、yyyyMMddHHmmssffff</param>
+    /// <returns><para>return DateTime</para></returns>
     /// </summary>
-    /// <param name="val"></param>
-    /// <returns></returns>
     public static DateTime? ConvertToDateTime(this string val)
     {
         if (val.IsNotNullOrEmpty())
@@ -234,9 +236,9 @@ public static class StringExtension
 
     /// <summary>
     /// 扩展，是否为空
-    /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
+    /// </summary>
     public static bool IsNullOrEmpty(this string s)
     {
         return string.IsNullOrEmpty(s);
@@ -244,9 +246,9 @@ public static class StringExtension
 
     /// <summary>
     /// 扩展，是否不为空
-    /// </summary>
     /// <param name="s"></param>
     /// <returns></returns>
+    /// </summary>
     public static bool IsNotNullOrEmpty(this string s)
     {
         return string.IsNullOrEmpty(s) == false;

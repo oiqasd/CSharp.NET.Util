@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
@@ -10,10 +7,11 @@ using System.Linq;
 /// <typeparam name="T"></typeparam>
 public class PageList<T>
 {
+#pragma warning disable CS1591
     public PageList(PageArgument page = null)
+#pragma warning restore CS1591
     {
-        page = page ?? new PageArgument();
-        this.TotalCount = 0;
+        TotalCount = 0;
         PageIndex = page.PageIndex;
         PageSize = page.PageSize;
     }
@@ -24,29 +22,33 @@ public class PageList<T>
     /// 请求页码
     /// 默认1
     /// </summary>
-    public int PageIndex { get; set; }
+    protected int PageIndex { get; set; }
     /// <summary>
     /// 每页记录数
     /// 默认10
     /// </summary>
-    public int PageSize { get; set; }
+    protected int PageSize { get; set; }
+    /**
+       /// <summary>
+       /// 是否有下一页
+       /// </summary>
+       public bool HasNextPages { get { return PageIndex < TotalPages; } }
+       /// <summary>
+       /// 是否有上一页
+       /// </summary>
+       public bool HasPrevPages { get { return PageIndex - 1 > 0; ; } }
+    */
 
     /// <summary>
     /// 总行数
     /// </summary>
     public int TotalCount { get; set; }
+
     /// <summary>
     /// 总页数
     /// </summary>
     public int TotalPages { get { return (int)Math.Ceiling(TotalCount / (double)PageSize); } }
-    /// <summary>
-    /// 是否有下一页
-    /// </summary>
-    public bool HasNextPages { get { return PageIndex < TotalPages; } }
-    /// <summary>
-    /// 是否有上一页
-    /// </summary>
-    public bool HasPrevPages { get { return PageIndex - 1 > 0; ; } }
+
     /// <summary>
     /// 数据列表
     /// </summary>
@@ -69,7 +71,6 @@ public class PageList<T>
         this.TotalCount = totalCount;
         PageIndex = pageIndex;
         PageSize = pageSize;
-        //this.AllPages = (int)Math.Ceiling(totalCount / (double)page.PageSize);
     }
 
     /// <summary>
@@ -85,12 +86,9 @@ public class PageList<T>
             this.list = items.ToList();
             //this.List.AddRange(items);
         }
-        page = page ?? new PageArgument();
         this.TotalCount = totalCount;
         PageIndex = page.PageIndex;
         PageSize = page.PageSize;
-
-        //this.AllPages = (int)Math.Ceiling(totalCount / (double)page.PageSize);
     }
 }
 
@@ -101,7 +99,7 @@ public class PageList<T>
 ///// </summary>
 ///// <typeparam name="T"></typeparam>
 ////[JsonObject(MemberSerialization.OptOut)]
-//class PageList1<T> : List<T>
+//class PageList<T> : List<T>
 //{
 //    public PageList1()
 //    {
