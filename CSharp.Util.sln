@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.6.33815.320
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{5B2BD89C-3474-42C7-864E-30B350C55B46}"
 EndProject
@@ -20,8 +20,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharp.Net.Util.Aliyun.Oss", "CSharp.Net.Util.Aliyun.Oss\CSharp.Net.Util.Aliyun.Oss.csproj", "{F4F88A61-B9AF-460D-8676-F62E5735E1F9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharp.Net.Mvc", "CSharp.Net.MVC\CSharp.Net.Mvc.csproj", "{0DC59EE7-EF5D-4EAA-9D78-A584ECCA06F5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharp.Net.Page", "CSharp.Net.Page\CSharp.Net.Page.csproj", "{98CED38D-6FAA-49EC-901D-1D9A719896A2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharp.Net.Cache", "CSharp.Net.Cache\CSharp.Net.Cache.csproj", "{11482974-F44C-42EE-AE08-CC2403D1E7C6}"
 EndProject
@@ -63,10 +61,6 @@ Global
 		{0DC59EE7-EF5D-4EAA-9D78-A584ECCA06F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DC59EE7-EF5D-4EAA-9D78-A584ECCA06F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DC59EE7-EF5D-4EAA-9D78-A584ECCA06F5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{98CED38D-6FAA-49EC-901D-1D9A719896A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{98CED38D-6FAA-49EC-901D-1D9A719896A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{98CED38D-6FAA-49EC-901D-1D9A719896A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{98CED38D-6FAA-49EC-901D-1D9A719896A2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{11482974-F44C-42EE-AE08-CC2403D1E7C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{11482974-F44C-42EE-AE08-CC2403D1E7C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11482974-F44C-42EE-AE08-CC2403D1E7C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
