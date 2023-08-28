@@ -5,6 +5,8 @@
 // ****************************************************
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CSharp.Net.Mvc;
 
@@ -20,11 +22,17 @@ public static class SwaggerMiddleware
         // 启用中间件服务对swagger-ui，指定Swagger JSON终结点
         app.UseSwaggerUI(c =>
         {
+            var apiDescriptionGroups = app.ApplicationServices.GetRequiredService<IApiDescriptionGroupCollectionProvider>().ApiDescriptionGroups.Items;
+            foreach (var apidesc in apiDescriptionGroups)
+            {
+                c.SwaggerEndpoint($"{virPath}/swagger/{apidesc.GroupName ?? "default"}/swagger.json", apidesc.GroupName ?? "default");
+            }
+
             //foreach (FieldInfo field in typeof(ApiVersionInfo).GetFields())
             //    c.SwaggerEndpoint($"/swagger/{field.Name}/swagger.json", $"{field.Name}");
 
-            c.SwaggerEndpoint($"{virPath}/swagger/v1/swagger.json", title);
-            c.InjectJavascript($"/swagger_translator.js");
+            //c.SwaggerEndpoint($"{virPath}/swagger/v1/swagger.json", title);
+            //c.InjectJavascript($"/swagger_translator.js");
         });
 
         // Knife4j配置

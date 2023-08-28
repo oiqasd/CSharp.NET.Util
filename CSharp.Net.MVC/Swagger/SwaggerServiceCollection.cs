@@ -1,6 +1,8 @@
 ﻿using CSharp.Net.Util;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System.IO;
 using System.Linq;
 
@@ -10,25 +12,26 @@ public static class SwaggerServiceCollection
 {
     public static void AddSwagger(this IServiceCollection services, string title = "webApi doc", string securityKey = "token")
     {
+        //services.ConfigureAll<SwaggerGenOptionsExt>(x => x.ApiName = title);
+        services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerConfigureOptions>();
+        //services.AddTransient<IConfigureOptions<SwaggerGenOptions>>();
         services.AddSwaggerGen(c =>
         {
             //foreach (FieldInfo fileld in typeof(ApiVersionInfo).GetFields())
             //{
-            //    options.SwaggerDoc(fileld.Name, new OpenApiInfo
+            //    c.SwaggerDoc(fileld.Name, new OpenApiInfo
             //    {
             //        Version = fileld.Name,
             //        Title = "API标题",
             //        Description = $"API描述,{fileld.Name}版本"
             //    });
-            //} 
+            //}
 
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = title, Version = "v1" });
-
-            //c.IncludeXmlComments(Path.Combine(System.AppContext.BaseDirectory, "ZJHW_Common_System.WebApi.xml"));
+            //c.SwaggerDoc("v1", new OpenApiInfo { Title = title, Version = "v1" });
             //c.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/App_Data/ApiXml/ZJHW_Common_System.WebApi.xml", true);// true表示显示控制器注释
-            //c.IncludeXmlComments($@"{_hostingEnvironment.ContentRootPath}/App_Data/ApiXml/ZJHW_Common_System.Model.xml");
+
             var name = AppDomainHelper.AppName.Split('.')[0];
-            var xmls = Directory.GetFiles(Environment.CurrentDirectory, $"{name}.*.xml",
+            var xmls = Directory.GetFiles(AppContext.BaseDirectory, $"{name}.*.xml",//Environment.CurrentDirectory
                 new EnumerationOptions { MatchCasing = MatchCasing.CaseInsensitive }).ToList();
 
             xmls.ForEach(x => c.IncludeXmlComments(x, true));
@@ -74,6 +77,7 @@ public static class SwaggerServiceCollection
 
 public class ApiVersionInfo
 {
+    public static string Default;
     public static string V1;
     public static string V2;
     public static string V3;

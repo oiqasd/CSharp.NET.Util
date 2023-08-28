@@ -1,17 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <PackageId>CSharp.Net.Util.Pdf</PackageId>
     <Authors>Developer</Authors>
     <Version>1.0.0</Version>
     <PackageVersion>1.0.0</PackageVersion>
-    <Description>基于iTextSharp.text.pdf</Description>
-    <PackageReleaseNotes>基于iTextSharp.text.pdf</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="iTextSharp" Version="5.5.13.1" />
+    <PackageReference Include="iTextSharp" Version="5.5.13.3" />
+    <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 
 </Project>

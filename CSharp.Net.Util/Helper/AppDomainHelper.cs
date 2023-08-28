@@ -186,7 +186,7 @@ public class AppDomainHelper
     {
         get
         {
-            Version version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+            Version version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
             return version;
         }
     }
@@ -201,7 +201,7 @@ public class AppDomainHelper
         {
             //System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;//当前执行的方法所在的程序文件
             //System.Reflection.Assembly.GetCallingAssembly();//获取调用当前方法的程序集
-            var name = Assembly.GetEntryAssembly().GetName().Name;//当前应用程序第一个启动的程序
+            var name = Assembly.GetEntryAssembly()?.GetName().Name;//当前应用程序第一个启动的程序
             return name;
         }
     }
