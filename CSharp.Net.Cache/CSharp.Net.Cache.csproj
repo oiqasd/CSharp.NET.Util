@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;netstandard2.1</TargetFrameworks>
 		<!--netstandard2.0;net5.0;-->
 		<PackageId>CSharp.Net.Cache</PackageId>
 		<!--<PackageVersion>2.2</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>.NET Cache:Memorycache and Redis</Description>
-		<Version>7.0.0</Version>
+		<Version>7.0.1</Version>
 		<Copyright></Copyright>
 		<ProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</ProjectUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -26,7 +26,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CSharp.Net.Util" Version="7.0.0" />
+		<PackageReference Include="CSharp.Net.Util" Version="7.1.10" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.6.122" />

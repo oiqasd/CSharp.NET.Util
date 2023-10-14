@@ -391,7 +391,6 @@ namespace CSharp.Net.Util
             foreach (System.Reflection.FieldInfo f in ms)
             {
                 //判断名称是否相等
-
                 try
                 {
                     value = (int)enumType.InvokeMember(f.Name, BindingFlags.GetField, null, null, null);
@@ -479,7 +478,13 @@ namespace CSharp.Net.Util
             return dic;
         }
 
-#if NET5_0
+#if NET
+        /// <summary>
+        /// 获取枚举名
+        /// <see cref="System.ComponentModel.DataAnnotations.DisplayAttribute"/>
+        /// <param name="en"></param>
+        /// <returns></returns>
+        /// </summary>
         public static string GetEnumDisplayName(System.Enum en)
         {
             Type type = en.GetType();

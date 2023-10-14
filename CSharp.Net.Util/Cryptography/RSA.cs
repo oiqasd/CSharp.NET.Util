@@ -126,6 +126,7 @@ namespace CSharp.Net.Util.Cryptography
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
             var bt = Convert.FromBase64String(privateKey);
             rsa.ImportRSAPrivateKey(bt, out int bytesreadPrivate);
+
             return rsa;
         }
 

@@ -153,8 +153,9 @@ namespace CSharp.Net.Util
                     Directory.CreateDirectory(filePath);
             }
             catch (NotSupportedException) { }
-
+             
             await File.WriteAllTextAsync(path: Path.Combine(filePath, fileName), contents: text, cancellationToken);
+ 
         }
     }
 }

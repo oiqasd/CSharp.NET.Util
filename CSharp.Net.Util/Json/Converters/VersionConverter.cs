@@ -1,4 +1,4 @@
-﻿#if NET
+﻿
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -12,11 +12,19 @@ namespace CSharp.Net.Util.Json
     {
         public override Version Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+#if NET6_0_OR_GREATER
             string? versionString = reader.GetString();
             if (Version.TryParse(versionString, out Version? result))
             {
                 return result;
             }
+#else
+            string versionString = reader.GetString();
+            if (Version.TryParse(versionString, out Version result))
+            {
+                return result;
+            }
+#endif
             return null;
         }
 
@@ -26,4 +34,3 @@ namespace CSharp.Net.Util.Json
         }
     }
 }
-#endif

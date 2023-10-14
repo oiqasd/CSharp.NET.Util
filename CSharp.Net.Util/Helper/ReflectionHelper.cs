@@ -89,5 +89,119 @@ namespace CSharp.Net.Util
             }
             return classes;
         }
+
+        #region 创建实例
+        /// <summary>
+        /// 创建实例
+        /// 当前程序集和className 应在同一个dll文件中，所以应该把这一块东西拷贝到当前项目的代码里
+        /// </summary>
+        /// <typeparam name="T">可以是Interface</typeparam>
+        /// <param name="className"></param>
+        /// <returns></returns>
+        private static T GetInstance<T>(string className)
+            where T : class
+        {
+            Assembly assembly;
+            object obj;
+            Type type;
+
+            try
+            {
+                assembly = Assembly.GetExecutingAssembly();
+                type = assembly.GetType(className);
+                obj = Activator.CreateInstance(type);
+                ////或者直接这样写
+                ////type = Type.GetType(className);
+                ////obj = type.Assembly.CreateInstance(type.Name);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + ":GetInstance(" + className + ")");
+            }
+            return obj as T;
+        }
+
+        /// <summary>
+        /// 通过程序集文件名和类名获得对象
+        /// </summary>
+        /// <typeparam name="T">可以是Interface</typeparam>
+        /// <param name="className"></param>
+        /// <param name="assemblyFile"></param>
+        /// <returns></returns>
+        public static T GetInstance<T>(string className, string assemblyFile)
+            where T : class
+        {
+            Assembly assembly;
+            object obj;
+            Type type;
+            try
+            {
+                assembly = Assembly.Load(assemblyFile);
+                type = assembly.GetType(className);
+                obj = Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + ":GetInstance(" + className + "," + assemblyFile + ")");
+            }
+            return obj as T;
+
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="className"></param>
+        /// <param name="assemblyFile"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public static object GetObject(string className, string assemblyFile)
+        {
+            Assembly assembly;
+            object obj;
+            Type type;
+            try
+            {
+                assembly = Assembly.Load(assemblyFile);
+                type = assembly.GetType(className);
+                obj = Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message + ":GetObject(" + className + "," + assemblyFile + ")");
+            }
+            return obj;
+        }
+
+        /// <summary>
+        /// 通过程序及 类名 方法名 参数执行方法
+        /// ReflectionHelper.DoMethod("WindowsFormsApplication.TestService","WindowsFormsApplication","GetStr", "a", "b");
+        /// </summary>
+        /// <param name="className"></param>
+        /// <param name="assemblyFile"></param>
+        /// <param name="method"></param>
+        /// <param name="pas"></param>
+        /// <returns></returns>
+        public static object DoMethod(string className, string assemblyFile, string method, params object[] pas)
+        {
+            if (assemblyFile.IsNotNullOrEmpty())
+            {
+                object obj = GetObject(className, assemblyFile);
+                Type type = obj.GetType();
+                //根据方法名获取MethodInfo对象
+                MethodInfo methodInfo = type.GetMethod(method);
+                //参数1类型为object[]，代表Hello World方法的对应参数，输入值为null代表没有参数
+                return methodInfo.Invoke(obj, pas);
+            }
+            else
+            {
+                ////当前程序集
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                Type type = Type.GetType(className);
+                object obj = type.Assembly.CreateInstance(type.Name);
+                return obj;
+            }
+        }
+        #endregion
     }
 }

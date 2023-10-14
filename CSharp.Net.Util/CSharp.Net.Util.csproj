@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;netstandard2.1</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>.NET Util</Description>
-		<Version>7.0.2</Version>
-		<Copyright></Copyright> 
+		<Version>7.1.10</Version>
+		<Copyright></Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<!--<FileVersion>2.2.1.0</FileVersion>-->
-		<AssemblyVersion>7.0.*</AssemblyVersion>
+		<AssemblyVersion>7.1.*</AssemblyVersion>
 		<Deterministic>False</Deterministic>
 		<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
@@ -32,19 +32,19 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-	  <NoWarn>1701;1702;1591</NoWarn>
+		<NoWarn>1701;1702;1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Json.NET\**" />
-	  <EmbeddedResource Remove="Json.NET\**" />
-	  <None Remove="Json.NET\**" />
+		<Compile Remove="Json.NET\**" />
+		<EmbeddedResource Remove="Json.NET\**" />
+		<None Remove="Json.NET\**" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
 	</ItemGroup>
- 
+
 	<!-- 在 .NET Framework 4.0 目标框架下需要引用的项目 -->
 	<!--<ItemGroup Condition="'$(TargetFramework)' == 'net40'">
 		<Reference Include="System.Net" />
@@ -59,19 +59,18 @@
 		</COMReference>
 	</ItemGroup>	-->
 	<!-- 在 .NET Standard 2.0 目标框架下需要引用的项目 -->
-	<!--<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="Microsoft.Windows.Compatibility" Version="5.0.2" />
-	</ItemGroup>-->
-	
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+	</ItemGroup>
+
 	<!--
 	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
 	</ItemGroup>
 	-->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' ">
-	</ItemGroup>
-
-	<ItemGroup>
 		<Using Include="System" />
 	</ItemGroup>
+
+
 </Project>

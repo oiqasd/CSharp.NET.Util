@@ -41,7 +41,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="func"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) where T : new()
+        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) //where T : new()
         {
             var value = StringGet<T>(key);
             if (value != null)
@@ -58,7 +58,7 @@ namespace CSharp.Net.Cache.Redis
                 value = func().Result;
                 if (value != null)
                 {
-                    StringSet(key, value, expiry);
+                    StringSet(key, value, expiry.HasValue ? (int)expiry.Value.TotalSeconds : 0);
                 }
             }
             return value;

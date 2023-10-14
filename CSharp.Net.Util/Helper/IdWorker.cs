@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace CSharp.Net.Util
 {
@@ -12,7 +13,10 @@ namespace CSharp.Net.Util
         private static IdWorker _IdWorkInstance = null;
         private static object _obj = new object();
 
-        public static IdWorker IdWorkInstance => _IdWorkInstance;
+        /// <summary>
+        /// work实例
+        /// </summary>
+        public static IdWorker Instance => _IdWorkInstance;
 
         /// <summary>
         /// 设置参数，建议程序初始化时执行一次
@@ -56,8 +60,9 @@ namespace CSharp.Net.Util
         private long machineId;
         /// <summary>
         /// 唯一时间，这是一个避免重复的随机量，自行设定不要大于当前时间戳
+        /// 默认2020-01-01 00:00:00
         /// </summary>
-        private long twepoch = 946656000000L;
+        private long twepoch = 1577808000000L;
         /// <summary>
         /// id序号
         /// </summary>
@@ -84,8 +89,9 @@ namespace CSharp.Net.Util
         private int timestampLeftShift = 14;// sequenceBits + workerIdBits;
         /// <summary>
         /// 一毫秒内可以产生计数，如果达到该值则等到下一毫秒再进行生成
+        /// 默认1023
         /// </summary>
-        private long sequenceMask = -1L ^ (-1L << 10);//-1L ^ (-1L << sequenceBits);
+        private long sequenceMax = -1L ^ (-1L << 10);//-1L ^ (-1L << sequenceBits);
         private long lastTimestamp = -1L;
 
         /// <summary>
@@ -95,7 +101,7 @@ namespace CSharp.Net.Util
         public IdWorker(int machineId = 1)
         {
             if (machineId > maxMachineId || machineId < 0)
-                throw new Exception($"machineId can't be greater than {maxMachineId} or less than 0 ");
+                throw new WorkIdException($"machineId can't be greater than {maxMachineId} or less than 0 ");
             this.machineId = machineId;
         }
 
@@ -109,24 +115,40 @@ namespace CSharp.Net.Util
                 options.SequenceMask = -1L ^ (-1L << options.SequenceBits);
             maxMachineId = -1L ^ -1L << workerIdBits;
             timestampLeftShift = sequenceBits + workerIdBits;
-            sequenceMask = options.SequenceMask;
+            sequenceMax = options.SequenceMask;
             workerIdShift = sequenceBits;
 
             if (machineId > maxMachineId || machineId < 0)
-                throw new Exception($"machineId can't be greater than {maxMachineId} or less than 0 ");
+                throw new WorkIdException($"machineId can't be greater than {maxMachineId} or less than 0 ");
 
-            timestampLeftShift = (int)Math.Ceiling(Math.Log((machineId << workerIdShift) | sequenceMask, 2));
+            timestampLeftShift = (int)Math.Ceiling(Math.Log((machineId << workerIdShift) | sequenceMax, 2));
         }
 
-        public long nextId()
+        /// <summary>
+        /// 生成唯一Id
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public long NextId()
         {
             lock (this)
             {
                 long timestamp = timeGen();
+                int r = 0;
+                while (timestamp < lastTimestamp)
+                {
+                    //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常，因为不能保证现在生成的ID之前没有生成过
+                    Thread.Sleep(1);
+                    timestamp = tillNextMillis(this.lastTimestamp);
+                    r++;
+                    if (r > 1000 * 10)
+                        throw new WorkIdException(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
+                }
+
                 if (this.lastTimestamp == timestamp)
                 {
                     //同一毫秒中生成ID
-                    sequence = (sequence + 1) & sequenceMask; //用&运算计算该毫秒内产生的计数是否已经到达上限
+                    sequence = (sequence + 1) & sequenceMax; //用&运算计算该毫秒内产生的计数是否已经到达上限
                     if (sequence == 0)
                     {
                         //一毫秒内产生的ID计数已达上限，等待下一毫秒
@@ -134,15 +156,9 @@ namespace CSharp.Net.Util
                     }
                 }
                 else
-                { //不同毫秒生成ID
+                {
                     sequence = 0; //计数清0
                 }
-                if (timestamp < lastTimestamp)
-                { //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常，因为不能保证现在生成的ID之前没有生成过
-                    throw new Exception(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds",
-                        this.lastTimestamp - timestamp));
-                }
-
                 this.lastTimestamp = timestamp;
                 long nextId = ((timestamp - twepoch) << timestampLeftShift) | (machineId << workerIdShift) | sequence;
                 return nextId;

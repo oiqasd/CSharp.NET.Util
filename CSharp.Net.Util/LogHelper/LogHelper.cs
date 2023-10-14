@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace CSharp.Net.Util
@@ -147,12 +148,18 @@ namespace CSharp.Net.Util
                 return;
             try
             {
-                string msg = string.IsNullOrEmpty(log.Title) ? "" : (log.Title + "\t");
-                msg += string.IsNullOrEmpty(log.Message) ? "" : (log.Message + "\t");
-                msg += string.IsNullOrEmpty(log.Exception) ? "" : (log.Exception + "\t");
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine((beginTime ?? DateTime.Now).ToString(1));
+                if (log.Title.IsNotNullOrEmpty())
+                    sb.AppendLine(log.Title);
+                if (log.Message.IsNotNullOrEmpty())
+                    sb.AppendLine(log.Message);
+                if (log.Exception.IsNotNullOrEmpty())
+                    sb.AppendLine(log.Exception);
+
                 // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
                 var path = FileHelper.GetFilePath(Path.Combine(AppDomainHelper.GetRunRoot, "logs", log.Level.GetDescription().ToLower()), DateTime.Now.ToString(2) + ".log");
-                FileHelper.AppendWrittenFile(path, msg);
+                FileHelper.AppendWrittenFile(path, sb.ToString());
             }
             catch (Exception ex)
             {

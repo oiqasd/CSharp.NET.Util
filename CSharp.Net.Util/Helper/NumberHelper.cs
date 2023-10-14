@@ -160,5 +160,26 @@ namespace CSharp.Net.Util
         }
         #endregion
 
+        /// <summary>
+        /// 62进制转换
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        public static string EncodeHexadecimal(long num)
+        {
+            string characters_all = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            while (num > 0)
+            {
+                stringBuilder.Append(characters_all[(int)(num % 62)]);
+                num = num / 62;
+            }
+            StringHelper.Reverse(stringBuilder);
+
+            return stringBuilder.ToString();
+        }
+
     }
 }

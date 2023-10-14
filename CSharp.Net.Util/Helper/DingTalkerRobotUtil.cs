@@ -57,7 +57,8 @@ namespace CSharp.Net.Util
         /// <param name="token"></param>
         /// <param name="secret"></param>
         /// <returns></returns>
-        public static async Task<string> SendMarkDownMsg(string title, string message, string token = null, string secret = null) => await SendMarkDownMsg(title, message, null, token, secret);
+        public static async Task<string> SendMarkDownMsg(string title, string message, string token = null, string secret = null)
+            => await SendMarkDownMsg(title, message, null, token, secret);
 
         /// <summary>
         /// 发送markdown消息

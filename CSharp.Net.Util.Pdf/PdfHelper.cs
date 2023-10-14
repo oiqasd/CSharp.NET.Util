@@ -103,7 +103,7 @@ public class PdfHelper
         return stream.ToArray();
     }
 
-    private static void AddWater(string pdfPath, string words)
+    public static void AddWater(string pdfPath, string words)
     {
         PdfReader pdfReader = null;
         PdfStamper pdfStamper = null;

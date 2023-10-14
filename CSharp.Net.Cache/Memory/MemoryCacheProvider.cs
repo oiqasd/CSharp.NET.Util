@@ -52,7 +52,7 @@ namespace CSharp.Net.Cache.Memory
         /// <param name="func"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) where T : new()
+        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) //where T : new()
         {
             return _cache.GetOrCreate<T>(key, c =>
             {
@@ -241,7 +241,7 @@ namespace CSharp.Net.Cache.Memory
             return keys.ToArray();
         }
 
-        public bool SetAdd<T>(string key, T value, TimeSpan? timeSpan= null)
+        public bool SetAdd<T>(string key, T value, TimeSpan? timeSpan = null)
         {
             if (value == null) return false;
             var data = _cache.Get<List<T>>(key) ?? new List<T>();

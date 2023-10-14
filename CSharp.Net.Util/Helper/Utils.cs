@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using CSharp.Net.Util.Cryptography;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CSharp.Net.Util
@@ -10,6 +13,15 @@ namespace CSharp.Net.Util
     /// </summary>
     public class Utils
     {
+        /// <summary>
+        /// 总62位 a-zA-Z0-9
+        /// </summary>
+        const string characters_all = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        /// <summary>
+        /// 36位 0-9A-Z
+        /// </summary>
+        const string characters_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
         #region 随机数生成
         /// <summary>
         /// 随机字符串 数字+大小写字母
@@ -45,14 +57,15 @@ namespace CSharp.Net.Util
         {
             length = length <= 0 ? 1 : length;
             length = length >= 10 ? 10 : length;
-            StringBuilder sbMax = new StringBuilder();
-
-            for (int i = 0; i < length; i++)
-            {
-                sbMax.Append("9");
-            }
+            //StringBuilder sbMax = new StringBuilder();             
+            //for (int i = 0; i < length; i++) 
+            //    sbMax.Append("9"); 
+#if NET
+            return Random.Shared.Next(0, (int)Math.Pow(10, length));
+#else
             Random rand = new Random(Guid.NewGuid().GetHashCode());
-            return rand.Next(0, int.Parse(sbMax.ToString()));
+            return rand.Next(0, (int)Math.Pow(10, length));
+#endif
         }
 
         /// <summary>
@@ -63,17 +76,22 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static int GetRandom(int min, int max)
         {
+#if NET
+            return Random.Shared.Next(min, max);
+#else
             Random rand = new Random(Guid.NewGuid().GetHashCode());
             return rand.Next(min, max);
+#endif
         }
 
         /// <summary>
         /// 生成编号，19位
         /// str+yyMMddHHmmssfff+4位随机数
         /// </summary>
+        [Obsolete("有重复风险，建议使用CreateWorkId")]
         public static string CreateOrderId(string headCode = null)
         {
-            System.Threading.Thread.Sleep(1);
+            //System.Threading.Thread.Sleep(1);
             StringBuilder orderId = new StringBuilder();
             //生成4位随机数
             Random rand = new Random(Guid.NewGuid().GetHashCode());
@@ -88,15 +106,15 @@ namespace CSharp.Net.Util
 
         /// <summary>
         /// 雪花算法生成编号
-        /// 自定义配置方式IdWorkerHelper.GeneratorIdWorker(IdWorkerOptions options)
+        /// <para>自定义配置方式：IdWorkerHelper.GeneratorIdWorker(IdWorkerOptions options)</para>
         /// </summary>
         public static long CreateWorkId()
         {
-            if (IdWorkerHelper.IdWorkInstance == null)
+            if (IdWorkerHelper.Instance == null)
             {
                 IdWorkerHelper.GeneratorIdWorker();
             }
-            return IdWorkerHelper.IdWorkInstance.nextId();
+            return IdWorkerHelper.Instance.NextId();
         }
 
         /// <summary>  
@@ -109,6 +127,40 @@ namespace CSharp.Net.Util
             long num = BitConverter.ToInt64(buffer, 0);
             return num.ToString().Substring(0, 15).ToLong();
         }
+
+        /// <summary>
+        /// 生成短链接key
+        /// 0.03%的概率会重复
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns>4段任选一段，区分大小写</returns>
+        public static string[] ShortKey(string data)
+        {
+            //自定义生成MD5加密字符传前的混合KEY
+            string key = "yvdh";
+            //对传入数据进行MD5加密
+            string hex = MD5.Md5Encrypt(key + data);
+            string[] resShortData = new string[4];
+            for (int i = 0; i < 4; i++)
+            {
+                //把加密字符按照8位一组16进制与0x3FFFFFFF进行位与运算
+                int hexint = 0x3FFFFFFF & Convert.ToInt32("0x" + hex.Substring(i * 8, 8), 16);
+                string outChars = string.Empty;
+                for (int j = 0; j < 6; j++)
+                {
+                    //把得到的值与0x0000003D进行位与运算，取得字符数组chars索引
+                    int index = 0x0000003D & hexint;
+                    //把取得的字符相加
+                    outChars += characters_all[index];
+                    //每次循环按位右移5位
+                    hexint = hexint >> 5;
+                }
+                //把字符串存入对应索引的输出数组
+                resShortData[i] = outChars;
+            }
+            return resShortData;
+        }
+
         #endregion
 
         #region 其它校验

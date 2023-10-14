@@ -41,8 +41,8 @@ namespace CSharp.Net.Util.Cryptography
             // MD5 md5 = new MD5CryptoServiceProvider();
             using (var md5 = System.Security.Cryptography.MD5.Create())
             {
-                byte[] FromData = encoding.GetBytes(strToBeEncrypt);
-                byte[] TargetData = md5.ComputeHash(FromData);
+                byte[] fromData = encoding.GetBytes(strToBeEncrypt);
+                byte[] targetData = md5.ComputeHash(fromData);
                 //StringBuilder Byte2Builder = new StringBuilder();
                 //for (int i = 0; i < TargetData.Length; i++)
                 //{
@@ -50,7 +50,7 @@ namespace CSharp.Net.Util.Cryptography
                 //}
                 //return Byte2Builder.ToString().ToLower();
 
-                var strResult = BitConverter.ToString(TargetData);
+                var strResult = BitConverter.ToString(targetData);
                 return strResult.Replace("-", "");
             }
 

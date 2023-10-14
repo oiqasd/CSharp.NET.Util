@@ -79,7 +79,7 @@ namespace CSharp.Net.Cache
         /// <param name="func"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) where T : new();
+        T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null);// where T : new();
         /// <summary>
         /// 获取或创建一个key
         /// </summary>
@@ -128,7 +128,7 @@ namespace CSharp.Net.Cache
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        bool SetAdd<T>(string key, T value, TimeSpan? timeSpan=null);
+        bool SetAdd<T>(string key, T value, TimeSpan? timeSpan = null);
         /// <summary>
         /// 添加集合
         /// </summary>
@@ -137,7 +137,7 @@ namespace CSharp.Net.Cache
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan=null);
+        bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan = null);
         /// <summary>
         /// 移除集合对象
         /// </summary>

@@ -201,6 +201,20 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
+        /// 反转字符串
+        /// </summary>
+        /// <param name="strBuilder"></param>
+        public static void Reverse(StringBuilder strBuilder)
+        {
+            for (int left = 0, right = strBuilder.Length - 1; left < right; left++, right--)
+            {
+                char temp = strBuilder[left];
+                strBuilder[left] = strBuilder[right];
+                strBuilder[right] = temp;
+            }
+        }
+
+        /// <summary>
         /// 确保一个字符串的指定的前缀
         /// </summary>
         /// <param name = "value">输入字符串</param>
@@ -1793,7 +1807,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// Determines whether the string contains all of the provided values.
         /// </summary>
-        /// <param name="this"></param>
+        /// <param name="value"></param>
         /// <param name="values"></param>
         /// <returns></returns>
         public static bool ContainsAll(string value, params string[] values)
