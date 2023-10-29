@@ -6,7 +6,7 @@
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>.NET Util</Description>
-		<Version>7.1.10</Version>
+		<Version>7.1.11</Version>
 		<Copyright></Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->

@@ -197,23 +197,134 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 动态获取json数据,在不确定key场景可用此方法
+        /// 获取json对象列表
         /// </summary>
-        /// <param name="jsonData"></param>
-        /// <returns>value 为 string</returns>
-        public static Dictionary<string, string> GetJObject(string jsonData)//<T>
+        /// <param name="input">json data</param>
+        /// <param name="dataKey">默认空,如果<paramref name="input"/>是对象且需要指定key时可用该字段</param>
+        /// <returns></returns>
+        /// <exception cref="JsonFormatterException"></exception>
+        public static List<Dictionary<string, string>> GetJList(string input, string dataKey = null)
         {
-            Dictionary<string, string> data = new Dictionary<string, string>();
-            JsonObject obj = JsonNode.Parse(jsonData).AsObject();
-            foreach (var item in obj)
+            var node = GetJsonNode(input);
+            if (node is JsonValue)
+                throw new JsonFormatterException("input is a value");
+
+            Func<JsonArray, List<Dictionary<string, string>>> func = (array) =>
             {
-                if (data.ContainsKey(item.Key)) continue;
-                //if (item.Value is JsonObject || item.Value is JsonArray)
-                //    data.Add(item.Key, ConvertHelper.ConvertTo<T>(item.Value.ToJsonString()));
-                //else if(typeof(T) is object)
-                data.Add(item.Key, item.Value?.ToString());
+                List<Dictionary<string, string>> data = new List<Dictionary<string, string>>();
+                foreach (var arr in array)
+                {
+                    Dictionary<string, string> dt = new Dictionary<string, string>();
+                    foreach (var o in (JsonObject)arr)
+                        dt.Add(o.Key, o.Value.ToString());
+
+                    data.Add(dt);
+                }
+                return data;
+            };
+
+            if (node is JsonObject)
+            {
+                foreach (var item in node.AsObject())
+                    if (item.Value is JsonArray && (dataKey.IsNullOrEmpty() || dataKey == item.Key))
+                        return func((JsonArray)item.Value);
+            }
+            else if (node is JsonArray)
+            {
+                return func(node.AsArray());
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取json对象字段
+        /// </summary>
+        /// <param name="input">json data</param>
+        /// <param name="dataKey">默认返回第一级对象,指定字段(多层级用:) xxx:xx</param>
+        /// <returns>
+        /// <para>返回dataFiled最末字段的值，</para>
+        /// <para>如果对应的是对象则返回对象内所有字段，</para>
+        /// <para>如果对应列表则返回第一条记录的所有字段。</para>
+        /// </returns>
+        public static Dictionary<string, string> GetJObject(string input, string dataKey = null)
+        {
+            var node = GetJsonNode(input);
+
+#if NET6_0_OR_GREATER
+            if (node is not JsonObject)
+                throw new JsonFormatterException("input is not object");
+#endif
+            Dictionary<string, string> data = new Dictionary<string, string>();
+            string[] fileds = dataKey?.Trim(':').Split(":");
+            if (fileds.IsNullOrEmpty())
+            {
+                JsonObject obj = node.AsObject();
+                foreach (var item in obj)
+                {
+                    if (data.ContainsKey(item.Key)) continue;
+                    data.Add(item.Key, item.Value?.ToString());
+                }
+                return data;
+            }
+
+            JsonObject jobj = JsonNode.Parse(input).AsObject();
+
+            for (int i = 0; i < fileds.Length; i++)
+            {
+                foreach (var item in jobj)
+                {
+                    if (item.Key != fileds[i]) continue;
+                    if (item.Value is JsonObject)
+                        jobj = (JsonObject)item.Value;
+
+                    else if (item.Value is JsonArray)
+                        jobj = (JsonObject)item.Value[0];
+
+                    else if (item.Value is JsonValue)
+                        data.Add(item.Key, item.Value.ToString());
+                    break;
+                }
+            }
+            if (data.IsNullOrEmpty())
+            {
+                foreach (var item in jobj)
+                    data.Add(item.Key, item.Value.ToString());
             }
             return data;
+        }
+
+        /// <summary>
+        /// 获取json中指定的字段
+        /// </summary>
+        /// <param name="input">json data</param>
+        /// <param name="dataKey">指定字段 xxx:xx</param>
+        /// <returns></returns>
+        public static string GetJValue(string input, string dataKey)
+        {
+            string[] fileds = dataKey.Trim(':').Split(":");
+            if (fileds.IsNullOrEmpty())
+                return input;
+
+            JsonObject jobj = JsonNode.Parse(input).AsObject();
+            for (int i = 0; i < fileds.Length; i++)
+            {
+                foreach (var item in jobj)
+                {
+                    if (item.Key != fileds[i]) continue;
+                    if (i == fileds.Length - 1)
+                        return item.Value.ToString();
+
+                    if (item.Value is JsonObject)
+                        jobj = (JsonObject)item.Value;
+
+                    else if (item.Value is JsonArray)
+                        jobj = (JsonObject)item.Value[0];
+                    else
+                        throw new JsonFormatterException($"node {item.Key} not object or array,please check dataKey.");
+                    break;
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -222,9 +333,28 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
-        public JsonNode GetJsonNode(string json)
+        public static JsonNode GetJsonNode(string json)
         {
             return JsonNode.Parse(json);
+        }
+
+        /// <summary>
+        /// 判断是否json
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static bool IsJson(string input)
+        {
+            try
+            {
+                input = input.Trim();
+                return input.StartsWith("{") && input.EndsWith("}")
+                       || input.StartsWith("[") && input.EndsWith("]");
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

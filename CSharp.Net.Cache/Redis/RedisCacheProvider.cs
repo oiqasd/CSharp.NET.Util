@@ -63,7 +63,7 @@ namespace CSharp.Net.Cache.Redis
             }
             return value;
         }
-
+       
         /// <summary>
         /// 获取或添加key
         /// </summary>
@@ -1712,12 +1712,30 @@ namespace CSharp.Net.Cache.Redis
         protected Dictionary<string, T> ConvetDic<T>(HashEntry[] values)
         {
             Dictionary<string, T> result = new Dictionary<string, T>();
+            bool? isJson = null;
             foreach (var item in values)
             {
-                var model = JsonHelper.Deserialize<T>(item.Value);
+                var val = item.Value.ToString();
+                if (!isJson.HasValue)
+                    isJson = CheckJson(val);
+
+                var model = isJson.Value ? JsonHelper.Deserialize<T>(val) : ConvertHelper.ConvertTo<T>(val);
                 result.Add(item.Name, model);
             }
             return result;
+        }
+
+        protected bool CheckJson(string data)
+        {
+            try
+            {
+                JsonHelper.GetJObject(data);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
         #endregion 其他
 

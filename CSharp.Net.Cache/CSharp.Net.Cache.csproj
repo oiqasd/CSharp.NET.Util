@@ -7,7 +7,7 @@
 		<!--<PackageVersion>2.2</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>.NET Cache:Memorycache and Redis</Description>
-		<Version>7.0.1</Version>
+		<Version>7.0.2</Version>
 		<Copyright></Copyright>
 		<ProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</ProjectUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>

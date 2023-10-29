@@ -27,6 +27,7 @@ namespace CSharp.Net.Util
         public ThrowExceptionMode ThrowExceptionMode { get; set; } = ThrowExceptionMode.Default;
         /// <summary>
         /// 日志记录级别
+        /// Debug:会打印请求日志
         /// </summary>
         public LogLevel LogLevel { get; set; } = LogLevel.None;
 
