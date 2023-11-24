@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net7.0;</TargetFrameworks>
 		<Authors>Util</Authors>
-		<Version>1.0.0</Version>
+		<Version>1.0.1</Version>
 		<RootNamespace>CSharp.Net.Mvc</RootNamespace>
 		<AssemblyName>CSharp.Net.Mvc</AssemblyName>
 		<OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>		
@@ -13,16 +13,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CSharp.Net.Util" Version="7.1.14" />
 		<PackageReference Include="System.Drawing.Common" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.3" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\CSharp.Net.Util\CSharp.Net.Util.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Using Include="System"/>
+		<Using Include="System" />
 	</ItemGroup> 
 </Project>

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace CSharp.Net.Util
 {
@@ -47,13 +48,17 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="param"></param>
-        /// <param name="defaultValue"></param>
+        /// <param name="defaultValue"></param> 
+        /// <param name="provider">默认null, 例:Thread.CurrentThread.CurrentCulture</param>
         /// <returns></returns>
-        public static T ConvertTo<T>(object param, T defaultValue = default(T))
+        public static T ConvertTo<T>(object param, T defaultValue = default(T), IFormatProvider? provider = null)
         {
             try
             {
-                return (T)Convert.ChangeType(param, typeof(T));
+                //if (typeof(System.Enum).IsAssignableFrom(typeof(T)))
+                //    return (T)Enum.Parse(typeof(T), param.ToString());
+
+                return (T)Convert.ChangeType(param, typeof(T), provider);
             }
             catch
             {
@@ -101,18 +106,11 @@ namespace CSharp.Net.Util
         /// <returns>The target type</returns>
         public static T ConvertTo<T>(object value, T defaultValue, bool ignoreException)
         {
-            if (ignoreException)
+            if (!ignoreException)
             {
-                try
-                {
-                    return ConvertTo<T>(value);
-                }
-                catch
-                {
-                    return defaultValue;
-                }
+                return (T)Convert.ChangeType(value, typeof(T));
             }
-            return ConvertTo<T>(value);
+            return ConvertTo<T>(value, defaultValue);
         }
 
         /// <summary>

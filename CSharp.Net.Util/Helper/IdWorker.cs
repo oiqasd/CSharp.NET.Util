@@ -137,12 +137,16 @@ namespace CSharp.Net.Util
                 int r = 0;
                 while (timestamp < lastTimestamp)
                 {
-                    //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常，因为不能保证现在生成的ID之前没有生成过
+                    //如果当前时间戳比上一次生成ID时时间戳还小，抛出异常
                     Thread.Sleep(1);
                     timestamp = tillNextMillis(this.lastTimestamp);
                     r++;
                     if (r > 1000 * 10)
-                        throw new WorkIdException(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
+                    {
+                        LogHelper.Fatal("WorkId Error", string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
+                        return Guid.NewGuid().GetHashCode();
+                        //throw new WorkIdException(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
+                    }
                 }
 
                 if (this.lastTimestamp == timestamp)

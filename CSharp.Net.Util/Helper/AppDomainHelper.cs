@@ -133,24 +133,27 @@ namespace CSharp.Net.Util
         /// 2.4.2.2
         /// iocp:(Busy=0,Free=1000,Min=10,Max=1000)
         /// worker:(Busy=2,Free=32765,Min=100,Max=32767)
-        /// 使用内存：689 mb
-        /// GC:146mb
+        /// 分配物理内存：100 mb
         /// </returns>
-        public static string PrintRunTimeInfo()
+        public static string PrintRuntimeInfo()
         {
-            PrintThreadPoolStats(out string icop, out string worker);
+            PrintThreadPoolStats(out string iocp, out string worker);
             StringBuilder sb = new StringBuilder();
             sb.Append(GetHostName)
               .AppendLine(IpHelper.GetCurrentIP())
               .Append("程序集版本:").AppendLine(GetVersion.ToString())
               .AppendLine(GetDotNetVersion)
-              .AppendLine(icop)
+              .AppendLine(iocp)
               .AppendLine(worker)
-              .AppendLine($"使用内存：{GetMemory / 1024 / 1024} mb")
-              .AppendLine($"GC:{GC.GetTotalMemory(false) / 1024 / 1024}mb");
-
+              .AppendLine($"分配物理内存：{GetMemory / 1024 / 1024} mb")
+              .AppendLine($"当前堆大小(不含碎片)：{GC.GetTotalMemory(false) / 1024 / 1024.0}mb");
+#if NET5_0_OR_GREATER
+            sb.AppendLine($"GC托管堆已提交的总量：{GC.GetGCMemoryInfo().TotalCommittedBytes / 1024 / 1024.0}mb");
+#endif
+            sb.AppendLine($"自创建程序域内存分配的总量(含已回收的内存)：{AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize / 1024 / 1024.0}mb");
             //if (gc == 1) GC.Collect(); 
-            //if (gc == 2) GC.Collect(GC.MaxGeneration);
+            //if (gc == 2) GC.Collect(GC.MaxGeneration); 
+
             return sb.ToString();
         }
 
@@ -164,12 +167,16 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 获取工作内存使用量bytes
+        ///获取分配的物理内存量 bytes
         /// </summary>
         /// <returns></returns>
         public static long GetMemory
         {
-            get { return System.Diagnostics.Process.GetCurrentProcess().WorkingSet64; }
+            get
+            {
+                Process.GetCurrentProcess().Refresh();
+                return Process.GetCurrentProcess().WorkingSet64;
+            }
         }
 
         /// <summary>

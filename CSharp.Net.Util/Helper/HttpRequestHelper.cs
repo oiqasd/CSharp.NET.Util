@@ -9,7 +9,8 @@ using System.Threading.Tasks;
 namespace CSharp.Net.Util
 {
     /// <summary>
-    /// Http请求帮助类
+    /// Http请求帮助类,
+    /// 已废弃,请使用HttpClientUtil
     /// </summary>
     [Obsolete("已弃用2021/8/15，推荐使用HttpClientUtil代替")]
     public class HttpRequestHelper

@@ -19,7 +19,7 @@ namespace CSharp.Net.Util
         /// <param name="numRetries">重试次数</param>
         /// <param name="retryTimeout">重试间隔时间</param>
         /// <param name="finalThrow">是否最终抛异常</param>
-        /// <param name="exceptionTypes">指定特定异常类型,可多个</param>
+        /// <param name="exceptionTypes">终止重试异常类型,可多个</param>
         public static async Task Invoke(Action action, int numRetries, int retryTimeout = 1000, bool finalThrow = true, Type[] exceptionTypes = default)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -31,6 +31,7 @@ namespace CSharp.Net.Util
              }, numRetries, retryTimeout, finalThrow, exceptionTypes);
         }
 
+
         /// <summary>
         /// 重试有异常的方法，还可以指定特定异常
         /// </summary>
@@ -38,12 +39,12 @@ namespace CSharp.Net.Util
         /// <param name="numRetries">重试次数</param>
         /// <param name="retryTimeout">重试间隔时间</param>
         /// <param name="finalThrow">是否最终抛异常</param>
-        /// <param name="exceptionTypes">异常类型,可多个</param>
+        /// <param name="exceptionTypes">终止重试异常类型,可多个</param>
         public static async Task Invoke(Func<Task> action, int numRetries, int retryTimeout = 1000, bool finalThrow = true, Type[] exceptionTypes = default)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
 
-            // 不断重试
+            // 重试
             while (true)
             {
                 try
@@ -65,6 +66,52 @@ namespace CSharp.Net.Util
                     {
                         if (finalThrow) throw;
                         else return;
+                    }
+
+                    if (Debugger.IsAttached)
+                    {
+                        Console.WriteLine($"You can retry {numRetries} more times.");
+                    }
+
+                    // 如果可重试异常数大于 0，则间隔指定时间后继续执行
+                    if (retryTimeout > 0) await Task.Delay(retryTimeout);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 重试有异常的方法，还可以指定特定异常
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="numRetries">重试次数,默认1次</param>
+        /// <param name="retryTimeout">重试间隔时间</param>
+        /// <param name="finalThrow">是否最终抛异常</param>
+        /// <param name="exceptionTypes">终止重试异常类型,可多个</param>
+        public static async Task<object> Invoke(Func<Task<object>> action, int numRetries = 1, int retryTimeout = 1000, bool finalThrow = true, Type[] exceptionTypes = default)
+        {
+            if (action == null) throw new ArgumentNullException(nameof(action));
+
+            // 重试
+            while (true)
+            {
+                try
+                {
+                    return await action();
+                }
+                catch (Exception ex)
+                {
+                    // 如果可重试次数小于或等于0，则终止重试
+                    if (--numRetries < 0)
+                    {
+                        if (finalThrow) throw;
+                        else return null;
+                    }
+
+                    // 如果填写了 exceptionTypes 且异常类型不在 exceptionTypes 之内，则终止重试
+                    if (exceptionTypes != null && exceptionTypes.Length > 0 && !exceptionTypes.Any(u => u.IsAssignableFrom(ex.GetType())))
+                    {
+                        if (finalThrow) throw;
+                        else return null;
                     }
 
                     if (Debugger.IsAttached)

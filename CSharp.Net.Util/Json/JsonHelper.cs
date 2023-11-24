@@ -1,6 +1,5 @@
-﻿//#if NET6_0_OR_GREATER
-
-using CSharp.Net.Util.Json;
+﻿using CSharp.Net.Util.Json;
+using CSharp.Net.Util.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +15,11 @@ namespace CSharp.Net.Util
     /// 使用System.Text.Json序列化
     /// Newtonsoft.Json 迁移文档
     /// https://docs.microsoft.com/zh-cn/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0
+    /// 
+    /// <para>.net8新增特性，可以反序列化只读字段或属性，此工具类未全局应用</para>
+    ///  若要选择此全局支持，请将新选项 PreferredObjectCreationHandling 设置为 JsonObjectCreationHandling.Populate。
+    ///  如果考虑兼容性问题，还可通过将 [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)] 特性放置在要填充其属性的特定类型上或单个属性上来更精细地启用该功能。
+    /// 
     /// </summary>
     public class JsonHelper
     {
@@ -34,6 +38,9 @@ namespace CSharp.Net.Util
         /// <para>.IsoDateTimeConverter</para>
         /// <para>.IsoDateTimeOffsetConverter</para>
         /// <para>.VersionConverter</para>
+        /// <para>.StringToIntegerConverter</para>
+        /// <para>.StringToLongConverter</para>
+        /// <para>.NumberToStringConverter</para>
         /// </returns>
         public static JsonSerializerOptions SetJsonSerializerOptions(JsonSerializerOptions jsonSerializerOptions)
         {
@@ -52,7 +59,9 @@ namespace CSharp.Net.Util
             jsonSerializerOptions.Converters.Add(new IsoDateTimeConverter());
             jsonSerializerOptions.Converters.Add(new IsoDateTimeOffsetConverter());
             jsonSerializerOptions.Converters.Add(new VersionConverter());
-            //jsonSerializerOptions.Converters.Add(new StringOrIntConverter());
+            jsonSerializerOptions.Converters.Add(new StringToIntegerConverter());
+            jsonSerializerOptions.Converters.Add(new StringToLongConverter());
+            jsonSerializerOptions.Converters.Add(new NumberToStringConverter());
             return jsonSerializerOptions;
         }
         static JsonHelper()
@@ -329,7 +338,7 @@ namespace CSharp.Net.Util
 
         /// <summary>
         /// 获取jsonNode
-        /// <para>使用方法，例：jsonNode["data"]["codes"][1].ToString();</para>
+        /// <para>使用方法，例：jsonNode["data"]["codes"][1].GetValue<![CDATA[<]]>int>();</para>
         /// </summary>
         /// <param name="json"></param>
         /// <returns></returns>
@@ -358,4 +367,3 @@ namespace CSharp.Net.Util
         }
     }
 }
-//#endif

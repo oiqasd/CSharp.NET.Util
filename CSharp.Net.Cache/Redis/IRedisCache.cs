@@ -612,9 +612,12 @@ namespace CSharp.Net.Cache
         /// 发布订阅 
         /// </summary>
         /// <param name="subChannel"></param>
-        /// <param name="action"></param>
-        void Subscribe(string subChannel, Action<string> action);
-        Task SubscribeAsync(string subChannel, Func<string, Task> action);
+        /// <param name="handler"></param>
+        void Subscribe(string subChannel, Action<string> handler);
+        void Subscribe<T>(string subChannel, Action<T> handler);
+        Task SubscribeAsync(string subChannel, Func<string, Task> handler);
+        Task SubscribeAsync<T>(string subChannel, Func<T, Task> handler);
+        Task SubscribeAsync<T>(string subChannel, Action<T> handler);
 
         /// <summary>
         /// Redis发布订阅  发布

@@ -4,9 +4,9 @@
 		<TargetFrameworks>net6.0;net7.0;netstandard2.1</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
-		<Authors>Util</Authors>
-		<Description>.NET Util</Description>
-		<Version>7.1.11</Version>
+		<Authors>Anonymous C</Authors>
+		<Description>Provides some tools for .NET 6/7 and .NETStandard2.1 projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
+		<Version>7.1.13</Version>
 		<Copyright></Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
@@ -16,8 +16,7 @@
 		<Deterministic>False</Deterministic>
 		<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
-		<PackageTags>.NET;Util</PackageTags>
-		<Title>.NET 通用帮助类</Title>
+		<PackageTags>.NET;Util;Utility,Tools</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 

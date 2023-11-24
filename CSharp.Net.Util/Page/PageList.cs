@@ -8,13 +8,28 @@ using System.Linq;
 /// <typeparam name="T"></typeparam>
 public class PageList<T>
 {
-#pragma warning disable CS1591
-    public PageList(PageArgument page = null)
-#pragma warning restore CS1591
+    /// <summary>
+    /// 实例化PageList
+    /// </summary>
+    /// <param name="page"></param>
+    /// <param name="initList">list是否实例化，默认false</param>
+    public PageList(PageArgument page, bool initList = false)
     {
         TotalCount = 0;
-        PageIndex = page.PageIndex;
-        PageSize = page.PageSize;
+        PageIndex = page?.PageIndex ?? 0;
+        PageSize = page?.PageSize ?? 0;
+        if (initList)
+            list = new List<T>();
+    }
+
+    /// <summary>
+    /// 实例化PageList
+    /// </summary>
+    /// <param name="initList">list是否实例化</param>
+    public PageList(bool initList = false)
+    {
+        if (initList)
+            list = new List<T>();
     }
 
     //protected PageArgument page;
@@ -23,12 +38,12 @@ public class PageList<T>
     /// 请求页码
     /// 默认1
     /// </summary>
-    protected int PageIndex { get; set; }
+    public int PageIndex { get; set; }
     /// <summary>
     /// 每页记录数
     /// 默认10
     /// </summary>
-    protected int PageSize { get; set; }
+    public int PageSize { get; set; }
     /**
        /// <summary>
        /// 是否有下一页
@@ -59,10 +74,10 @@ public class PageList<T>
     /// 列表
     /// </summary>
     /// <param name="items"></param>
-    /// <param name="pageIndex"></param>
-    /// <param name="pageSize"></param>
-    /// <param name="totalCount"></param>
-    public PageList(IEnumerable<T> items, int pageIndex, int pageSize, int totalCount)
+    /// <param name="pageIndex">default -1</param>
+    /// <param name="pageSize">default -1</param>
+    /// <param name="totalCount">default -1</param>
+    public PageList(IEnumerable<T> items, int totalCount = -1, int pageIndex = -1, int pageSize = -1)
     {
         if (totalCount != 0 && items != null)
         {
@@ -79,8 +94,8 @@ public class PageList<T>
     /// </summary>
     /// <param name="items"></param>
     /// <param name="page"></param>
-    /// <param name="totalCount"></param>
-    public PageList(IEnumerable<T> items, PageArgument page, int totalCount)
+    /// <param name="totalCount">default -1</param>
+    public PageList(IEnumerable<T> items, PageArgument page, int totalCount = -1)
     {
         if (totalCount != 0 && items != null)
         {

@@ -63,7 +63,7 @@ namespace CSharp.Net.Cache.Redis
             }
             return value;
         }
-       
+
         /// <summary>
         /// 获取或添加key
         /// </summary>
@@ -95,9 +95,7 @@ namespace CSharp.Net.Cache.Redis
         {
             TimeSpan? timeSpan = null;
             if (cacheSeconds > 0)
-            {
                 timeSpan = TimeSpan.FromSeconds(cacheSeconds);
-            }
 
             return StringSet(key, value, timeSpan);
         }
@@ -112,9 +110,7 @@ namespace CSharp.Net.Cache.Redis
         public bool StringSet(string key, string value, TimeSpan? expiry)
         {
             if (string.IsNullOrWhiteSpace(key))
-            {
                 throw new ArgumentNullException(nameof(key));
-            }
 
             key = PrefixKey(key);
             return Do(db => db.StringSet(key, value, expiry));
@@ -129,9 +125,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="expiry"></param>
         /// <returns></returns>
         public bool StringSet<T>(string key, T obj, TimeSpan? expiry) where T : new()
-        {
-            return StringSet(key, Serialize(obj), expiry);
-        }
+        => StringSet(key, Serialize(obj), expiry);
 
         /// <summary>
         /// 保存一个对象
@@ -141,9 +135,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="cacheSeconds"></param>
         /// <returns></returns>
         public bool StringSet(string key, object obj, int cacheSeconds = 0)
-        {
-            return StringSet(key, Serialize(obj), cacheSeconds);
-        }
+        => StringSet(key, Serialize(obj), cacheSeconds);
 
         /// <summary>
         /// 批量添加 有过期时间
@@ -210,11 +202,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="key"></param>
         /// <returns></returns>
         public T StringGet<T>(string key)
-        {
-            var str = StringGet(key);
-
-            return Deserialize<T>(str);
-        }
+            => Deserialize<T>(StringGet(key));
 
         /// <summary>
         /// 获取单个key的值
@@ -710,13 +698,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="t"></param>
         /// <returns> 返回true表示是新加，返回false表示是修改 </returns>
         public async Task<bool> HashSetAsync<T>(string key, string dataKey, T t)
-        {
-            key = PrefixKey(key);
-            return await Do(db =>
-            {
-                return db.HashSetAsync(key, dataKey, Serialize(t));
-            });
-        }
+             => await Do(db => { return db.HashSetAsync(PrefixKey(key), dataKey, Serialize(t)); });
 
         /// <summary>
         /// 移除hash中的某值
@@ -725,10 +707,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="dataKey"></param>
         /// <returns></returns>
         public async Task<bool> HashDeleteAsync(string key, string dataKey)
-        {
-            key = PrefixKey(key);
-            return await Do(db => db.HashDeleteAsync(key, dataKey));
-        }
+            => await Do(db => db.HashDeleteAsync(PrefixKey(key), dataKey));
 
         /// <summary>
         /// 移除hash中的多个值
@@ -1531,12 +1510,22 @@ namespace CSharp.Net.Cache.Redis
         /// 订阅消息
         /// </summary>
         /// <param name="subChannel"></param>
-        /// <param name="action"></param>
-        public void Subscribe(string subChannel, Action<string> action)
+        /// <param name="handler"></param>
+        public void Subscribe(string subChannel, Action<string> handler)
+        {
+            Subscribe(subChannel, (c, h) => { handler(h); });
+        }
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
+        public void Subscribe<T>(string subChannel, Action<T> handler)
         {
             Subscribe(subChannel, (c, h) =>
             {
-                action(h);
+                handler(Deserialize<T>(h));
             });
         }
 
@@ -1544,11 +1533,35 @@ namespace CSharp.Net.Cache.Redis
         /// 订阅消息
         /// </summary>
         /// <param name="subChannel"></param>
-        /// <param name="action"></param>
-        public async Task SubscribeAsync(string subChannel, Func<string, Task> action)
+        /// <param name="handler"></param>
+        public async Task SubscribeAsync(string subChannel, Func<string, Task> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            await sub.SubscribeAsync(PrefixKey(subChannel), async (channel, message) => await action?.Invoke(message));
+            await sub.SubscribeAsync(PrefixKey(subChannel), async (channel, message) => await handler?.Invoke(message));
+        }
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
+        public async Task SubscribeAsync<T>(string subChannel, Func<T, Task> handler)
+        {
+            ISubscriber sub = _connection.GetSubscriber();
+            await sub.SubscribeAsync(PrefixKey(subChannel), async (channel, message)
+                => await handler?.Invoke(Deserialize<T>(message)));
+        }
+
+        /// <summary>
+        /// 订阅消息
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
+        public async Task SubscribeAsync<T>(string subChannel, Action<T> handler)
+        {
+            ISubscriber sub = _connection.GetSubscriber();
+            await sub.SubscribeAsync(PrefixKey(subChannel), (_, message)
+                => handler(Deserialize<T>(message)));
         }
 
         /// <summary>
@@ -1614,7 +1627,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="key"></param>
         string PrefixKey(string key)
         {
-            return key = $"{_options.InstanceName}{key}";
+            return $"{_options.InstanceName}{key}";
         }
 
 
@@ -1640,10 +1653,12 @@ namespace CSharp.Net.Cache.Redis
         T Deserialize<T>(string tValue)
         {
             if (typeof(T) == typeof(string) || CheckIConvertible(default(T)))
-            {
-                return ConvertHelper.ConvertTo<T>(tValue);
-            }
-            return JsonHelper.Deserialize<T>(tValue);
+                return ConvertHelper.ConvertTo<T>(tValue, default(T), false);
+
+            if (JsonHelper.IsJson(tValue))
+                return JsonHelper.Deserialize<T>(tValue);
+
+            throw new FormatException(tValue);
         }
 
         /// <summary> 
@@ -1717,7 +1732,7 @@ namespace CSharp.Net.Cache.Redis
             {
                 var val = item.Value.ToString();
                 if (!isJson.HasValue)
-                    isJson = CheckJson(val);
+                    isJson = JsonHelper.IsJson(val);
 
                 var model = isJson.Value ? JsonHelper.Deserialize<T>(val) : ConvertHelper.ConvertTo<T>(val);
                 result.Add(item.Name, model);
@@ -1725,18 +1740,6 @@ namespace CSharp.Net.Cache.Redis
             return result;
         }
 
-        protected bool CheckJson(string data)
-        {
-            try
-            {
-                JsonHelper.GetJObject(data);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
         #endregion 其他
 
     }

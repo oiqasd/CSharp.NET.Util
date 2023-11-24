@@ -27,7 +27,7 @@ namespace CSharp.Net.Util
         public ThrowExceptionMode ThrowExceptionMode { get; set; } = ThrowExceptionMode.Default;
         /// <summary>
         /// 日志记录级别
-        /// Debug:会打印请求日志
+        /// Debug:会打印请求/响应日志
         /// </summary>
         public LogLevel LogLevel { get; set; } = LogLevel.None;
 
@@ -77,7 +77,7 @@ namespace CSharp.Net.Util
                         HttpClientHandler handler = new HttpClientHandler
                         {
                             UseDefaultCredentials = true,
-                            SslProtocols = SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
+                            SslProtocols = SslProtocols.None, // SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
                             ClientCertificateOptions = ClientCertificateOption.Automatic,
                             ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) =>
                            {
@@ -484,11 +484,13 @@ namespace CSharp.Net.Util
             string msg = DateTime.Now.ToString(1) + ex.Message + url;
             if (PrintRequestErrorConsoleLog)
                 Console.WriteLine(msg);
-            if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw ex;
-            if (ThrowExceptionMode == ThrowExceptionMode.Always) throw ex;
 
             if (LogLevel != LogLevel.None)
                 LogHelper.Fatal(nameof(HttpClientUtil), msg, ex);
+
+            if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw ex;
+            if (ThrowExceptionMode == ThrowExceptionMode.Always) throw ex;
+
         }
 
         private static void PrintRequestLog(string method, string url, object data = null)

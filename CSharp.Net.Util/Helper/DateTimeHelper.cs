@@ -164,12 +164,13 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 
+        /// 判断字符串是否是时间
         /// </summary>
+        /// <param name="str"></param>
         /// <returns></returns>
-        public static bool IsTime(string timeval)
+        public static bool IsTime(string str)
         {
-            return System.Text.RegularExpressions.Regex.IsMatch(timeval, @"^((([0-1]?[0-9])|(2[0-3])):([0-5]?[0-9])(:[0-5]?[0-9])?)$");
+            return System.Text.RegularExpressions.Regex.IsMatch(str, @"^((([0-1]?[0-9])|(2[0-3])):([0-5]?[0-9])(:[0-5]?[0-9])?)$");
         }
 
         /// <summary>
@@ -321,7 +322,7 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 	Sets the time on the specified DateTime value.
+        /// Sets the time on the specified DateTime value.
         /// </summary>
         /// <param name = "date">The base date.</param>
         /// <param name = "hours">The hours to be set.</param>
@@ -334,12 +335,12 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 	Sets the time on the specified DateTime value.
+        /// Sets the time on the specified DateTime value.
         /// </summary>
         /// <param name = "date">The base date.</param>
         /// <param name = "time">The TimeSpan to be applied.</param>
         /// <returns>
-        /// 	The DateTime including the new time value
+        /// The DateTime including the new time value
         /// </returns>
         public static DateTime SetTime(DateTime date, TimeSpan time)
         {
@@ -347,7 +348,7 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        ///     Indicates whether the source DateTime is before the supplied DateTime.
+        /// Indicates whether the source DateTime is before the supplied DateTime.
         /// </summary>
         /// <param name="source">The source DateTime.</param>
         /// <param name="other">The compared DateTime.</param>
@@ -358,7 +359,7 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        ///     Indicates whether the source DateTime is before the supplied DateTime.
+        /// Indicates whether the source DateTime is before the supplied DateTime.
         /// </summary>
         /// <param name="source">The source DateTime.</param>
         /// <param name="other">The compared DateTime.</param>
@@ -555,7 +556,7 @@ namespace CSharp.Net.Util
         /// 时间戳转换本地时间
         /// </summary>
         /// <param name="timestamp">时间戳</param>
-        /// <param name="isSecond">default: auto select, true: second, false: millisecond </param>
+        /// <param name="isSecond">是否秒转化，default: auto select, true: second, false: millisecond </param>
         /// <returns></returns>
         public static DateTime Parse(long timestamp, bool? isSecond = null)
         {

@@ -175,23 +175,24 @@ namespace CSharp.Net.Util
 
         /// <summary>
         /// 通过程序及 类名 方法名 参数执行方法
-        /// ReflectionHelper.DoMethod("WindowsFormsApplication.TestService","WindowsFormsApplication","GetStr", "a", "b");
+        /// ReflectionHelper.InvokeMethod("WindowsFormsApplication.TestService","WindowsFormsApplication","GetStr", "a", "b");
         /// </summary>
         /// <param name="className"></param>
         /// <param name="assemblyFile"></param>
         /// <param name="method"></param>
-        /// <param name="pas"></param>
+        /// <param name="args"></param>
         /// <returns></returns>
-        public static object DoMethod(string className, string assemblyFile, string method, params object[] pas)
+        public static object InvokeMethod(string className, string assemblyFile, string method, params object[] args)
         {
             if (assemblyFile.IsNotNullOrEmpty())
             {
                 object obj = GetObject(className, assemblyFile);
                 Type type = obj.GetType();
+                //type.InvokeMember(method, BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Instance, BindingFlags.Public, BindingFlags.NonPublic, null, obj, args);
                 //根据方法名获取MethodInfo对象
                 MethodInfo methodInfo = type.GetMethod(method);
                 //参数1类型为object[]，代表Hello World方法的对应参数，输入值为null代表没有参数
-                return methodInfo.Invoke(obj, pas);
+                return methodInfo.Invoke(obj, args);
             }
             else
             {
@@ -203,5 +204,395 @@ namespace CSharp.Net.Util
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// 反射一个实体类
+    /// </summary>
+    /// <typeparam name="TargetClass"></typeparam>
+    public class ReflectionHelper<TargetClass>
+    {
+        private TargetClass mTarget;
+        private NestObject mNestObject;
+
+        /// <summary>
+        /// 要反射的对象
+        /// </summary>
+        public TargetClass Target
+        {
+            get { return mTarget; }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="target">要反射的对象</param>
+        public ReflectionHelper(TargetClass target)
+        {
+            mTarget = target;
+            mNestObject = new NestObject(target);
+        }
+
+        /// <summary>
+        /// 执行指定的方法
+        /// </summary>
+        /// <param name="method">目标方法的名称</param>
+        /// <param name="args">参数</param>
+        /// <returns></returns>
+        public object InvokeMethod(string method, object[] args)
+        {
+            return mTarget.GetType().InvokeMember(
+                method,
+                BindingFlags.InvokeMethod | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, mTarget, args);
+        }
+
+        /// <summary>
+        /// 获取字段值
+        /// </summary>
+        /// <param name="field">字段名称(层次结构可以用.分隔)</param>
+        /// <returns>字段值</returns>
+        public object GetFieldValue(string field)
+        {
+            mNestObject.SetField(field);
+            return mNestObject.FieldInfo.GetValue(mNestObject.FieldParent);
+        }
+
+        /// <summary>
+        /// 设置字段值
+        /// </summary>
+        /// <param name="field">字段名称(层次结构可以用.分隔)</param>
+        /// <param name="value"></param>
+        public void SetField(string field, object value)
+        {
+            mNestObject.SetField(field);
+            mNestObject.FieldInfo.SetValue(mNestObject.FieldParent, value);
+        }
+    }
+
+    internal class NestObject
+    {
+        private const int NEST_MAX = 10;
+
+        private object mTarget;
+        private FieldInfo mFieldInfo;
+        private object mFieldParent;
+        private int mNest;
+
+        public FieldInfo FieldInfo
+        {
+            get { return mFieldInfo; }
+        }
+
+        public object FieldParent
+        {
+            get { return mFieldParent; }
+        }
+
+        public NestObject(object target)
+        {
+            mTarget = target;
+        }
+
+        public void SetField(string field)
+        {
+            mFieldInfo = null;
+            mFieldParent = null;
+            SetFieldByNestedField(field, mTarget);
+            Console.WriteLine("SetField field=" + field + ", mFieldInfo=" + mFieldInfo + ", mFieldParent=" + mFieldParent);
+        }
+
+        private void SetFieldByNestedField(string hierarchy, object target)
+        {
+            Console.WriteLine("Called SetFieldByNestedField, hierarchy=" + hierarchy + ", target.GetType().Name=" + target.GetType().Name);
+
+            NestName names = new NestName(hierarchy);
+            if (names.IsNextNames() == false)
+            {
+                //无上层字段名称
+                SetFieldOrThrow(names.FirstName, target);
+            }
+            else
+            {
+                if (names.IsFreeParent())
+                {
+                    //指定任意一个层次时
+
+                    SetFieldByFreeParent(names.NextNames, target);
+                }
+                else if (names.IsFreeHierarchy())
+                {
+                    //指定了任意多个上层
+                    string tmpNames = names.NextNames;
+                    for (int i = 0; i < NEST_MAX; i++)
+                    {
+                        // 尝试用临时名称调用SetFieldByNestedField()
+                        // 如果找不到字段，则尝试将其命名为深入层次
+                        if (TryFieldByNestedField(tmpNames, target))
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            tmpNames = "*." + tmpNames;
+                        }
+                    }
+                    throw new ApplicationException("未找到字段.hierarchy=" + hierarchy);
+                }
+                else
+                {
+                    // 指定特定层次
+                    object obj = GetObjectOrThrow(names.FirstName, target);
+                    SetFieldByNestedField(names.NextNames, obj);
+                }
+            }
+        }
+
+        private bool TryFieldByNestedField(string hierarchy, object target)
+        {
+            try
+            {
+                SetFieldByNestedField(hierarchy, target);
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+        private void SetFieldOrThrow(string field, object target)
+        {
+            Console.WriteLine("Called SetFieldOrThrow, field=" + field + ", target.GetType().Name=" + target.GetType().Name);
+
+            mFieldInfo = target.GetType().GetField(field,
+                BindingFlags.GetField | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            mFieldParent = target;
+
+            if (mFieldInfo == null)
+            {
+                throw new ApplicationException("未找到字段.field=" + field);
+            }
+        }
+
+        private void SetFieldByFreeParent(string nextNames, object target)
+        {
+            Console.WriteLine("Called SetFieldByFreeParent, nextNames=" + nextNames + ", target.GetType().Name=" + target.GetType().Name);
+
+            FieldInfo[] fieldInfoArr = target.GetType().GetFields(
+                BindingFlags.GetField | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            foreach (FieldInfo fieldInfo in fieldInfoArr)
+            {
+                Console.WriteLine("fieldInfo.Name=" + fieldInfo.Name);
+
+                // 尝试用临时名称调用SetFieldByNestedField()
+                object obj = fieldInfo.GetValue(target);
+                if (TryFieldByNestedField(nextNames, obj))
+                {
+                    return;
+                }
+            }
+
+            throw new ApplicationException("未找到字段.nextNames=" + nextNames);
+        }
+
+        /// <summary>
+        /// 获取指定的对象
+        /// </summary>
+        /// <param name="hierarchy">字段名称（可.分隔符中指定层次）</param>
+        /// <returns>对象</returns>
+        public object GetObject(string hierarchy)
+        {
+            mNest = 0;
+            return GetObjectByNestedField(hierarchy, mTarget);
+        }
+
+        private object GetObjectOrThrow(string field, object target)
+        {
+            FieldInfo fieldInfo = target.GetType().GetField(field,
+                BindingFlags.GetField | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return fieldInfo.GetValue(target);
+        }
+
+        private object GetObjectByNestedField(string hierarchy, object target)
+        {
+            Console.WriteLine("Called GetObjectByNestedField, hierarchy=" + hierarchy + ", target.GetType().Name=" + target.GetType().Name);
+
+            if (mNest >= NEST_MAX)
+            {
+                return null;
+            }
+            mNest++;
+
+            NestName names = new NestName(hierarchy);
+            if (names.IsNextNames() == false)
+            {
+                return GetObjectOrThrow(names.FirstName, target);
+            }
+            else
+            {
+                if (names.IsFreeParent())
+                {
+                    return GetNextObjectByFreeParent(names.NextNames, target);
+                }
+                else if (names.IsFreeHierarchy())
+                {
+                    return GetNextObjectByFreeHierarchy(names.NextNames, target);
+                }
+                else
+                {
+                    object obj = GetObjectOrThrow(names.FirstName, target);
+                    return GetObjectByNestedField(names.NextNames, obj);
+                }
+            }
+        }
+
+        private object GetNextObjectByFreeParent(string nextNames, object target)
+        {
+            FieldInfo[] fieldInfoArr = target.GetType().GetFields(
+                BindingFlags.GetField | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            foreach (FieldInfo fieldInfo in fieldInfoArr)
+            {
+                Console.WriteLine("fieldInfo.Name=" + fieldInfo.Name);
+                try
+                {
+                    object obj = GetObjectByNestedField(nextNames, fieldInfo);
+                    if (obj != null)
+                    {
+                        return obj;
+                    }
+                }
+                catch { }
+            }
+
+            return null;
+        }
+
+        private object GetNextObjectByFreeHierarchy(string nextNames, object target)
+        {
+            Console.WriteLine("Called GetNextObjectByFreeHierarchy, nextNames=" + nextNames);
+
+            FieldInfo[] fieldInfoArr = target.GetType().GetFields(
+                BindingFlags.GetField | BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            // 查找该层是否存在指定字段
+            foreach (FieldInfo fieldInfo in fieldInfoArr)
+            {
+                Console.WriteLine("fieldInfo.Name=" + fieldInfo.Name);
+                if (fieldInfo.Name.Equals(nextNames))
+                {
+                    return fieldInfo.GetValue(target);
+                }
+            }
+
+            // 检查底层是否存在指定字段
+            foreach (FieldInfo fieldInfo in fieldInfoArr)
+            {
+                Console.WriteLine("fieldInfo.Name=" + fieldInfo.Name);
+                try
+                {
+                    object obj = GetObjectByNestedField(nextNames, fieldInfo);
+                    if (obj != null)
+                    {
+                        return obj;
+                    }
+                }
+                catch { }
+            }
+
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// 使用.分隔的名称(字段名称)的类
+    /// </summary>
+    internal class NestName
+    {
+        private string mFirstName;
+        private string mNextNames;
+        private string mUpperNames;
+        private string mLastName;
+
+        /// <summary>
+        /// .分隔符中的起始名称
+        /// </summary>
+        public string FirstName
+        {
+            get { return mFirstName; }
+        }
+
+        /// <summary>
+        /// .分隔符中的第二个后缀的名称
+        /// </summary>
+        public string NextNames
+        {
+            get { return mNextNames; }
+        }
+
+        /// <summary>
+        /// .分隔符中的最后一个名称
+        /// </summary>
+        public string LastName
+        {
+            get { return mLastName; }
+        }
+
+        /// <summary>
+        /// .分隔符中从开头到结尾的名字
+        /// </summary>
+        public string UpperNames
+        {
+            get { return mUpperNames; }
+        }
+
+        public NestName(string names)
+        {
+            SetFirstAndNextNames(names);
+            SetUpperAndLastNames(names);
+        }
+
+        private void SetFirstAndNextNames(string names)
+        {
+            string[] nameArr = names.Split(new char[] { '.' }, 2);
+            mFirstName = nameArr[0];
+            if (nameArr.Length >= 2)
+            {
+                mNextNames = nameArr[1];
+            }
+        }
+
+        public bool IsNextNames()
+        {
+            return mNextNames != null;
+        }
+
+        public bool IsFreeParent()
+        {
+            return "*".Equals(mFirstName);
+        }
+
+        public bool IsFreeHierarchy()
+        {
+            return "**".Equals(mFirstName);
+        }
+
+        private void SetUpperAndLastNames(string names)
+        {
+            int index = names.LastIndexOf('.');
+            if (index < 0)
+            {
+                mUpperNames = null;
+                mLastName = names;
+            }
+            else
+            {
+                mUpperNames = names.Substring(0, index);
+                mLastName = names.Substring(index + 1);
+            }
+        }
     }
 }
