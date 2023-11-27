@@ -4,15 +4,15 @@
 		<TargetFrameworks>netstandard2.0;net5.0;net6.0;</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
-		<Authors>Utiler</Authors>
-		<Description>Integrating common util class libraries</Description>
-		<Version>5.6.0</Version>
+		<Authors>Anonymous</Authors>
+		<Description>Provides some tools for .NET Core projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
+		<Version>5.7.0</Version>
 		<Copyright></Copyright>
-		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>
 		<LicenseUrl>https://github.com/oiqasd/CSharp.NET.Util/blob/master/LICENSE</LicenseUrl>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<!--<AssemblyVersion>2.2.1.0</AssemblyVersion>
 		<FileVersion>2.2.1.0</FileVersion>-->
 		<Company />

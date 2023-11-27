@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace CSharp.Net.Util
@@ -19,23 +20,23 @@ namespace CSharp.Net.Util
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
-        /// <param name="beginTime"></param>
-        public static void Debug(string title, string message, Exception ex, DateTime? beginTime = null)
+        /// <param name="dateTime"></param>
+        public static void Debug(string title, string message, Exception ex, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Debug;
             log.Exception = ex.GetExcetionMessage();
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
-        public static void Debug(string title, string message, DateTime? beginTime = null)
+        public static void Debug(string title, string message, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Debug;
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
         /// <summary>
         /// 记录信息日志
@@ -43,23 +44,23 @@ namespace CSharp.Net.Util
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
-        /// <param name="beginTime"></param>
-        public static void Info(string title, string message, Exception ex, DateTime? beginTime = null)
+        /// <param name="dateTime"></param>
+        public static void Info(string title, string message, Exception ex, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Info;
             log.Exception = ex.GetExcetionMessage();
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
-        public static void Info(string title, string message, DateTime? beginTime = null)
+        public static void Info(string title, string message, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Info;
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
 
         /// <summary>
@@ -68,22 +69,22 @@ namespace CSharp.Net.Util
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
-        public static void Warn(string title, string message, Exception ex, DateTime? beginTime = null)
+        public static void Warn(string title, string message, Exception ex, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Warn;
             log.Exception = ex.GetExcetionMessage();
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
-        public static void Warn(string title, string message, DateTime? beginTime = null)
+        public static void Warn(string title, string message, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Warn;
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
         /// <summary>
         /// 记录错误日志
@@ -91,22 +92,22 @@ namespace CSharp.Net.Util
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
-        public static void Error(string title, string message, Exception ex, DateTime? beginTime = null)
+        public static void Error(string title, string message, Exception ex, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Error;
             log.Exception = ex.GetExcetionMessage();
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
-        public static void Error(string title, string message, DateTime? beginTime = null)
+        public static void Error(string title, string message, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Error;
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
         /// <summary>
         /// 记录崩溃日志
@@ -114,31 +115,31 @@ namespace CSharp.Net.Util
         /// <param name="title"></param>
         /// <param name="message"></param>
         /// <param name="ex"></param>
-        /// <param name="beginTime"></param>
-        public static void Fatal(string title, string message, Exception ex, DateTime? beginTime = null)
+        /// <param name="dateTime"></param>
+        public static void Fatal(string title, string message, Exception ex, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Fatal;
             log.Exception = ex.GetExcetionMessage();
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
-        public static void Fatal(string title, string message, DateTime? beginTime = null)
+        public static void Fatal(string title, string message, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog();
             log.Title = title;
             log.Message = message;
             log.Level = LogLevel.Fatal;
-            WriteLog(log, beginTime);
+            WriteLog(log, dateTime);
         }
 
         /// <summary>
         /// 执行记录日志
         /// </summary>
         /// <param name="log"></param>
-        /// <param name="beginTime"></param>
-        private static void WriteLog(ISystemLog log, DateTime? beginTime = null)
+        /// <param name="dateTime"></param>
+        private static void WriteLog(ISystemLog log, DateTime? dateTime = null)
         {
             if (log.Level == LogLevel.None) return;
             log.AppId = Appid;
@@ -147,12 +148,18 @@ namespace CSharp.Net.Util
                 return;
             try
             {
-                string msg = string.IsNullOrEmpty(log.Title) ? "" : (log.Title + "\t");
-                msg += string.IsNullOrEmpty(log.Message) ? "" : (log.Message + "\t");
-                msg += string.IsNullOrEmpty(log.Exception) ? "" : (log.Exception + "\t");
-                // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, beginTime);
-                var path = FileHelper.GetFilePath(Path.Combine(AppDomainHelper.GetRunRoot, "logs", log.Level.GetDescription().ToLower()), DateTime.Now.ToString(2) + ".log");
-                FileHelper.AppendWrittenFile(path, msg);
+                StringBuilder msg = new StringBuilder((dateTime ?? DateTime.Now).ToString(1))
+                    .Append(string.IsNullOrEmpty(log.Title) ? "" : log.Title)
+                    .Append(string.IsNullOrEmpty(log.Message) ? "" : log.Message)
+                    .AppendLine(string.IsNullOrEmpty(log.Exception) ? "" : log.Exception);
+
+                // LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, dateTime);
+                var path = FileHelper.GetFilePath(
+                    Path.Combine(AppDomainHelper.GetRunRoot, "logs",
+                                 log.Level.GetDescription().ToLower()),
+                                 (dateTime ?? DateTime.Now).ToString(2) + ".log");
+
+                FileHelper.AppendWrittenFile(path, msg.ToString());
             }
             catch (Exception ex)
             {

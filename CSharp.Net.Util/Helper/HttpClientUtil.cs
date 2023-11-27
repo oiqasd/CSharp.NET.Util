@@ -165,7 +165,7 @@ namespace CSharp.Net.Util
 
                     url = $"{url}{sb.ToString().TrimEnd('&')}";
                 }
-                PrintRequestLog("post", url, dataDic);
+                PrintRequestLog("post", url, out string trackId, dataDic);
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0)
                     cts.CancelAfter(timeOutSecond * 1000);
@@ -175,6 +175,8 @@ namespace CSharp.Net.Util
                     response.EnsureSuccessStatusCode();
                     result = await response.Content.ReadAsStringAsync();
                 }
+
+                PrintResponseLog(trackId, result);
             }
             catch (Exception ex)
             {
@@ -226,7 +228,7 @@ namespace CSharp.Net.Util
                         //ArrayPool<byte>.Shared.Return(bt, true);
                     }
                     HttpContent httpContent = fromData;
-                    PrintRequestLog("post file", url, "file");
+                    PrintRequestLog("post file", url, out string trackId, "file");
                     CancellationTokenSource cts = new CancellationTokenSource();
                     if (timeOutSecond > 0)
                         cts.CancelAfter(timeOutSecond * 1000);
@@ -236,6 +238,7 @@ namespace CSharp.Net.Util
                         response.EnsureSuccessStatusCode();
                         result = await response.Content.ReadAsStringAsync();
                     }
+                    PrintResponseLog(trackId, result);
                 }
             }
             catch (Exception ex)
@@ -290,7 +293,7 @@ namespace CSharp.Net.Util
                     url = url + dataStr;
                 }
 
-                PrintRequestLog("post", url, dataStr);
+                PrintRequestLog("post", url, out string trackId, dataStr);
 
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0)
@@ -301,6 +304,7 @@ namespace CSharp.Net.Util
                     response.EnsureSuccessStatusCode();
                     result = await response.Content.ReadAsStringAsync();
                 }
+                PrintResponseLog(trackId, result);
             }
             catch (Exception ex)
             {
@@ -371,7 +375,7 @@ namespace CSharp.Net.Util
                     url = $"{url}{pramstr}";
                 }
 
-                PrintRequestLog("get", url);
+                PrintRequestLog("get", url, out string trackId);
 
                 CancellationTokenSource cts = new CancellationTokenSource();
                 if (timeOutSecond > 0) cts.CancelAfter(timeOutSecond * 1000);
@@ -381,6 +385,7 @@ namespace CSharp.Net.Util
                     response.EnsureSuccessStatusCode();
                     result = await response.Content.ReadAsStringAsync();
                 }
+                PrintResponseLog(trackId, result);
             }
             catch (TaskCanceledException ex)
             {
@@ -403,7 +408,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static async Task<HttpResponseDto> SendAsync(string url, HttpMethod httpMethod, HttpContent content)
         {
-            PrintRequestLog("send", url);
+            PrintRequestLog("send", url, out string trackId);
             HttpResponseDto ret = new HttpResponseDto();
             var request = new HttpRequestMessage(httpMethod, url);
             //request.Content = new FormUrlEncodedContent(kv);
@@ -416,6 +421,7 @@ namespace CSharp.Net.Util
                 var res = await response.Content.ReadAsStringAsync();
                 ret.Data = res;
                 ret.Success = true;
+                PrintResponseLog(trackId, res);
             }
             else
             {
@@ -450,171 +456,26 @@ namespace CSharp.Net.Util
             string msg = DateTime.Now.ToString(1) + ex.Message + url;
             if (PrintRequestErrorConsoleLog)
                 Console.WriteLine(msg);
+
+            LogHelper.Fatal($"[{nameof(HttpClientUtil)}]", msg, ex);
+
             if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw ex;
             if (ThrowExceptionMode == ThrowExceptionMode.Always) throw ex;
 
-            if (LogLevel != LogLevel.None)
-                LogHelper.Fatal(nameof(HttpClientUtil), msg, ex);
         }
 
-        private static void PrintRequestLog(string method, string url, object data = null)
+        private static void PrintRequestLog(string method, string url, out string trackId, object data = null)
+        {
+            trackId = Guid.NewGuid().ToString("N");
+            if (LogLevel == LogLevel.None || LogLevel >= LogLevel.Info) return;
+            LogHelper.Debug($"[{nameof(HttpClientUtil)}]", $" {trackId},{method},{url},Request Data:{JsonHelper.Serialize(data)}");
+        }
+
+        private static void PrintResponseLog(string trackId, string data)
         {
             if (LogLevel == LogLevel.None || LogLevel >= LogLevel.Info) return;
-            LogHelper.Debug(nameof(HttpClientUtil), $"{method},{url},data:{JsonHelper.Serialize(data)}");
+            LogHelper.Debug($"[{nameof(HttpClientUtil)}]", $" {trackId},Response Data:{data}");
         }
-
-        #region Common Request
-
-        /***
-        public T Request<T>(string relyonNo, string issn, long uid, int areaid, string map_id = "", string giftId = "", DateTime? start_time = null, DateTime? end_time = null) where T : new()
-        {
-            var rey = _commonService.GetTaskRelyon(issn, relyonNo);
-            if (rey == null || string.IsNullOrWhiteSpace(rey.Url))
-                throw new ErrorException(ErrorCode.ConfigError);
-
-            string parms = rey.Parms;
-            string url = rey.Url;
-            if (!string.IsNullOrWhiteSpace(parms))
-            {
-                if (!url.Contains("?") && !parms.Contains("?"))
-                    url += "?";
-
-                url += parms;
-            }
-
-            url = url.Replace("{zid}", areaid.ToString())
-                     .Replace("{iuin}", uid.ToString())
-                     .Replace("{map_id}", map_id)
-                     .Replace("{start_time}", start_time?.ToString(1))
-                     .Replace("{end_time}", end_time?.ToString(1))
-                     .Replace("{start_date}", start_time?.ToString(2))
-                     .Replace("{end_date}", end_time?.ToString(2))
-                     .Replace("{item_type_id}", giftId)
-                     .Replace("{action_date}", start_time?.ToString(2));
-
-
-            string outRet = HttpClientUtil.GetAsync(url).Result;
-
-            JObject obj = JObject.Parse(outRet);
-            if (obj == null || obj[rey.CodeField].ToObject<int>() != rey.CodeValue || obj[rey.DataField] == null)
-                return default(T);
-
-            return JsonHelper.Deserialize<T>(obj[rey.DataField].ToString());
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="relyonNo"></param>
-        /// <param name="conditionKey">批量列表接口需要该参数</param>
-        /// <param name="issn"></param>
-        /// <param name="uid"></param>
-        /// <param name="areaid"></param>
-        /// <param name="start_time"></param>
-        /// <param name="end_time"></param>
-        /// <param name="map_id"></param>
-        /// <param name="giftId"></param>
-        /// <param name="listdata"></param>
-        /// <returns></returns>
-        public T? RequestApi<T>(string relyonNo, string conditionKey, string issn, long uid, int areaid, DateTime? start_time = null, DateTime? end_time = null, string map_id = "", string giftId = "", string listdata = null) where T : struct
-        {
-            try
-            {
-                var rey = _commonService.GetTaskRelyon(issn, relyonNo);
-                if (rey == null || string.IsNullOrWhiteSpace(rey.Url) || string.IsNullOrWhiteSpace(rey.Parms))
-                    throw new ErrorException(ErrorCode.ConfigError, "rey 配置错误");
-
-                if (rey.IsBatch && conditionKey.IsNullOrEmpty())
-                    throw new ErrorException(ErrorCode.ConfigError, "conditionKey 未配置");
-
-                if (!start_time.HasValue || !end_time.HasValue)
-                {
-                    var a = _activeService.GetActiveMaster(issn);
-                    if (!start_time.HasValue) start_time = a.BeginTime;
-                    if (!end_time.HasValue) end_time = a.EndTime;
-                }
-                string parms = rey.Parms;
-                string url = rey.Url;
-                if (!string.IsNullOrWhiteSpace(parms))
-                {
-                    if (!url.Contains("?") && !parms.Contains("?"))
-                        url += "?";
-
-                    url += parms;
-                }
-
-                url = url.Replace("{zid}", areaid.ToString())
-                         .Replace("{iuin}", uid.ToString())
-                         .Replace("{map_id}", map_id)
-                         .Replace("{start_time}", start_time?.ToString(1))
-                         .Replace("{end_time}", end_time?.ToString(1))
-                         .Replace("{start_date}", start_time?.ToString(2))
-                         .Replace("{end_date}", end_time?.ToString(2))
-                         .Replace("{item_type_id}", giftId)
-                         .Replace("{action_date}", start_time?.ToString(2))
-                         .Replace("{list_data}", listdata);
-
-
-                string outRet = HttpClientUtil.GetAsync(url).Result;
-                JObject obj = JObject.Parse(outRet);
-                if (obj == null || obj[rey.CodeField].ToObject<int>() != rey.CodeValue)
-                    return null;
-
-                string[] fileds = rey.DataField.Split(":");
-                string tmpVal = outRet;
-                JToken jobj = obj;
-                for (int i = 0; i < fileds.Length; i++)
-                {
-                    if (jobj.Type == JTokenType.Object)
-                        jobj = jobj[fileds[i]];
-                    else if (jobj.Type == JTokenType.Array)
-                    {
-                        jobj = jobj.FirstOrDefault();
-                        jobj = jobj[fileds[i]];
-                    }
-                }
-                if (jobj == null) return null;
-
-                if (rey.IsBatch)
-                {
-                    if (jobj.Type == JTokenType.Array)
-                    {
-                        foreach (JToken o in jobj)
-                        {
-                            if (o["task_type"].ToString() == conditionKey)
-                            {
-                                return ConvertHelper.ConvertTo<T>(o["task_status"].ToString());
-                            }
-                        }
-                        return default(T);
-                    }
-                }
-                tmpVal = jobj.ToString();
-                return ConvertHelper.ConvertTo<T>(tmpVal);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"{relyonNo}:{ex.Message}");
-                return default(T);
-            }
-        }
-        **/
-
-        #endregion
-
-        /// <summary>
-        /// HttpContentType
-        /// </summary>
-        //public enum HttpContentType
-        //{
-
-        //    QueryString = 0,
-
-        //    JSON = 1,
-
-        //    FormData = 2
-        //}
     }
 
     /// <summary>
