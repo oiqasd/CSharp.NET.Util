@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace CSharp.Net.Util
+﻿namespace CSharp.Net.Util
 {
     /// <summary>
     /// 文件上传返回Dto

@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace CSharp.Net.Mvc;
 
-public class SwaggerConfig : IOperationFilter
+public class SwaggerApiOperation : IOperationFilter
 {
     /// <summary>
     /// 初始化模块配置

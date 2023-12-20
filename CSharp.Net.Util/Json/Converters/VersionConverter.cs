@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
+#nullable enable
 namespace CSharp.Net.Util.Json
 {
     /// <summary>
@@ -9,7 +9,7 @@ namespace CSharp.Net.Util.Json
     /// </summary>
     internal sealed class VersionConverter : JsonConverter<Version>
     {
-        public override Version Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        public override Version? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
 #if NET6_0_OR_GREATER
             string? versionString = reader.GetString();

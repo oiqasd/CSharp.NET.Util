@@ -1,10 +1,7 @@
 ﻿using Aliyun.OSS;
 using Aliyun.OSS.Common;
-using CSharp.Net.Util.Interface;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Util.Aliyun.Oss
@@ -118,20 +115,21 @@ namespace CSharp.Net.Util.Aliyun.Oss
         {
 
             // 打开文件
-            FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
 
-            // 读取文件的 byte[]
-            byte[] bytes = new byte[fileStream.Length];
+                // 读取文件的 byte[]
+                byte[] bytes = new byte[fileStream.Length];
 
-            fileStream.Read(bytes, 0, bytes.Length);
+                fileStream.Read(bytes, 0, bytes.Length);
 
-            fileStream.Dispose();
-            fileStream.Close();
+                fileStream.Dispose();
+                fileStream.Close();
 
-            // 把 byte[] 转换成 Stream
-            Stream stream = new MemoryStream(bytes);
-
-            return stream;
+                // 把 byte[] 转换成 Stream
+                using Stream stream = new MemoryStream(bytes);
+                return stream;
+            }
 
         }
 

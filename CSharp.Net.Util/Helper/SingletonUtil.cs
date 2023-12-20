@@ -6,7 +6,7 @@ namespace CSharp.Net.Util
     /// 通用单例
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class SingletonHelper<T> where T : new()
+    public class SingletonUtil<T> where T : new()
     {
         private static object LockKey = new object();
 

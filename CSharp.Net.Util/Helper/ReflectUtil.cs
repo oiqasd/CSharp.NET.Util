@@ -1,30 +1,101 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+#if NET
+using System.Runtime.Loader;
+#endif
 using System.Text;
 
 namespace CSharp.Net.Util
 {
     /// <summary>
-    /// 反射帮助类
+    /// 反射工具类
     /// </summary>
-    public class ReflectionHelper
+    public class ReflectUtil
     {
+        /// <summary>
+        /// 获取入口程序集
+        /// </summary>
+        /// <returns></returns>
+        public static Assembly GetEntryAssembly()
+            => Assembly.GetEntryAssembly();
+
+#if NET
+        /// <summary>
+        /// 根据程序集名称获取运行时程序集
+        /// </summary>
+        /// <param name="assemblyName"></param>
+        /// <returns></returns>
+        public static Assembly GetAssembly(string assemblyName)
+            => AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName(assemblyName));
+#endif
+        /// <summary>
+        /// 根据路径加载程序集
+        /// </summary>
+        /// <param name="path">路径</param>
+        /// <returns></returns>
+        public static Assembly LoadAssembly(string path)
+        {
+            if (!File.Exists(path)) throw new FileNotFoundException();
+            return Assembly.LoadFrom(path);
+        }
+
+        /// <summary>
+        /// 通过流加载程序集
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns></returns>
+        public static Assembly LoadAssembly(MemoryStream assembly)
+            => Assembly.Load(assembly.ToArray());
+
+        /// <summary>
+        /// 根据程序集和类型名获取运行时类型
+        /// </summary>
+        /// <param name="assembly">程序集</param>
+        /// <param name="typeFullName">类型完全名获</param>
+        /// <returns></returns>
+        public static Type GetType(Assembly assembly, string typeFullName)
+            => assembly.GetType(typeFullName);
+
+        /// <summary>
+        /// 获取程序集名称
+        /// </summary>
+        /// <param name="assembly"></param>
+        /// <returns></returns>
+        public static string GetAssemblyName(Assembly assembly)
+            => assembly.GetName().Name;
+
+        /// <summary>
+        /// 获取程序集名称
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static string GetAssemblyName(Type type)
+            => GetAssemblyName(type.GetTypeInfo());
+
+        /// <summary>
+        /// 获取程序集名称
+        /// </summary>
+        /// <param name="typeInfo"></param>
+        /// <returns></returns>
+        public static string GetAssemblyName(TypeInfo typeInfo)
+            => GetAssemblyName(typeInfo.Assembly);
+
         /// <summary>
         /// 获取调用链方法名
         /// </summary>
         /// <param name="depth"></param>
         /// <returns></returns>
         public static string GetCallingMethodName(int depth = 1)
-        {
-            StackTrace stack = new StackTrace();
-            return stack.GetFrame(depth)?.GetMethod()?.Name;
-            //获取当前
-            //System.Reflection.MethodBase.GetCurrentMethod().Name;
-            //Assembly.GetExecutingAssembly().GetName().Name
-        }
+            => new StackTrace().GetFrame(depth)?.GetMethod()?.Name;
+        /*获取当前
+          System.Reflection.MethodBase.GetCurrentMethod().Name;
+          Assembly.GetExecutingAssembly().GetName().Name
+        */
+
 
         /// <summary>
         /// 获取调用链类名
@@ -32,13 +103,10 @@ namespace CSharp.Net.Util
         /// <param name="depth"></param>
         /// <returns></returns>
         public static string GetCallingClassName(int depth = 1)
-        {
-            StackTrace stack = new StackTrace();
-            return stack.GetFrame(depth)?.GetMethod()?.DeclaringType?.ToString();
-            //System.Reflection.Assembly.GetCallingAssembly();
-            //获取当前
-            //this.GetType().Name
-        }
+            => new StackTrace().GetFrame(depth)?.GetMethod()?.DeclaringType?.ToString();
+        //System.Reflection.Assembly.GetCallingAssembly();
+        //获取当前
+        //this.GetType().Name
 
 
         /// <summary>
@@ -47,9 +115,7 @@ namespace CSharp.Net.Util
         /// <param name="t"></param>
         /// <returns></returns>
         public static bool HasDefaultConstructor(Type t)
-        {
-            return t.IsValueType || t.GetConstructor(Type.EmptyTypes) != null;
-        }
+            => t.IsValueType || t.GetConstructor(Type.EmptyTypes) != null;
 
         /// <summary>
         /// 获取私有构造函数
@@ -57,14 +123,11 @@ namespace CSharp.Net.Util
         /// <param name="t"></param>
         /// <returns></returns>
         public static ConstructorInfo[] GetConstructorInfo(Type t)
-        {
-            var r = t.GetConstructors().OrderBy(x => x.GetParameters().Length - x.GetParameters().Count(p => p.IsOptional)).ToArray();
-            return r;
-            //return t.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
-        }
+            => t.GetConstructors().OrderBy(x => x.GetParameters().Length - x.GetParameters().Count(p => p.IsOptional)).ToArray();
+        //return t.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null); 
 
         /// <summary>
-        /// 反射获取所有带有<para>TAttribute</para>特性的类
+        /// 反射获取所有带有<paramref name="TAttribute"/>特性的类
         /// </summary>
         /// <typeparam name="TAttribute"></typeparam>
         /// <param name="assemblyName">指定程序集,默认全部</param>
@@ -207,10 +270,10 @@ namespace CSharp.Net.Util
     }
 
     /// <summary>
-    /// 反射一个实体类
+    /// 反射实体类
     /// </summary>
     /// <typeparam name="TargetClass"></typeparam>
-    public class ReflectionHelper<TargetClass>
+    public class ReflectHelper<TargetClass>
     {
         private TargetClass mTarget;
         private NestObject mNestObject;
@@ -227,7 +290,7 @@ namespace CSharp.Net.Util
         /// 
         /// </summary>
         /// <param name="target">要反射的对象</param>
-        public ReflectionHelper(TargetClass target)
+        public ReflectHelper(TargetClass target)
         {
             mTarget = target;
             mNestObject = new NestObject(target);

@@ -509,22 +509,23 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 当前月第一天
         /// </summary>
-        /// <param name="date"></param>
+        /// <param name="date">默认当前月</param>
         /// <returns></returns>
-        public static DateTime GetMonthFirstDay(DateTime date)
+        public static DateTime GetMonthFirstDay(DateTime? date = null)
         {
+            if (!date.HasValue) date = DateTime.Now;
             //var dt = DateTime.Parse(date.ToString("yyyy-MM-dd") + " 00:00:00");
             //return dt.AddDays(1 - dt.Day);
-            var dt = DateTime.Parse($"{date.Year}/{date.Month}/01 00:00:00");
+            var dt = DateTime.Parse($"{date.Value.Year}/{date.Value.Month}/01 00:00:00");
             return dt;
         }
 
         /// <summary>
         /// 当前月最后一天
         /// </summary>
-        /// <param name="date"></param>
+        /// <param name="date">默认当前月</param>
         /// <returns></returns>
-        public static DateTime GetMonthLastDay(DateTime date)
+        public static DateTime GetMonthLastDay(DateTime? date = null)
         {
             return GetMonthFirstDay(date).AddMonths(1).AddSeconds(-1);
         }
@@ -570,6 +571,31 @@ namespace CSharp.Net.Util
             else
                 dateTime = DateTimeOffset.FromUnixTimeMilliseconds(timestamp).LocalDateTime;
             return dateTime;
+        }
+
+        /// <summary>
+        /// 将 DateTime 转换成 DateTimeOffset
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public static DateTimeOffset ConvertToDateTimeOffset(DateTime dateTime)
+        {
+            return DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
+        }
+
+        /// <summary>
+        /// 将 DateTimeOffset 转换成本地 DateTime
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public static DateTime ConvertToDateTime(DateTimeOffset dateTime)
+        {
+            if (dateTime.Offset.Equals(TimeSpan.Zero))
+                return dateTime.UtcDateTime;
+            if (dateTime.Offset.Equals(TimeZoneInfo.Local.GetUtcOffset(dateTime.DateTime)))
+                return dateTime.ToLocalTime().DateTime;
+            else
+                return dateTime.DateTime;
         }
     }
 }

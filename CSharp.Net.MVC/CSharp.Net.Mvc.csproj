@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;</TargetFrameworks>
+		<TargetFrameworks>net6.0;net7.0;net8.0;</TargetFrameworks>
 		<Authors>Util</Authors>
 		<Version>1.0.1</Version>
 		<RootNamespace>CSharp.Net.Mvc</RootNamespace>
@@ -13,6 +13,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Localizer\LocalizerUtil.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CSharp.Net.Util" Version="7.1.14" />
 		<PackageReference Include="System.Drawing.Common" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
@@ -20,6 +24,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\CSharp.Net.Util\CSharp.Net.Util.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Using Include="System" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Localizer\" />
 	</ItemGroup> 
 </Project>

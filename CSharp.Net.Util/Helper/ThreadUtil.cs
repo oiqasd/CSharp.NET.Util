@@ -9,7 +9,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// https://www.cnblogs.com/wei325/p/16065342.html
     /// </summary>
-    class ThreadHelper
+    class ThreadUtil
     {
         /// <summary>
         /// CAS原子操作加减 替换lock

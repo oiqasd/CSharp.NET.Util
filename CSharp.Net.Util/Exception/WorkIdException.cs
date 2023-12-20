@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
-    internal class WorkIdException:BaseException
+    internal class WorkIdException:AppException
     {
         public WorkIdException(string message) : base(message) { }
     }

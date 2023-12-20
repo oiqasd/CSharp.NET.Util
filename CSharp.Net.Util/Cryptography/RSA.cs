@@ -182,50 +182,44 @@ namespace CSharp.Net.Util.Cryptography
 
             var rsa = new RSACryptoServiceProvider();
             var rsaParameters = new RSAParameters();
-            try
+
+            using (BinaryReader binr = new BinaryReader(new MemoryStream(privateKeyBits)))
             {
-                using (BinaryReader binr = new BinaryReader(new MemoryStream(privateKeyBits)))
-                {
-                    byte bt = 0;
-                    ushort twobytes = 0;
-                    twobytes = binr.ReadUInt16();
-                    if (twobytes == 0x8130)
-                        binr.ReadByte();
-                    else if (twobytes == 0x8230)
-                        binr.ReadInt16();
-                    else
-                        throw new Exception("Unexpected value read binr.ReadUInt16()");
+                byte bt = 0;
+                ushort twobytes = 0;
+                twobytes = binr.ReadUInt16();
+                if (twobytes == 0x8130)
+                    binr.ReadByte();
+                else if (twobytes == 0x8230)
+                    binr.ReadInt16();
+                else
+                    throw new Exception("Unexpected value read binr.ReadUInt16()");
 
-                    //bt = binr.ReadByte();
-                    //if (bt != 0x02)
-                    //    throw new Exception("Unexpected value read binr.ReadByte()");
+                //bt = binr.ReadByte();
+                //if (bt != 0x02)
+                //    throw new Exception("Unexpected value read binr.ReadByte()");
 
-                    twobytes = binr.ReadUInt16();
-                    if (twobytes != 0x0102)
-                        throw new Exception("Unexpected version");
+                twobytes = binr.ReadUInt16();
+                if (twobytes != 0x0102)
+                    throw new Exception("Unexpected version");
 
-                    bt = binr.ReadByte();
-                    if (bt != 0x00)
-                        throw new Exception("Unexpected value read binr.ReadByte()");
+                bt = binr.ReadByte();
+                if (bt != 0x00)
+                    throw new Exception("Unexpected value read binr.ReadByte()");
 
-                    //------  all private key components are Integer sequences ----
-                    rsaParameters.Modulus = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.Exponent = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.D = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.P = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.Q = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.DP = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.DQ = binr.ReadBytes(GetIntegerSize(binr));
-                    rsaParameters.InverseQ = binr.ReadBytes(GetIntegerSize(binr));
-                }
-
-                rsa.ImportParameters(rsaParameters);
-                return rsa;
+                //------  all private key components are Integer sequences ----
+                rsaParameters.Modulus = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.Exponent = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.D = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.P = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.Q = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.DP = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.DQ = binr.ReadBytes(GetIntegerSize(binr));
+                rsaParameters.InverseQ = binr.ReadBytes(GetIntegerSize(binr));
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+
+            rsa.ImportParameters(rsaParameters);
+            return rsa;
         }
 
         /// <summary>

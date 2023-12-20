@@ -10,7 +10,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 正则校验帮助类
     /// </summary>
-    public class RegexHelper
+    public class RegexUtil
     {
         /**
         * 方法命名规则 Check + 待校验参数英文名称

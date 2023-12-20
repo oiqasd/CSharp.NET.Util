@@ -93,5 +93,5 @@ public static class DictionaryExtension
         if (dictionary == null)
             throw new ArgumentNullException("dictionary");
         return new SortedDictionary<TKey, TValue>(dictionary);
-    }
+    } 
 }

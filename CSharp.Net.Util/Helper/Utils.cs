@@ -1,10 +1,12 @@
 ﻿using CSharp.Net.Util.Cryptography;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
@@ -267,22 +269,56 @@ namespace CSharp.Net.Util
         /// 记录在程序根目录下
         /// </summary>
         /// <param name="str">日志内容</param> 
-        public static void WriteLog(string str)
+        public static async Task WriteLog(string str)
         {
             try
             {
                 var path = Path.Combine(AppDomainHelper.GetRunRoot, "logs");
-
                 string file = FileHelper.GetFilePath(path, "log.txt", true);
-
-                FileHelper.AppendWrittenFile(file, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + str);
-
+                await FileHelper.AppendWrittenFile(file, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + str);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.GetExcetionMessage());
+                Trace.TraceError(ex.GetExcetionMessage());
             }
         }
+
+        /// <summary>
+        /// 获取位与运算基数
+        /// </summary>
+        /// <param name="move">value: 0~255;要返回Int,则不能超过31. 0: 返回0,代表没有意义</param>
+        /// <returns>输入0则返回0,其它返回1的左移 move-1次</returns>
+        public static uint GetBitwiseCode(byte move)
+        {
+            if (move == 0) return 0;
+            return (uint)1 << move - 1;
+            //return Math.Pow(2, target - 1);
+        }
+
+        /// <summary>
+        /// 计算位与后数值
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="move">数值,0:代表没有意义</param>
+        /// <returns></returns>
+        public static uint CalcBitwiseValue(uint source, byte move)
+        {
+            if (move == 0) return source;
+            return source | GetBitwiseCode(move);
+        }
+
+        /// <summary>
+        /// 比较位与后是否相等
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="move">数值,0:代表没有意义</param>
+        /// <returns>true,false</returns>
+        public static bool CheckBitwise(uint source, byte move)
+        {
+            var t = GetBitwiseCode(move);
+            return (source & t) == t;
+        }
+
         #endregion
 
         /// <summary>
@@ -302,5 +338,20 @@ namespace CSharp.Net.Util
             money = Math.Floor(money);
             return (int)money;
         }
+
+        /// <summary>
+        /// 计算代码执行耗时
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns><see cref="long"/></returns>
+        public static long CalcExecuteTime(Action action)
+        {
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            var stopwatch = Stopwatch.StartNew();
+            action();
+            stopwatch.Stop();
+            return stopwatch.ElapsedMilliseconds;
+        }
+
     }
 }

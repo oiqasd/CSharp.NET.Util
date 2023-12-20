@@ -4,10 +4,18 @@
 /// </summary>
 public class PageArgument
 {
+    /// <summary>
+    /// ctor
+    /// </summary>
     public PageArgument()
     {
 
     }
+    /// <summary>
+    /// ctor
+    /// </summary>
+    /// <param name="index"></param>
+    /// <param name="size"></param>
     public PageArgument(int index, int size)
     {
         PageIndex = index;

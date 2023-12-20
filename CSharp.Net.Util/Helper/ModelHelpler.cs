@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -72,7 +73,9 @@ namespace CSharp.Net.Util
         /// <summary>  
         /// 填充对象列表：用DataSet的第index个表填充实体类
         /// </summary>  
-        /// <param name="IsConvert">是否进行数据处理 true 处理</param>
+        /// <param name="ds"></param>
+        /// <param name="IsConvert"></param>
+        /// <param name="index">是否进行数据处理 true 处理</param>
         /// <returns></returns>
         public List<T> FillModel(DataSet ds, int index, bool IsConvert)
         {
@@ -129,6 +132,7 @@ namespace CSharp.Net.Util
         /// <summary>  
         /// 填充对象列表：用DataTable填充实体类
         /// </summary>  
+        /// <param name="dt">DataTable</param>
         /// <param name="IsConvert">是否进行数据处理 true 处理</param>
         /// <returns></returns>
         public List<T> FillModel(DataTable dt, bool IsConvert)
@@ -348,6 +352,7 @@ namespace CSharp.Net.Util
         /// <summary>  
         /// 填充对象列表：用DataTable填充实体类
         /// </summary>  
+        /// <param name="dt">DataTable</param>
         /// <param name="IsConvert">是否进行数据处理 true 处理</param>
         /// <param name="IsDistinguish">是否区分大小写 True 区分</param>
         /// <returns></returns>
@@ -630,6 +635,29 @@ namespace CSharp.Net.Util
                 target.Add(targetItem);
             }
             return target;
+        }
+
+        /// <summary>
+        /// 将对象转成字典
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static IDictionary<string, object> ToDictionary(object input)
+        {
+            if (input == null) return default;
+
+            if (input.GetType().IsImplementedRawGeneric(typeof(IDictionary<,>)))
+            {
+                var dicInput = ((IDictionary)input);
+
+                var dic = new Dictionary<string, object>();
+                foreach (var key in dicInput.Keys)
+                {
+                    dic.Add(key.ToString(), dicInput[key]);
+                }
+                return dic;
+            }
+            throw new AppException(input.GetType().Name + "is not support");
         }
     }
 }

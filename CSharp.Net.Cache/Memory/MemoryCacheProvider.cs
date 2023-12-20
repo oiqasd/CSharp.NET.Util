@@ -73,16 +73,17 @@ namespace CSharp.Net.Cache.Memory
         /// 获取或创建一个key
         /// </summary>
         /// <param name="key">key</param>
-        /// <param name="defaultValue">不存在则使用该值创建</param>
+        /// <param name="func">不存在则使用该值创建</param>
+        /// <param name="seconds"></param>
         /// <returns></returns>
-        public string GetOrSet(string key, string defaultValue, int seconds = 30)
+        public T GetOrSet<T>(string key, Func<T> func, int seconds = 30)
         {
-            return _cache.GetOrCreate<string>(key, c =>
+            return _cache.GetOrCreate<T>(key, c =>
             {
                 //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
                 c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
-                c.SetValue(defaultValue);
-                return defaultValue;
+                c.SetValue(func.Invoke());
+                return func.Invoke();
             });
         }
 

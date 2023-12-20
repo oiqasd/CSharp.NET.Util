@@ -8,7 +8,7 @@ using CSharp.Net.Util;
 
 namespace CSharp.Net.Mvc;
 
-public class RequestExpiredException : BaseException
+public class RequestExpiredException : AppException
 {
     public RequestExpiredException(string message="请求已过期") : base(message) { }
 }

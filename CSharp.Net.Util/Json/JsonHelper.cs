@@ -10,16 +10,15 @@ using System.Text.Json.Serialization;
 
 namespace CSharp.Net.Util
 {
-
     /// <summary>
     /// 使用System.Text.Json序列化
     /// Newtonsoft.Json 迁移文档
     /// https://docs.microsoft.com/zh-cn/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0
-    /// 
-    /// <para>.net8新增特性，可以反序列化只读字段或属性，此工具类未全局应用</para>
+    /// <para>
+    /// net8新增特性，可以反序列化只读字段或属性，此工具类未全局应用
     ///  若要选择此全局支持，请将新选项 PreferredObjectCreationHandling 设置为 JsonObjectCreationHandling.Populate。
     ///  如果考虑兼容性问题，还可通过将 [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)] 特性放置在要填充其属性的特定类型上或单个属性上来更精细地启用该功能。
-    /// 
+    /// </para>
     /// </summary>
     public class JsonHelper
     {
@@ -45,17 +44,23 @@ namespace CSharp.Net.Util
         public static JsonSerializerOptions SetJsonSerializerOptions(JsonSerializerOptions jsonSerializerOptions)
         {
             if (jsonSerializerOptions == null) jsonSerializerOptions = new JsonSerializerOptions();
-            jsonSerializerOptions.PropertyNameCaseInsensitive = false;//反序列化时不区分属性大小写
-            jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;//使用 camel 大小写 
-            jsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;//字典key驼峰
-            jsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;// | JsonNumberHandling.WriteAsString,//允许或写入带引号的数字,例如:"23"
-                                                                                             //保留引用并处理循环引用
+            //反序列化时不区分属性大小写
+            jsonSerializerOptions.PropertyNameCaseInsensitive = false;
+            //使用 camel 大小写 
+            jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            //字典key驼峰
+            jsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            jsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+            // | JsonNumberHandling.WriteAsString,//允许或写入带引号的数字,例如:"23"
+            //保留引用并处理循环引用
             jsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-            jsonSerializerOptions.WriteIndented = false; //格式化输出
-                                                         //jsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;//允许有注释
+            //格式化输出
+            jsonSerializerOptions.WriteIndented = false;
+            //jsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;//允许有注释
             jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;//等同NullValueHandling.Ignore
-                                                                                               //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);//不unicode转换
+
             jsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);//不unicode转换,解决乱码问题
             jsonSerializerOptions.Converters.Add(new IsoDateTimeConverter());
             jsonSerializerOptions.Converters.Add(new IsoDateTimeOffsetConverter());
             jsonSerializerOptions.Converters.Add(new VersionConverter());
@@ -84,6 +89,7 @@ namespace CSharp.Net.Util
             return JsonSerializer.Serialize(obj, options ?? _options);
 #endif
         }
+
         /// <summary>
         /// 序列化
         /// </summary>
@@ -91,7 +97,7 @@ namespace CSharp.Net.Util
         /// <param name="type"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public string Serialize(object obj, Type type, JsonSerializerOptions options = null)
+        public static string Serialize(object obj, Type type, JsonSerializerOptions options = null)
         {
             return JsonSerializer.Serialize(obj, type, options ?? _options);
         }
@@ -106,7 +112,6 @@ namespace CSharp.Net.Util
         {
             if (string.IsNullOrEmpty(json))
                 return default(T);
-
             return JsonSerializer.Deserialize<T>(json, _options);
         }
 
@@ -123,13 +128,14 @@ namespace CSharp.Net.Util
 
             return JsonSerializer.Deserialize<List<T>>(json, _options);
         }
+
         /// <summary>
         /// 将指定的 JSON 流数据反序列化成指定对象
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public T Deserialize<T>(Stream stream)
+        public static T Deserialize<T>(Stream stream)
         {
             if (stream.CanSeek)
             {
@@ -142,6 +148,7 @@ namespace CSharp.Net.Util
                 return Deserialize<T>(json);
             }
         }
+
         /// <summary>
         /// 反序列化
         /// </summary>
@@ -149,7 +156,7 @@ namespace CSharp.Net.Util
         /// <param name="type"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public object Deserialize(string json, Type type, JsonSerializerOptions options = null)
+        public static object Deserialize(string json, Type type, JsonSerializerOptions options = null)
         {
             return JsonSerializer.Deserialize(json, type, options ?? _options)!;
         }
@@ -212,7 +219,7 @@ namespace CSharp.Net.Util
         /// <param name="dataKey">默认空,如果<paramref name="input"/>是对象且需要指定key时可用该字段</param>
         /// <returns></returns>
         /// <exception cref="JsonFormatterException"></exception>
-        public static List<Dictionary<string, string>> GetJList(string input, string dataKey = null)
+        public static List<Dictionary<string, string>> GetList(string input, string dataKey = null)
         {
             var node = GetJsonNode(input);
             if (node is JsonValue)
@@ -246,71 +253,22 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 获取json对象字段
+        /// jsonData转Object
         /// </summary>
-        /// <param name="input">json data</param>
-        /// <param name="dataKey">默认返回第一级对象,指定字段(多层级用:) xxx:xx</param>
-        /// <returns>
-        /// <para>返回dataFiled最末字段的值，</para>
-        /// <para>如果对应的是对象则返回对象内所有字段，</para>
-        /// <para>如果对应列表则返回第一条记录的所有字段。</para>
-        /// </returns>
-        public static Dictionary<string, string> GetJObject(string input, string dataKey = null)
-        {
-            var node = GetJsonNode(input);
-
-#if NET6_0_OR_GREATER
-            if (node is not JsonObject)
-                throw new JsonFormatterException("input is not object");
-#endif
-            Dictionary<string, string> data = new Dictionary<string, string>();
-            string[] fileds = dataKey?.Trim(':').Split(":");
-            if (fileds.IsNullOrEmpty())
-            {
-                JsonObject obj = node.AsObject();
-                foreach (var item in obj)
-                {
-                    if (data.ContainsKey(item.Key)) continue;
-                    data.Add(item.Key, item.Value?.ToString());
-                }
-                return data;
-            }
-
-            JsonObject jobj = JsonNode.Parse(input).AsObject();
-
-            for (int i = 0; i < fileds.Length; i++)
-            {
-                foreach (var item in jobj)
-                {
-                    if (item.Key != fileds[i]) continue;
-                    if (item.Value is JsonObject)
-                        jobj = (JsonObject)item.Value;
-
-                    else if (item.Value is JsonArray)
-                        jobj = (JsonObject)item.Value[0];
-
-                    else if (item.Value is JsonValue)
-                        data.Add(item.Key, item.Value.ToString());
-                    break;
-                }
-            }
-            if (data.IsNullOrEmpty())
-            {
-                foreach (var item in jobj)
-                    data.Add(item.Key, item.Value.ToString());
-            }
-            return data;
-        }
+        /// <param name="jsonData"></param>
+        /// <returns>AS <![CDATA[string,decimal,bool,object,Dictionary<string, object>,List<object>]]></returns>
+        public static object GetObject(string jsonData)
+            => ToObject(JsonDocument.Parse(jsonData).RootElement);
 
         /// <summary>
         /// 获取json中指定的字段
         /// </summary>
         /// <param name="input">json data</param>
-        /// <param name="dataKey">指定字段 xxx:xx</param>
+        /// <param name="field">指定字段 xxx:xx</param>
         /// <returns></returns>
-        public static string GetJValue(string input, string dataKey)
+        public static string GetFieldValue(string input, string field)
         {
-            string[] fileds = dataKey.Trim(':').Split(":");
+            string[] fileds = field.Trim(':').Split(":");
             if (fileds.IsNullOrEmpty())
                 return input;
 
@@ -363,6 +321,52 @@ namespace CSharp.Net.Util
             catch
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// jsonElement 转 Object
+        /// </summary>
+        /// <param name="jsonElement"></param>
+        /// <returns></returns>
+        internal static object ToObject(JsonElement jsonElement)
+        {
+            switch (jsonElement.ValueKind)
+            {
+                case JsonValueKind.String:
+                    return jsonElement.GetString();
+
+                case JsonValueKind.Undefined:
+                case JsonValueKind.Null:
+                    return default;
+
+                case JsonValueKind.Number:
+                    return jsonElement.GetDecimal();
+
+                case JsonValueKind.True:
+                case JsonValueKind.False:
+                    return jsonElement.GetBoolean();
+
+                case JsonValueKind.Object:
+                    var enumerateObject = jsonElement.EnumerateObject();
+                    var dic = new Dictionary<string, object>();
+                    foreach (var item in enumerateObject)
+                    {
+                        dic.Add(item.Name, ToObject(item.Value));
+                    }
+                    return dic;
+
+                case JsonValueKind.Array:
+                    var enumerateArray = jsonElement.EnumerateArray();
+                    var list = new List<object>();
+                    foreach (var item in enumerateArray)
+                    {
+                        list.Add(ToObject(item));
+                    }
+                    return list;
+
+                default:
+                    return default;
             }
         }
     }

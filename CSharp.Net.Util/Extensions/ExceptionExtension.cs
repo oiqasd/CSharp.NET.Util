@@ -25,6 +25,7 @@ public static class ExceptionExtension
                 exceMsg += "\n" + ex.InnerException.GetExcetionMessage();
             }
         }
+
         return exceMsg;
     }
 }

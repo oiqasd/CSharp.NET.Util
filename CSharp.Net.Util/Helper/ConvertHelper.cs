@@ -1,11 +1,10 @@
-﻿using System;
+﻿using NPOI.SS.Formula.Functions;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
-using System.Text;
-using System.Threading;
 
 namespace CSharp.Net.Util
 {
@@ -49,21 +48,82 @@ namespace CSharp.Net.Util
         /// <typeparam name="T"></typeparam>
         /// <param name="param"></param>
         /// <param name="defaultValue"></param> 
-        /// <param name="provider">默认null, 例:Thread.CurrentThread.CurrentCulture</param>
+        /// <param name="provider">格式信息,默认null, 例:Thread.CurrentThread.CurrentCulture</param>
         /// <returns></returns>
         public static T ConvertTo<T>(object param, T defaultValue = default(T), IFormatProvider? provider = null)
         {
-            try
-            {
-                //if (typeof(System.Enum).IsAssignableFrom(typeof(T)))
-                //    return (T)Enum.Parse(typeof(T), param.ToString());
+            return Try.CatchOrDefault(() => (T)ChangeType(param, typeof(T), provider), defaultValue);
+            //if (typeof(System.Enum).IsAssignableFrom(typeof(T)))
+            //    return (T)Enum.Parse(typeof(T), param.ToString());
+            //return (T)Convert.ChangeType(param, typeof(T), provider); 
+        }
 
-                return (T)Convert.ChangeType(param, typeof(T), provider);
-            }
-            catch
+        /// <summary>
+        /// 将一个对象转换为指定类型
+        /// </summary>
+        /// <param name="obj">待转换的对象</param>
+        /// <param name="type">目标类型</param>
+        /// <param name="provider"><see cref="IFormatProvider"/></param>
+        /// <returns>转换后的对象</returns>
+        public static object ChangeType(object obj, Type type, IFormatProvider? provider)
+        {
+            if (type == null) return obj;
+            if (type == typeof(string)) return obj?.ToString();
+            if (type == typeof(Guid) && obj != null) return Guid.Parse(obj.ToString());
+            if (obj == null) return type.IsValueType ? Activator.CreateInstance(type) : null;
+
+            var underlyingType = Nullable.GetUnderlyingType(type);
+            if (type.IsAssignableFrom(obj.GetType())) return obj;
+            else if ((underlyingType ?? type).IsEnum)
             {
-                return defaultValue;
+                if (underlyingType != null && string.IsNullOrWhiteSpace(obj.ToString())) return null;
+                else return Enum.Parse(underlyingType ?? type, obj.ToString());
             }
+            //DateTime->DateTimeOffset
+            else if (obj.GetType().Equals(typeof(DateTime)) && (underlyingType ?? type).Equals(typeof(DateTimeOffset)))
+            {
+                return DateTimeHelper.ConvertToDateTimeOffset((DateTime)obj);
+            }
+            //DateTimeOffset->DateTime
+            else if (obj.GetType().Equals(typeof(DateTimeOffset)) && (underlyingType ?? type).Equals(typeof(DateTime)))
+            {
+                return DateTimeHelper.ConvertToDateTime((DateTimeOffset)obj);
+            }
+            else if (typeof(IConvertible).IsAssignableFrom(underlyingType ?? type))
+            {
+                try
+                {
+                    return Convert.ChangeType(obj, underlyingType ?? type, provider);
+                }
+                catch
+                {
+                    return underlyingType == null ? Activator.CreateInstance(type) : null;
+                }
+            }
+            else
+            {
+                var converter = TypeDescriptor.GetConverter(type);
+                if (converter.CanConvertFrom(obj.GetType())) return converter.ConvertFrom(obj);
+
+                var constructor = type.GetConstructor(Type.EmptyTypes);
+                if (constructor != null)
+                {
+                    var o = constructor.Invoke(null);
+                    var propertys = type.GetProperties();
+                    var oldType = obj.GetType();
+
+                    foreach (var property in propertys)
+                    {
+                        var p = oldType.GetProperty(property.Name);
+                        if (property.CanWrite && p != null && p.CanRead)
+                        {
+                            property.SetValue(o, ChangeType(p.GetValue(obj, null), property.PropertyType, provider), null);
+                        }
+                    }
+                    return o;
+                }
+            }
+            return obj;
         }
 
         /// <summary>
@@ -148,7 +208,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// DataTable 转换为List 集合
         /// </summary>
-        /// <typeparam name="TResult">类型</typeparam>
+        /// <typeparam name="T">类型</typeparam>
         /// <param name="dt">DataTable</param>
         /// <returns></returns>
         public static List<T> ToList<T>(DataTable dt)
@@ -223,7 +283,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// List转换为一个DataTable
         /// </summary>
-        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
         public static DataTable ToDataTable<T>(IEnumerable<T> value)

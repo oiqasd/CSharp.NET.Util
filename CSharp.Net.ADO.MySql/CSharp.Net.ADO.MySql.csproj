@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Authors>Developer</Authors>
-    <Company>Developer</Company>
+    <Authors>Util</Authors>
     <Description>基于.NET Standard2.0的MySql类库</Description>
     <PackageVersion>1.0.1</PackageVersion>
     <Copyright>Y</Copyright>

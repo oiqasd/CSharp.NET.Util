@@ -13,7 +13,7 @@ namespace CSharp.Net.Util
         private const string StrKeyWord = @"select|insert|delete|from|count(|drop table|update|truncate|asc(|mid(|char(|xp_cmdshell|exec master|netlocalgroup administrators|:|net user|""|or|and";
         private const string StrRegex = @"[-|;|,|/|(|)|[|]|}|{|%|@|*|!|']";
 
-        //// <summary>
+        /// <summary>
         /// 静态方法，检查_sword是否包涵SQL关键字
         /// </summary>
         /// <param name="_sWord">被检查的字符串</param>

@@ -14,7 +14,7 @@ namespace CSharp.Net.Util.Validate
                 this.ErrorMessage = $"手机号码不能为空";
                 return false;
             }
-            bool v = RegexHelper.CheckPhone(value.ToString());
+            bool v = RegexUtil.CheckPhone(value.ToString());
             if (v)
                 return true;
 

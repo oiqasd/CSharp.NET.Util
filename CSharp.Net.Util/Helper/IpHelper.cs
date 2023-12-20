@@ -76,11 +76,11 @@ namespace CSharp.Net.Util
         /// 获取当前服务器IP
         /// </summary>
         /// <returns></returns>
-        public static string GetCurrentIP()
+        public static string GetLocalIP()
         {
             var ip = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces().Select(p => p.GetIPProperties()).SelectMany(p => p.UnicastAddresses)
                   .Where(p => p.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork && !System.Net.IPAddress.IsLoopback(p.Address))
-                  .FirstOrDefault()?.Address.ToString();
+                  .FirstOrDefault()?.Address.MapToIPv4()?.ToString();
             return ip;
         }
 

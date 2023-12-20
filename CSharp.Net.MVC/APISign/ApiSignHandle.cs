@@ -85,7 +85,7 @@ public class ApiSignHandle : ActionFilterAttribute
 
         if (signData.IsNullOrEmpty()) throw new SignNotExistException();
 
-        /**
+        /*
         SortedList<string, string> listd = new SortedList<string, string>();
         PropertyInfo parmPro = parmObjProp.FirstOrDefault(q => q.Name.ToLower() == "parameter");
         if (parmPro != null)

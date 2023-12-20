@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
-    internal class JsonFormatterException : BaseException
+    internal class JsonFormatterException : AppException
     {
         public JsonFormatterException(string message) : base(message) { }
     }

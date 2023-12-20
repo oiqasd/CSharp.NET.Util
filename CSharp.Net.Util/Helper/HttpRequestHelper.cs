@@ -20,6 +20,8 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="Url"></param>
         /// <param name="postDataStr"></param>
+        /// <param name="contentType"></param>
+        /// <param name="timeOut"></param>
         /// <returns></returns>
         public static async Task<string> DoHttpPostAsync(string Url, string postDataStr, HttpContentType contentType = HttpContentType.JSON, int timeOut = 300000)
         {
@@ -51,15 +53,8 @@ namespace CSharp.Net.Util
         public static void SendOnly(HttpResquestEntity resquestEntity)
         {
             HttpWebRequest request = CreateRequest(resquestEntity);
-            try
-            {
-                request.GetResponse().Close();//销毁关闭响应
-            }
-            catch (Exception ex)
-            {
-                if (!ex.Message.Contains("操作超时"))
-                    throw ex;
-            }
+
+            request.GetResponse().Close();//销毁关闭响应
         }
 
         /// <summary>
@@ -200,21 +195,14 @@ namespace CSharp.Net.Util
 
         public static HttpStatusCode GetHttpStatusCode(WebException ex)
         {
-            try
+            //返回错误状态
+            if (ex.Response != null)
             {
-                //返回错误状态
-                if (ex.Response != null)
-                {
-                    return ((HttpWebResponse)ex.Response).StatusCode;// Status.ToString();                   
-                }
-                else
-                {
-                    throw ex;
-                }
+                return ((HttpWebResponse)ex.Response).StatusCode;// Status.ToString();                   
             }
-            catch (Exception ex1)
+            else
             {
-                throw ex1;
+                throw ex;
             }
         }
 
@@ -223,29 +211,35 @@ namespace CSharp.Net.Util
             return true;
         }
 
+        /*
         /// <summary>
         /// 读取application/json格式传递过来的字符串
         /// </summary>
         /// <param name="Context"></param>
         /// <returns></returns>
-        //public static String GetJson(HttpRequest request, Encoding encoding = null)
-        //{
-        //    if (encoding == null)
-        //        encoding = Encoding.Default;
-        //    string postContent = "";
-        //    if (request != null)
-        //    {
-        //        Stream postData = request.Body;
-        //        using (StreamReader sRead = new StreamReader(postData, encoding))
-        //        {
-        //            postContent = sRead.ReadToEnd();
-        //            sRead.Close();
-        //        }
-        //    }
-        //    return HttpUtility.HtmlDecode(postContent);
+        public static String GetJson(HttpRequest request, Encoding encoding = null)
+        {
+            if (encoding == null)
+                encoding = Encoding.Default;
+            string postContent = "";
+            if (request != null)
+            {
+                Stream postData = request.Body;
+                using (StreamReader sRead = new StreamReader(postData, encoding))
+                {
+                    postContent = sRead.ReadToEnd();
+                    sRead.Close();
+                }
+            }
+            return HttpUtility.HtmlDecode(postContent);
 
-        //}
+        }*/
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="contentType"></param>
+        /// <returns></returns>
         public static string GetContentTypeName(HttpContentType contentType)
         {
             switch (contentType)
@@ -267,19 +261,25 @@ namespace CSharp.Net.Util
     public enum HttpContentType
     {
 
-        QueryString = 0,// "application/x-www-form-urlencoded;",
+        /// <summary>
+        /// application/x-www-form-urlencoded
+        /// </summary>
+        QueryString = 0,
 
-        JSON = 1,//"application/json;"
+        /// <summary>
+        /// application/json
+        /// </summary>
+        JSON = 1,
 
         /// <summary>
         /// multipart/form-data:既可上传文件等二进制数据，也可以上传表单键值对
-        /// x-www-form-urlencoded:只能上传键值对，且键值对都是间隔分开的(name=zhang&age = 23)
+        /// x-www-form-urlencoded:只能上传键值对，且键值对都是间隔分开的(name=zhang<![CDATA[&]]>age = 23)
         /// </summary>
         FormData = 2,
         /// <summary>
         /// x-www-form-urlencoded
         /// </summary>
-        x_www_form_urlEncoded = 3 ,
+        x_www_form_urlEncoded = 3,
     }
 
     /// <summary>
@@ -290,12 +290,12 @@ namespace CSharp.Net.Util
         /// <summary>
         /// Post方式
         /// </summary>
-        POST = 0,//"POST",
+        POST = 0,
 
         /// <summary>
         /// Get方式
         /// </summary>
-        GET = 1//"GET"
+        GET = 1
     }
 
     /// <summary>

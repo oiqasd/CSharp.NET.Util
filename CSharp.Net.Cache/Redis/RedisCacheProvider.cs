@@ -3,9 +3,7 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -38,7 +36,7 @@ namespace CSharp.Net.Cache.Redis
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
-        /// <param name="func"></param>
+        /// <param name="func">async()=>{}</param>
         /// <param name="expiry"></param>
         /// <returns></returns>
         public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) //where T : new()
@@ -68,20 +66,20 @@ namespace CSharp.Net.Cache.Redis
         /// 获取或添加key
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="defaultValue"></param>
+        /// <param name="func"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public string GetOrSet(string key, string defaultValue, int seconds = 30)
+        public T GetOrSet<T>(string key, Func<T> func, int seconds = 30)
         {
             if (_db.KeyExists(key))
-                return StringGet(key);
+                return StringGet<T>(key);
 
             //if (LockTake("lck_" + key))
             lock (_lockObj)
             {
-                StringSet(key, defaultValue, seconds);
+                StringSet(key, func.Invoke(), seconds);
             }
-            return defaultValue;
+            return func.Invoke();
         }
 
         /// <summary>
@@ -151,7 +149,7 @@ namespace CSharp.Net.Cache.Redis
             if (cacheSeconds <= 0)
                 return StringSet(keyValues);
 
-            /**
+            /*
             List<KeyValuePair<RedisKey, RedisValue>> newkeyValues =
             keyValues.Select(p => new KeyValuePair<RedisKey, RedisValue>(PrefixKey(p.Key), p.Value)).ToList();
             return Do(db => db.StringSet(newkeyValues.ToArray()));

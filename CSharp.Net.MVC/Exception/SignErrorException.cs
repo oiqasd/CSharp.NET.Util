@@ -8,7 +8,7 @@ using CSharp.Net.Util;
 
 namespace CSharp.Net.Mvc;
 
-public class SignErrorException : BaseException
+public class SignErrorException : AppException
 {
     public SignErrorException(string message) : base(message) { }
 }

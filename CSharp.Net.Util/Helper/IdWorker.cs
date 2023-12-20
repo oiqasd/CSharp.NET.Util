@@ -33,7 +33,7 @@ namespace CSharp.Net.Util
                         if (options == null)
                         {
                             options = new IdWorkerOptions();
-                            string ip = IpHelper.GetCurrentIP();
+                            string ip = IpHelper.GetLocalIP();
                             if (IpHelper.CheckIp(ip))
                             {
                                 options.MachineId = ConvertHelper.ConvertTo<ushort>(ip.Split('.')[3], 1);

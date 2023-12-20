@@ -40,10 +40,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+/// <summary>
+/// OrderByExtention
+/// </summary>
 public static class OrderByExtention
 {
     #region Private expression tree helpers
-
+    /// <summary>
+    /// OrderBy
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <param name="propertyName"></param>
+    /// <param name="resultType"></param>
+    /// <returns></returns>
     private static LambdaExpression GenerateSelector<TEntity>(String propertyName, out Type resultType) where TEntity : class
     {
         // Create a parameter to pass into the Lambda expression (Entity => Entity.OrderByField).
@@ -88,17 +97,37 @@ public static class OrderByExtention
         MethodCallExpression resultExp = GenerateMethodCall<TEntity>(source, "OrderBy", fieldName);
         return source.Provider.CreateQuery<TEntity>(resultExp) as IOrderedQueryable<TEntity>;
     }
-
+    /// <summary>
+    /// OrderByDescending
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <param name="source"></param>
+    /// <param name="fieldName"></param>
+    /// <returns></returns>
     public static IOrderedQueryable<TEntity> OrderByDescending<TEntity>(this IQueryable<TEntity> source, string fieldName) where TEntity : class
     {
         MethodCallExpression resultExp = GenerateMethodCall<TEntity>(source, "OrderByDescending", fieldName);
         return source.Provider.CreateQuery<TEntity>(resultExp) as IOrderedQueryable<TEntity>;
     }
+    /// <summary>
+    /// ThenBy
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <param name="source"></param>
+    /// <param name="fieldName"></param>
+    /// <returns></returns>
     public static IOrderedQueryable<TEntity> ThenBy<TEntity>(this IOrderedQueryable<TEntity> source, string fieldName) where TEntity : class
     {
         MethodCallExpression resultExp = GenerateMethodCall<TEntity>(source, "ThenBy", fieldName);
         return source.Provider.CreateQuery<TEntity>(resultExp) as IOrderedQueryable<TEntity>;
     }
+    /// <summary>
+    /// ThenByDescending
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <param name="source"></param>
+    /// <param name="fieldName"></param>
+    /// <returns></returns>
     public static IOrderedQueryable<TEntity> ThenByDescending<TEntity>(this IOrderedQueryable<TEntity> source, string fieldName) where TEntity : class
     {
         MethodCallExpression resultExp = GenerateMethodCall<TEntity>(source, "ThenByDescending", fieldName);

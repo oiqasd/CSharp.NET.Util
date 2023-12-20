@@ -1,8 +1,12 @@
 ﻿using CSharp.Net.Util;
 using System;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
+/// <summary>
+/// StringExtension
+/// </summary>
 public static class StringExtension
 {
     /// <summary>
@@ -88,6 +92,7 @@ public static class StringExtension
     /// 8.yyyyMMdd
     /// 9.yyyy-MM-dd HH:mm
     /// </param>
+    /// <param name="defaultvalue"></param>
     /// <returns></returns>
     /// </summary>
     public static string ToString(this DateTime? time, int formatType, string defaultvalue = "")
@@ -241,7 +246,7 @@ public static class StringExtension
     /// </summary>
     public static bool IsNullOrEmpty(this string s)
     {
-        return string.IsNullOrEmpty(s);
+        return string.IsNullOrWhiteSpace(s);
     }
 
     /// <summary>
@@ -251,6 +256,105 @@ public static class StringExtension
     /// </summary>
     public static bool IsNotNullOrEmpty(this string s)
     {
-        return string.IsNullOrEmpty(s) == false;
+        return string.IsNullOrWhiteSpace(s) == false;
     }
+
+    /// <summary>
+    /// 格式化字符串
+    /// </summary>
+    /// <param name="str"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public static string Format(this string str, params object[] args)
+    {
+        return args == null || args.Length == 0 ? str : string.Format(str, args);
+    }
+
+#if NET
+    /// <summary>
+    /// 首字母小写
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string ToLowerCamelCase(this string str)
+    {
+        if (string.IsNullOrWhiteSpace(str)) return str;
+
+        return string.Concat(str.First().ToString().ToLower(), str.AsSpan(1));
+    }
+
+    /// <summary>
+    /// 首字母大写
+    /// </summary>
+    /// <param name="str"></param>
+    /// <returns></returns>
+    public static string ToUpperCamelCase(this string str)
+    {
+        if (string.IsNullOrWhiteSpace(str)) return str;
+
+        return string.Concat(str.First().ToString().ToUpper(), str.AsSpan(1));
+    }
+#endif
+
+    /// <summary>
+    /// 清除字符串前后缀
+    /// </summary>
+    /// <param name="str">字符串</param>
+    /// <param name="pos">0：前后缀，1：后缀，-1：前缀</param>
+    /// <param name="affixes">前后缀集合</param>
+    /// <returns></returns>
+    public static string ClearStringAffixes(this string str, int pos = 0, params string[] affixes)
+    {
+        // 空字符串直接返回
+        if (string.IsNullOrWhiteSpace(str)) return str;
+
+        // 空前后缀集合直接返回
+        if (affixes == null || affixes.Length == 0) return str;
+
+        var startCleared = false;
+        var endCleared = false;
+
+        string tempStr = null;
+        foreach (var affix in affixes)
+        {
+            if (string.IsNullOrWhiteSpace(affix)) continue;
+
+            if (pos != 1 && !startCleared && str.StartsWith(affix, StringComparison.OrdinalIgnoreCase))
+            {
+                tempStr = str[affix.Length..];
+                startCleared = true;
+            }
+            if (pos != -1 && !endCleared && str.EndsWith(affix, StringComparison.OrdinalIgnoreCase))
+            {
+                var _tempStr = !string.IsNullOrWhiteSpace(tempStr) ? tempStr : str;
+                tempStr = _tempStr[..^affix.Length];
+                endCleared = true;
+            }
+            if (startCleared && endCleared) break;
+        }
+        return !string.IsNullOrWhiteSpace(tempStr) ? tempStr : str;
+    }
+
+    /// <summary>
+    /// 反转字符串
+    /// </summary>
+    /// <param name="value"></param>
+    public static string ToReverse(this string value) =>
+          StringHelper.Reverse(value);
+
+    /// <summary>
+    /// Converts the string to a byte-array using the supplied encoding
+    /// </summary>
+    /// <param name = "value">The input string.</param>
+    /// <param name = "encoding">The encoding to be used.Default: Encoding.Default</param>
+    /// <returns>The created byte array</returns>
+    /// <example>
+    /// 	<code>
+    /// 		var value = "Hello World";
+    /// 		var ansiBytes = value.ToBytes(Encoding.GetEncoding(1252)); // 1252 = ANSI
+    /// 		var utf8Bytes = value.ToBytes(Encoding.UTF8);
+    /// 	</code>
+    /// </example>
+    public static byte[] ToBytes(this string value, string encoding = null) =>
+          StringHelper.GetBytes(value, encoding);
 }

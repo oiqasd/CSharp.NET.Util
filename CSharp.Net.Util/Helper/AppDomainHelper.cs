@@ -38,13 +38,27 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static string GetUserRoamingFolder(string path = "", bool defaultCreate = false)
         {
-            string dir = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), path);
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), path);
             if (defaultCreate)
             {
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
             }
+            return dir;
+        }
 
+        /// <summary>
+        /// 获取桌面路径
+        /// </summary>
+        /// <returns></returns>
+        public static string GetUserDesktopFolder(string path = "", bool defaultCreate = false)
+        {
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), path);
+            if (defaultCreate)
+            {
+                if (!Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+            }
             return dir;
         }
 
@@ -140,7 +154,7 @@ namespace CSharp.Net.Util
             PrintThreadPoolStats(out string iocp, out string worker);
             StringBuilder sb = new StringBuilder();
             sb.Append(GetHostName)
-              .AppendLine(IpHelper.GetCurrentIP())
+              .AppendLine(IpHelper.GetLocalIP())
               .Append("程序集版本:").AppendLine(GetVersion.ToString())
               .AppendLine(GetDotNetVersion)
               .AppendLine(iocp)
@@ -157,13 +171,15 @@ namespace CSharp.Net.Util
             return sb.ToString();
         }
 
+        //public static Timer timer(int interval = 5) => new Timer(_ => { GC.Collect(); }, null, TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+
         /// <summary>
         /// 获取当前服务器IP
         /// </summary>
         /// <returns></returns>
         public static string GetCurrentIP
         {
-            get { return IpHelper.GetCurrentIP(); }
+            get { return IpHelper.GetLocalIP(); }
         }
 
         /// <summary>

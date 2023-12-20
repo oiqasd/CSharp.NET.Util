@@ -21,7 +21,6 @@ namespace CSharp.Net.Util
                             .Replace(" ", "+");
         }
 
-
         /// <summary>
         /// 提取首字母,只能取到常用的一级汉字
         /// </summary>
@@ -663,16 +662,6 @@ namespace CSharp.Net.Util
             return index < 0 ? value : value.Substring(index, value.Length - index);
         }
 
-        public static byte[] GetBytes(string data)
-        {
-            return Encoding.Default.GetBytes(data);
-        }
-
-        public static byte[] GetBytes(string data, Encoding encoding)
-        {
-            return encoding.GetBytes(data);
-        }
-
         public static string ToTitleCase(string value)
         {
             return ToTitleCase(value, CultureInfo.CurrentCulture);
@@ -1254,16 +1243,6 @@ namespace CSharp.Net.Util
         #region Bytes & Base64
 
         /// <summary>
-        /// 	Converts the string to a byte-array using the default encoding
-        /// </summary>
-        /// <param name = "value">The input string.</param>
-        /// <returns>The created byte array</returns>
-        public static byte[] ToBytes(string value)
-        {
-            return ToBytes(value, null);
-        }
-
-        /// <summary>
         /// 	Converts the string to a byte-array using the supplied encoding
         /// </summary>
         /// <param name = "value">The input string.</param>
@@ -1276,10 +1255,10 @@ namespace CSharp.Net.Util
         /// 		var utf8Bytes = value.ToBytes(Encoding.UTF8);
         /// 	</code>
         /// </example>
-        public static byte[] ToBytes(string value, Encoding encoding)
+        public static byte[] GetBytes(string value, string encoding = null)
         {
-            encoding = (encoding ?? Encoding.Default);
-            return encoding.GetBytes(value);
+            var _encoding = encoding.IsNullOrEmpty() ? Encoding.Default : Encoding.GetEncoding(encoding);
+            return _encoding.GetBytes(value);
         }
 
         /// <summary>
@@ -1480,10 +1459,10 @@ namespace CSharp.Net.Util
         /// <param name="encrypt">True to encrypt, False to decrypt.</param>
         /// <returns></returns>
         /// <remarks></remarks>
-        private static byte[] CryptBytes(String password, byte[] in_bytes, bool encrypt)
+        private static byte[] CryptBytes(string password, byte[] in_bytes, bool encrypt)
         {
             // Make a triple DES service provider.
-            var des_provider = new TripleDESCryptoServiceProvider();
+            var des_provider = TripleDES.Create();
 
             // Find a valid key size for this provider.
             int key_size_bits = 0;
@@ -1555,12 +1534,9 @@ namespace CSharp.Net.Util
         /// <param name="key">The output key bytes to generate.</param>
         /// <param name="iv">The output initialization vector to generate.</param>
         /// <remarks></remarks>
-        private static void MakeKeyAndIV(String password, byte[] salt, int key_size_bits, int block_size_bits,
-                                         ref byte[] key, ref byte[] iv)
+        private static void MakeKeyAndIV(String password, byte[] salt, int key_size_bits, int block_size_bits, ref byte[] key, ref byte[] iv)
         {
-            var derive_bytes =
-                new Rfc2898DeriveBytes(password, salt, 1234);
-
+            var derive_bytes = new Rfc2898DeriveBytes(password, salt, 1234, HashAlgorithmName.MD5);
             key = derive_bytes.GetBytes(key_size_bits / 8);
             iv = derive_bytes.GetBytes(block_size_bits / 8);
         }
@@ -1777,14 +1753,14 @@ namespace CSharp.Net.Util
             //}
 
             Byte[] data = Encoding.UTF8.GetBytes(stringToHash);
-            Byte[] hash = new SHA1CryptoServiceProvider().ComputeHash(data);
+            Byte[] hash = SHA1.Create().ComputeHash(data);
             return Convert.ToBase64String(hash);
         }
 
         /// <summary>
         /// Determines whether the string contains any of the provided values.
         /// </summary>
-        /// <param name="this"></param>
+        /// <param name="value"></param>
         /// <param name="values"></param>
         /// <returns></returns>
         public static bool ContainsAny(string value, params string[] values)
@@ -1795,7 +1771,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// Determines whether the string contains any of the provided values.
         /// </summary>
-        /// <param name="this"></param>
+        /// <param name="inputValue"></param>
         /// <param name="comparisonType"></param>
         /// <param name="values"></param>
         /// <returns></returns>
@@ -1954,12 +1930,11 @@ namespace CSharp.Net.Util
         {
             if (IsEmpty(str)) return "";
             StringBuilder sb = new StringBuilder();
-            byte[] byStr = System.Text.Encoding.UTF8.GetBytes(str); //默认是System.Text.Encoding.Default.GetBytes(str)
+            byte[] byStr = Encoding.UTF8.GetBytes(str); //默认是System.Text.Encoding.Default.GetBytes(str)
             for (int i = 0; i < byStr.Length; i++)
             {
                 sb.Append(@"%" + Convert.ToString(byStr[i], 16));
             }
-
             return (sb.ToString());
         }
 
@@ -2492,9 +2467,41 @@ namespace CSharp.Net.Util
             //return Kq * q / (Kq * q + Kr * r + Ks * s);
         }
 
+        /// <summary>
+        /// 本文对齐
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static string PadLeftAlign(string text)
+        {
+            return string.Join(Environment.NewLine, text.Split(new[] { Environment.NewLine, "\n" }, StringSplitOptions.None)
+                         .Select(line => string.Empty.PadLeft(6, ' ') + line));
+        }
 
+        /// <summary>
+        /// 从配置中渲染字符串模板
+        /// </summary>
+        /// <param name="template"></param>
+        /// <param name="value"></param>
+        /// <param name="encode"></param>
+        /// <returns></returns>
+        public static string Render(string template, string value = "", bool encode = false)
+        {
+            if (template == null) return default;
 
+            // 判断字符串是否包含模板
+            if (!Regex.IsMatch(template, @"\#\((?<p>.*?)\)")) return template;
 
+            // 获取所有匹配的模板
+            var templateValues = Regex.Matches(template, @"\#\((?<p>.*?)\)")
+                                  .Select(u => new { Template = u.Groups["p"].Value, Value = value });
+            // 循环替换模板
+            foreach (var item in templateValues)
+            {
+                template = template.Replace($"#({item.Template})", encode ? Uri.EscapeDataString(item.Value?.ToString() ?? string.Empty) : item.Value?.ToString());
+            }
 
+            return template;
+        }
     }
 }

@@ -44,8 +44,8 @@ namespace CSharp.Net.Util.Serialize
         {
             try
             {
-                IFormatter formatter = GetSerializer(typeof(T));
 #pragma warning disable SYSLIB0011 // 类型或成员已过时
+                IFormatter formatter = GetSerializer(typeof(T));
                 T t = (T)formatter.Deserialize(source);
 #pragma warning restore SYSLIB0011 // 类型或成员已过时
                 return t;
@@ -90,8 +90,8 @@ namespace CSharp.Net.Util.Serialize
             T t = null;
             using (FileStream fs = new FileStream(fileName, FileMode.Open))
             {
-                IFormatter formatter = GetSerializer(typeof(T));
 #pragma warning disable SYSLIB0011 // 类型或成员已过时
+                IFormatter formatter = GetSerializer(typeof(T));
                 t = (T)formatter.Deserialize(fs);
 #pragma warning restore SYSLIB0011 // 类型或成员已过时
             }
@@ -125,8 +125,8 @@ namespace CSharp.Net.Util.Serialize
         public virtual void Serialize<T>(T t, System.IO.Stream destination)
             where T : class
         {
-            IFormatter formatter = GetSerializer(typeof(T));
 #pragma warning disable SYSLIB0011 // 类型或成员已过时
+            IFormatter formatter = GetSerializer(typeof(T));
             formatter.Serialize(destination, t);
 #pragma warning restore SYSLIB0011 // 类型或成员已过时
         }
@@ -161,13 +161,14 @@ namespace CSharp.Net.Util.Serialize
         {
             using (FileStream fs = new FileStream(fileName, FileMode.Create))
             {
-                IFormatter formatter = GetSerializer(typeof(T));
 #pragma warning disable SYSLIB0011 // 类型或成员已过时
+                IFormatter formatter = GetSerializer(typeof(T));
                 formatter.Serialize(fs, t);
 #pragma warning restore SYSLIB0011 // 类型或成员已过时
             }
         }
 
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
         /// <summary>
         /// 从缓存中获取序列化对象,如果没有,则创建
         /// </summary>
@@ -194,5 +195,6 @@ namespace CSharp.Net.Util.Serialize
         {
             return new BinaryFormatter();
         }
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
     }
 }

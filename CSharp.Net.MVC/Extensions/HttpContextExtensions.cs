@@ -2,10 +2,13 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Mvc;
@@ -24,9 +27,63 @@ public static class HttpContextExtensions
         return app;
     }
 
-    public static string GetClientIP(this HttpContext httpContext)
+    /// <summary>
+    /// 获取客户端ip
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <returns></returns>
+    public static string GetRemoteIP(this HttpContext httpContext)
     {
-        return httpContext.Connection.RemoteIpAddress.ToString();
+        return httpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
+    }
+
+    /// <summary>
+    /// 获取完整请求地址
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    public static string GetRequestUrl(this HttpRequest request)
+    {
+        return new StringBuilder()
+                .Append(request.Scheme)
+                .Append("://")
+                .Append(request.Host)
+                .Append(request.PathBase)
+                .Append(request.Path)
+                .Append(request.QueryString)
+                .ToString();
+    }
+
+    /// <summary>
+    /// 获取本机ip
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <returns></returns>
+    public static string GetLocalIP(this HttpContext httpContext)
+    {
+        return httpContext.Connection.LocalIpAddress?.MapToIPv4()?.ToString();
+    }
+
+    /// <summary>
+    /// 获取 Action 特性
+    /// </summary>
+    /// <typeparam name="TAttribute"></typeparam>
+    /// <param name="httpContext"></param>
+    /// <returns></returns>
+    public static TAttribute GetMetadata<TAttribute>(this HttpContext httpContext)
+        where TAttribute : class
+    {
+        return httpContext.GetEndpoint()?.Metadata?.GetMetadata<TAttribute>();
+    }
+
+    /// <summary>
+    /// 获取 控制器/Action 描述器
+    /// </summary>
+    /// <param name="httpContext"></param>
+    /// <returns></returns>
+    public static ControllerActionDescriptor GetControllerActionDescriptor(this HttpContext httpContext)
+    {
+        return httpContext.GetEndpoint()?.Metadata?.FirstOrDefault(u => u is ControllerActionDescriptor) as ControllerActionDescriptor;
     }
 
     #region Cookie Helper

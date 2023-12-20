@@ -33,13 +33,14 @@ public static class HttpRequestExtensions
         if (request.Method == HttpMethods.Get)
         {
             var query = request.QueryString.ToString();
-            return RegexHelper.QueryStringToDictionany(query);
+            return RegexUtil.QueryStringToDictionany(query);
         }
 
         if (request.Method == HttpMethods.Post && request.ContentType.Contains("json"))
         {
             var str = await ReadBodyAsync(request);
-            return JsonHelper.GetJObject(str);
+            var obj = JsonHelper.GetObject(str) as Dictionary<string, object>;
+            return obj.ToDictionary(k => k.Key, k => k.Value == null ? "" : k.Value.ToString());
         }
 
         if (request.Method == HttpMethods.Post && request.ContentType.Contains("form-data"))
@@ -118,12 +119,10 @@ public static class HttpRequestExtensions
 
     public static async Task EnableRewindAsync(this HttpRequest request)
     {
+        //清空上一个节点的信息
         if (!request.Body.CanSeek)
-        {
-            request.EnableBuffering();
-            //清空上一个节点的信息
             await request.Body.DrainAsync(CancellationToken.None);
-        }
+
         if (request.Body.Position > 0)
             request.Body.Seek(0L, SeekOrigin.Begin);
     }

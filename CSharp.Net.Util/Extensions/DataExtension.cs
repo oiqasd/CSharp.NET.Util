@@ -25,6 +25,7 @@ public static class DataExtension
     /// <summary>
     /// 获取第n个Table
     /// </summary>
+    /// <param name="ds">DataSet</param>
     /// <param name="index">索引</param>
     /// <returns></returns>
     public static DataTable GetTable(this DataSet ds, int index)
@@ -60,6 +61,7 @@ public static class DataExtension
     /// 获取第n行数据
     /// 如 ds.GetTable(0).GetRow(0)
     /// </summary>
+    /// <param name="dt"></param>
     /// <param name="index">索引</param>
     /// <returns></returns>
     public static DataRow GetRow(this DataTable dt, int index)

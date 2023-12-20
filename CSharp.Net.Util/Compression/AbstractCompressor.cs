@@ -24,6 +24,7 @@ namespace CSharp.Net.Util.Compression
         /// 对字符串进行压缩
         /// </summary>
         /// <param name="str">待压缩的字符串</param>
+        /// <param name="encoding"></param>
         /// <returns>压缩后的字符串</returns>
         public string CompressStringToString(string str, Encoding encoding)
         {
@@ -42,6 +43,7 @@ namespace CSharp.Net.Util.Compression
         /// 对字符串进行解压缩
         /// </summary>
         /// <param name="str">待解压缩的字符串</param>
+        /// <param name="encoding"></param>
         /// <returns>解压缩后的字符串</returns>
         public string DecompressStringToString(string str, Encoding encoding)
         {
@@ -56,7 +58,7 @@ namespace CSharp.Net.Util.Compression
             return DecompressStringToString(str, Encoding.UTF8);
         }
 
-        // <summary>
+        /// <summary>
         /// 对byte数组进行压缩
         /// </summary>
         /// <param name="data">待压缩的byte数组</param>

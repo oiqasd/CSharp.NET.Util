@@ -3569,35 +3569,35 @@ namespace CSharp.Net.Util.Validate
         /// <returns>
         /// 0-获取成功，1-身份证号格式不正确
         /// </returns>
-        //public static int GetInfoByIdentityCard(string identityCard, out string areaCode, out string areaName, out int sex, out DateTime birthDate)
-        //{
-        //    sex = 2;
-        //    birthDate = new DateTime();
-        //    areaName = string.Empty;
-        //    areaCode = string.Empty;
-        //    bool check = Check(identityCard);
-        //    if (!check)
-        //        return 1;
-        //    areaCode = identityCard.Remove(2) + "0000";
-        //    areaName = areaInfo[areaCode].ToString();
-        //    string birth = string.Empty;
-        //    if (identityCard.Length == 18)
-        //        birth = identityCard.Substring(6, 8).Insert(6, "-").Insert(4, "-");
-        //    else
-        //        identityCard.Substring(6, 6).Insert(4, "-").Insert(2, "-");
-        //    DateTime.TryParse(birth, out birthDate);
-        //    string sexStr = string.Empty;
-        //    if (identityCard.Length == 18)
-        //        sexStr = identityCard.Substring(14, 3);
-        //    else
-        //        sexStr = identityCard.Substring(12, 3);
-        //    //性别代码为偶数是女性奇数为男性
-        //    if (Int32.Parse(sexStr) % 2 == 0)
-        //        sex = 0;
-        //    else
-        //        sex = 1;
-        //    return 0;
-        //}
+        public static int GetInfoByIdentityCard(string identityCard, out string areaCode, out string areaName, out int sex, out DateTime birthDate)
+        {
+            sex = 2;
+            birthDate = new DateTime();
+            areaName = string.Empty;
+            areaCode = string.Empty;
+            if(!Check18IdentityCard(identityCard)&& !Check15IdentityCard(identityCard))
+                return 1;
+
+            areaCode = identityCard.Remove(2) + "0000";
+            areaName = areaInfo[areaCode].ToString();
+            string birth = string.Empty;
+            if (identityCard.Length == 18)
+                birth = identityCard.Substring(6, 8).Insert(6, "-").Insert(4, "-");
+            else
+                identityCard.Substring(6, 6).Insert(4, "-").Insert(2, "-");
+            DateTime.TryParse(birth, out birthDate);
+            string sexStr = string.Empty;
+            if (identityCard.Length == 18)
+                sexStr = identityCard.Substring(14, 3);
+            else
+                sexStr = identityCard.Substring(12, 3);
+            //性别代码为偶数是女性奇数为男性
+            if (Int32.Parse(sexStr) % 2 == 0)
+                sex = 0;
+            else
+                sex = 1;
+            return 0;
+        }
 
         /// <summary>
         /// 获取自定义身份证号
