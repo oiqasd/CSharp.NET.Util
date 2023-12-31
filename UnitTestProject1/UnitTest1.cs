@@ -39,7 +39,7 @@ namespace UnitTestProject1
 
             var signdata = RSA.Sign(content, pri);
 
-            var cksign = RSA.CheckSign(content, signdata, pub);
+            var cksign = RSA.Verify(content, signdata, pub);
 
             string encal = RSA.Encrypt(content, pub);
             string deval = RSA.Decrypt(encal, pri);
