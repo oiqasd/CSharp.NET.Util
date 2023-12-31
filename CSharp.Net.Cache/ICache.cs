@@ -92,14 +92,14 @@ namespace CSharp.Net.Cache
         /// 删除以<paramref name="pattern"/>开头的key
         /// </summary>
         /// <param name="pattern"></param>
-        void KeyDeleteStartWith(string pattern);
+        Task KeyDeleteStartWith(string pattern);
         /// <summary>
         /// 查询<paramref name="pattern"/>开头的keys
         /// </summary>
         /// <param name="pattern"></param>
         /// <param name="removePrefix">默认移除实例前缀</param>
         /// <returns></returns>
-        string[] QueryStartWith(string pattern, bool removePrefix = true);
+        Task<string[]> QueryStartWith(string pattern, bool removePrefix = true);
         /// <summary>
         /// 判断key是否存储
         /// </summary>

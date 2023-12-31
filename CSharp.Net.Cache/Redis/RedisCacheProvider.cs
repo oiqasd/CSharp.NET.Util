@@ -4,7 +4,10 @@ using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache.Redis
@@ -111,7 +114,7 @@ namespace CSharp.Net.Cache.Redis
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return Do(db => db.StringSet(key, value, expiry));
+            return Do(db => db.StringSetAsync(key, value, expiry).Result);
         }
 
         /// <summary>
@@ -213,7 +216,7 @@ namespace CSharp.Net.Cache.Redis
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return Do(db => db.StringGet(key));
+            return Do(db => db.StringGetAsync(key).Result);
         }
 
         /// <summary>
@@ -229,7 +232,7 @@ namespace CSharp.Net.Cache.Redis
             var pkey = PrefixKey(key);
             var ret = Do(db =>
             {
-                double data = db.StringIncrement(pkey, val);
+                double data = db.StringIncrementAsync(pkey, val).Result;
                 if (expireTimeSpan != null && (updateExpire || data <= val))
                     db.KeyExpireAsync(pkey, expireTimeSpan);
 
@@ -253,7 +256,7 @@ namespace CSharp.Net.Cache.Redis
             var pkey = PrefixKey(key);
             var ret = Do(db =>
             {
-                var data = db.StringIncrement(pkey, val);
+                var data = db.StringIncrementAsync(pkey, val).Result;
                 if (expireTime.HasValue)
                     db.KeyExpireAsync(pkey, expireTime.Value);
                 return data;
@@ -271,7 +274,7 @@ namespace CSharp.Net.Cache.Redis
         public double StringDecrement(string key, double val = 1)
         {
             key = PrefixKey(key);
-            return Do(db => db.StringDecrement(key, val));
+            return Do(db => db.StringDecrementAsync(key, val).Result);
         }
 
         #endregion 同步方法
@@ -295,7 +298,7 @@ namespace CSharp.Net.Cache.Redis
         public void ListRemove<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListRemove(key, Serialize(value)));
+            Do(db => db.ListRemoveAsync(key, Serialize(value)).Result);
         }
 
         /// <summary>
@@ -308,7 +311,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var values = redis.ListRange(key);
+                var values = redis.ListRangeAsync(key).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -321,7 +324,7 @@ namespace CSharp.Net.Cache.Redis
         public void ListRightPush<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListRightPush(key, Serialize(value)));
+            Do(db => db.ListRightPushAsync(key, Serialize(value)).Result);
         }
 
         /// <summary>
@@ -335,7 +338,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListRightPop(key);
+                var value = db.ListRightPopAsync(key).Result;
                 return Deserialize<T>(value);
             });
         }
@@ -344,7 +347,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListRightPop(key, count);
+                var value = db.ListRightPopAsync(key, count).Result;
                 return ConvetList<T>(value);
             });
         }
@@ -357,7 +360,7 @@ namespace CSharp.Net.Cache.Redis
         public void ListLeftPush<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListLeftPush(key, Serialize(value)));
+            Do(db => db.ListLeftPushAsync(key, Serialize(value)).Result);
         }
 
         /// <summary>
@@ -371,7 +374,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListLeftPop(key);
+                var value = db.ListLeftPopAsync(key).Result;
                 return Deserialize<T>(value);
             });
         }
@@ -387,7 +390,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListLeftPop(key, count);
+                var value = db.ListLeftPopAsync(key, count).Result;
                 return ConvetList<T>(value);
             });
         }
@@ -399,7 +402,7 @@ namespace CSharp.Net.Cache.Redis
         public long ListLength(string key)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.ListLength(key));
+            return Do(redis => redis.ListLengthAsync(key).Result);
         }
 
         #endregion 同步方法
@@ -506,7 +509,7 @@ namespace CSharp.Net.Cache.Redis
         public bool HashExists(string key, string dataKey)
         {
             key = PrefixKey(key);
-            return Do(db => db.HashExists(key, dataKey));
+            return Do(db => db.HashExistsAsync(key, dataKey).Result);
         }
 
         /// <summary>
@@ -523,7 +526,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashSet(key, dataKey, Serialize(t));
+                var data = db.HashSetAsync(key, dataKey, Serialize(t)).Result;
                 if (expireTime != null)
                 {
                     if (expireTime.Value <= DateTime.Now)
@@ -548,7 +551,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashSet(key, dataKey, Serialize(t));
+                var data = db.HashSetAsync(key, dataKey, Serialize(t)).Result;
                 db.KeyExpireAsync(key, expireTimeSpan);
                 return data;
             });
@@ -562,7 +565,7 @@ namespace CSharp.Net.Cache.Redis
         public bool HashDelete(string key, string dataKey)
         {
             key = PrefixKey(key);
-            return Do(db => db.HashDelete(key, dataKey));
+            return Do(db => db.HashDeleteAsync(key, dataKey).Result);
         }
 
         /// <summary>
@@ -575,7 +578,7 @@ namespace CSharp.Net.Cache.Redis
         {
             key = PrefixKey(key);
             //List<RedisValue> dataKeys = new List<RedisValue>() {"1","2"};
-            return Do(db => db.HashDelete(key, ConvertRedisValue(dataKeys)));
+            return Do(db => db.HashDeleteAsync(key, ConvertRedisValue(dataKeys)).Result);
         }
 
         /// <summary>
@@ -590,7 +593,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                string value = db.HashGet(key, dataKey);
+                string value = db.HashGetAsync(key, dataKey).Result;
                 return Deserialize<T>(value);
             });
         }
@@ -608,7 +611,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashIncrement(key, dataKey, val);
+                var data = db.HashIncrementAsync(key, dataKey, val).Result;
                 if (expireTime.HasValue)
                     db.KeyExpireAsync(key, expireTime.Value);
                 return data;
@@ -620,7 +623,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashIncrement(key, dataKey, val);
+                var data = db.HashIncrementAsync(key, dataKey, val).Result;
                 db.KeyExpireAsync(key, expireTime);
                 return data;
             });
@@ -636,7 +639,7 @@ namespace CSharp.Net.Cache.Redis
         public double HashDecrement(string key, string dataKey, double val = 1)
         {
             key = PrefixKey(key);
-            return Do(db => db.HashDecrement(key, dataKey, val));
+            return Do(db => db.HashDecrementAsync(key, dataKey, val)).Result;
         }
 
         /// <summary>
@@ -650,7 +653,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                RedisValue[] values = db.HashKeys(key);
+                RedisValue[] values = db.HashKeysAsync(key).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -666,7 +669,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                HashEntry[] values = db.HashGetAll(key);
+                HashEntry[] values = db.HashGetAllAsync(key).Result;
                 return ConvetDic<T>(values);
             });
         }
@@ -822,7 +825,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.SetAdd(key, Serialize(value));
+                var data = db.SetAddAsync(key, Serialize(value)).Result;
                 if (timeSpan.HasValue)
                     db.KeyExpireAsync(key, timeSpan);
                 return data;
@@ -833,7 +836,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.SetAdd(key, ConvertRedisValue(value));
+                var data = db.SetAddAsync(key, ConvertRedisValue(value)).Result;
                 if (timeSpan.HasValue)
                     db.KeyExpireAsync(key, timeSpan);
                 return data > 0;
@@ -848,7 +851,7 @@ namespace CSharp.Net.Cache.Redis
         {
             key = PrefixKey(key);
             RedisValue[] valueList = value.Select(v => (RedisValue)Serialize(v)).ToArray();
-            return Do(redis => redis.SetRemove(key, valueList));
+            return Do(redis => redis.SetRemoveAsync(key, valueList).Result);
         }
 
         /// <summary>
@@ -861,7 +864,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var values = redis.SetMembers(key);
+                var values = redis.SetMembersAsync(key).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -877,7 +880,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var value = redis.SetRandomMember(key);
+                var value = redis.SetRandomMemberAsync(key).Result;
                 return Deserialize<T>(value);
             });
         }
@@ -895,7 +898,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var value = redis.SetRandomMembers(key, count).Select(x => Deserialize<T>(x)).ToList();
+                var value = redis.SetRandomMembersAsync(key, count).Result.Select(x => Deserialize<T>(x)).ToList();
                 return value;
             });
         }
@@ -912,7 +915,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                return redis.SetContains(key, Serialize(value));
+                return redis.SetContainsAsync(key, Serialize(value)).Result;
 
             });
         }
@@ -928,7 +931,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var v = redis.SetPop(key);
+                var v = redis.SetPopAsync(key).Result;
                 return Deserialize<T>(v);
             });
         }
@@ -946,7 +949,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var list = redis.SetPop(key, count).Select(x => Deserialize<T>(x)).ToList();
+                var list = redis.SetPopAsync(key, count).Result.Select(x => Deserialize<T>(x)).ToList();
                 return list;
             });
         }
@@ -959,7 +962,7 @@ namespace CSharp.Net.Cache.Redis
         public long SetLength(string key)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SetLength(key));
+            return Do(redis => redis.SetLengthAsync(key)).Result;
         }
 
 
@@ -974,7 +977,7 @@ namespace CSharp.Net.Cache.Redis
             return Do(redis =>
             {
                 key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombine(SetOperation.Union, ConvertRedisKeys(key));
+                var values = redis.SetCombineAsync(SetOperation.Union, ConvertRedisKeys(key)).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -990,7 +993,7 @@ namespace CSharp.Net.Cache.Redis
             return Do(redis =>
             {
                 key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombine(SetOperation.Intersect, ConvertRedisKeys(key));
+                var values = redis.SetCombineAsync(SetOperation.Intersect, ConvertRedisKeys(key)).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -1006,7 +1009,7 @@ namespace CSharp.Net.Cache.Redis
             return Do(redis =>
             {
                 key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombine(SetOperation.Difference, ConvertRedisKeys(key));
+                var values = redis.SetCombineAsync(SetOperation.Difference, ConvertRedisKeys(key)).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -1190,7 +1193,7 @@ namespace CSharp.Net.Cache.Redis
         public bool SortedSetAdd<T>(string key, T value, double score)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetAdd(key, Serialize(value), score));
+            return Do(redis => redis.SortedSetAddAsync(key, Serialize(value), score)).Result;
         }
 
         /// <summary>
@@ -1201,7 +1204,7 @@ namespace CSharp.Net.Cache.Redis
         public bool SortedSetRemove<T>(string key, T value)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetRemove(key, Serialize(value)));
+            return Do(redis => redis.SortedSetRemoveAsync(key, Serialize(value))).Result;
         }
 
         /// <summary>
@@ -1214,7 +1217,7 @@ namespace CSharp.Net.Cache.Redis
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var values = redis.SortedSetRangeByRank(key);
+                var values = redis.SortedSetRangeByRankAsync(key).Result;
                 return ConvetList<T>(values);
             });
         }
@@ -1227,7 +1230,7 @@ namespace CSharp.Net.Cache.Redis
         public long SortedSetLength(string key)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetLength(key));
+            return Do(redis => redis.SortedSetLengthAsync(key)).Result;
         }
 
         #endregion 同步方法
@@ -1295,7 +1298,7 @@ namespace CSharp.Net.Cache.Redis
         {
             if (string.IsNullOrWhiteSpace(key))
                 return true;
-            return Do(db => db.KeyDelete(PrefixKey(key)));
+            return Do(db => db.KeyDeleteAsync(PrefixKey(key))).Result;
         }
 
         /// <summary>
@@ -1306,18 +1309,18 @@ namespace CSharp.Net.Cache.Redis
         public long KeyDelete(List<string> keys)
         {
             string[] newKeys = keys.Select(x => PrefixKey(x)).ToArray();
-            return Do(db => db.KeyDelete(ConvertRedisKeys(newKeys)));
+            return Do(db => db.KeyDeleteAsync(ConvertRedisKeys(newKeys))).Result;
         }
 
         /// <summary>
         /// 删除以<paramref name="pattern"/>开头的key
         /// </summary>
         /// <param name="pattern"></param>
-        public void KeyDeleteStartWith(string pattern)
+        public async Task KeyDeleteStartWith(string pattern)
         {
-            var keys = QueryStartWith(pattern, false);
+            var keys = await QueryStartWith(pattern, false);
             if (keys.IsNullOrEmpty()) return;
-            Do(db => db.KeyDeleteAsync(ConvertRedisKeys(keys)));
+            await Do(db => db.KeyDeleteAsync(ConvertRedisKeys(keys)));
             //string luaScript = $"redis.call('del', unpack(redis.call('keys','{pattern}*')))";
 
             //mock数据
@@ -1346,7 +1349,7 @@ namespace CSharp.Net.Cache.Redis
         /// <param name="pattern"></param>
         /// <param name="removePrefix">默认移除实例前缀</param>
         /// <returns></returns>
-        public string[] QueryStartWith(string pattern, bool removePrefix = true)
+        public async Task<string[]> QueryStartWith(string pattern, bool removePrefix = true)
         {
             StringBuilder sbLuaScript = new StringBuilder()
                    .AppendLine("local keys, has, cursor = {}, {},'0';")
@@ -1360,7 +1363,7 @@ namespace CSharp.Net.Cache.Redis
                    .AppendLine("until cursor =='0'")
                    .AppendLine("return keys");
 
-            var result = _db.ScriptEvaluate(LuaScript.Prepare(sbLuaScript.ToString()), new { keypattern = PrefixKey(pattern) + "*" });
+            var result = await _db.ScriptEvaluateAsync(LuaScript.Prepare(sbLuaScript.ToString()), new { keypattern = PrefixKey(pattern) + "*" });
 
             if (!result.IsNull)
             {
@@ -1387,7 +1390,7 @@ namespace CSharp.Net.Cache.Redis
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExists(key));
+            return Do(db => db.KeyExistsAsync(key)).Result;
         }
 
         /// <summary>
@@ -1401,7 +1404,7 @@ namespace CSharp.Net.Cache.Redis
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyRename(key, newKey));
+            return Do(db => db.KeyRenameAsync(key, newKey)).Result;
         }
 
         /// <summary>
@@ -1415,7 +1418,7 @@ namespace CSharp.Net.Cache.Redis
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExpire(key, expiry));
+            return Do(db => db.KeyExpireAsync(key, expiry)).Result;
         }
 
         public bool KeyExpire(string key, DateTime dateTime)
@@ -1423,7 +1426,7 @@ namespace CSharp.Net.Cache.Redis
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExpire(key, dateTime));
+            return Do(db => db.KeyExpireAsync(key, dateTime)).Result;
         }
 
         /// <summary>
@@ -1443,11 +1446,18 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         public bool LockTake(string key, string value = "", int cacheSeconds = 10)
         {
-            return _db.LockTake(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
+            return _db.LockTakeAsync(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds)).Result;
         }
+
+        /// <summary>
+        /// 分布式锁
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cacheSeconds"></param>
+        /// <returns></returns>
         public bool LockTake(string key, int cacheSeconds)
         {
-            return _db.LockTake(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds));
+            return _db.LockTakeAsync(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds)).Result;
         }
 
         /// <summary>
@@ -1458,7 +1468,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         public bool LockRelease(string key, string value = "")
         {
-            return _db.LockRelease(PrefixKey(key), value);
+            return _db.LockReleaseAsync(PrefixKey(key), value).Result;
         }
 
         /// <summary>
@@ -1478,7 +1488,7 @@ namespace CSharp.Net.Cache.Redis
             var allKeys = GetAllKeys();
             foreach (var key in allKeys)
             {
-                string objValue = _db.StringGet(key);
+                string objValue = _db.StringGetAsync(key).Result;
 
                 if (tmp == objValue)
                 {
@@ -1535,7 +1545,8 @@ namespace CSharp.Net.Cache.Redis
         public async Task SubscribeAsync(string subChannel, Func<string, Task> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            await sub.SubscribeAsync(PrefixKey(subChannel), async (channel, message) => await handler?.Invoke(message));
+            var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
+            await sub.SubscribeAsync(chl, async (channel, message) => await handler?.Invoke(message));
         }
 
         /// <summary>
@@ -1546,7 +1557,8 @@ namespace CSharp.Net.Cache.Redis
         public async Task SubscribeAsync<T>(string subChannel, Func<T, Task> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            await sub.SubscribeAsync(PrefixKey(subChannel), async (channel, message)
+            var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
+            await sub.SubscribeAsync(chl, async (channel, message)
                 => await handler?.Invoke(Deserialize<T>(message)));
         }
 
@@ -1558,7 +1570,8 @@ namespace CSharp.Net.Cache.Redis
         public async Task SubscribeAsync<T>(string subChannel, Action<T> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            await sub.SubscribeAsync(PrefixKey(subChannel), (_, message)
+            var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
+            await sub.SubscribeAsync(chl, (_, message)
                 => handler(Deserialize<T>(message)));
         }
 
@@ -1570,7 +1583,8 @@ namespace CSharp.Net.Cache.Redis
         protected void Subscribe(string subChannel, Action<RedisChannel, RedisValue> handler = null)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            sub.Subscribe(PrefixKey(subChannel), (channel, message) =>
+            var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
+            sub.SubscribeAsync(chl, (channel, message) =>
             {
                 if (handler == null)
                 {
@@ -1580,7 +1594,7 @@ namespace CSharp.Net.Cache.Redis
                 {
                     handler(channel, message);
                 }
-            });
+            }).GetAwaiter();
         }
 
         /// <summary>
@@ -1593,7 +1607,8 @@ namespace CSharp.Net.Cache.Redis
         public long Publish<T>(string channel, T msg)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            return sub.Publish(PrefixKey(channel), Serialize(msg));
+            var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
+            return sub.PublishAsync(chl, Serialize(msg)).Result;
         }
 
         /// <summary>
@@ -1603,7 +1618,8 @@ namespace CSharp.Net.Cache.Redis
         public void Unsubscribe(string channel)
         {
             ISubscriber sub = _connection.GetSubscriber();
-            sub.Unsubscribe(PrefixKey(channel));
+            var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
+            sub.UnsubscribeAsync(chl).GetAwaiter();
         }
 
         /// <summary>
@@ -1612,7 +1628,7 @@ namespace CSharp.Net.Cache.Redis
         public void UnsubscribeAll()
         {
             ISubscriber sub = _connection.GetSubscriber();
-            sub.UnsubscribeAll();
+            sub.UnsubscribeAllAsync().GetAwaiter();
         }
 
         #endregion 发布订阅
@@ -1650,6 +1666,7 @@ namespace CSharp.Net.Cache.Redis
         /// <returns></returns>
         T Deserialize<T>(string tValue)
         {
+            if (tValue.IsNullOrEmpty()) return default(T);
             if (typeof(T) == typeof(string) || CheckIConvertible(default(T)))
                 return ConvertHelper.ConvertTo<T>(tValue, default(T), false);
 

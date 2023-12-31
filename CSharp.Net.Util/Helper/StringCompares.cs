@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
+    /// <summary>
+    /// 相似度计算
+    /// </summary>
     internal class LevenshteinDistance
     {
         #region 私有变量  
@@ -46,6 +49,7 @@ namespace CSharp.Net.Util
         /// </summary>  
         private int _Row;
         #endregion
+
         #region 属性  
         public LevenshteinResult ComputeResult
         {
@@ -178,14 +182,14 @@ namespace CSharp.Net.Util
         /// <summary>  
         /// 相似度  
         /// </summary>  
-        public string Rate;
+        public string Rate { get; set; }
         /// <summary>  
         /// 对比次数  
         /// </summary>  
-        public string ComputeTimes;
+        public string ComputeTimes { get; set; }
         /// <summary>  
         /// 使用时间  
         /// </summary>  
-        public string UseTime;
+        public string UseTime { get; set; }
     }
 }

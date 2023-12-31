@@ -210,7 +210,7 @@ namespace CSharp.Net.Cache.Memory
         /// 匹配删除
         /// </summary>
         /// <param name="pattern"></param>
-        public void KeyDeleteStartWith(string pattern)
+        public async Task KeyDeleteStartWith(string pattern)
         {
             IList<string> keys = SearchCachePre(x => x.StartsWith(pattern));
             foreach (var s in keys)
@@ -235,7 +235,7 @@ namespace CSharp.Net.Cache.Memory
         /// <param name="pattern"></param>
         /// <param name="removePrefix"></param>
         /// <returns></returns>
-        public string[] QueryStartWith(string pattern, bool removePrefix = true)
+        public async Task<string[]> QueryStartWith(string pattern, bool removePrefix = true)
         {
             IList<string> keys = SearchCachePre(x => x.StartsWith(pattern));
             if (keys.IsNullOrEmpty()) return null;

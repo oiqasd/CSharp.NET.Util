@@ -1,14 +1,11 @@
 ﻿using CSharp.Net.Util;
-using Org.BouncyCastle.Asn1.X509;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 
 public static class ObjectExtension
@@ -38,18 +35,17 @@ public static class ObjectExtension
     {
         if (Obj == null)
             return defaultValue;
-
-        object obj;
+        object _obj;
 
         try
         {
-            obj = Obj.GetType().GetProperty(colum).GetValue(Obj, null);
+            _obj = Obj.GetType().GetProperty(colum).GetValue(Obj, null);
         }
         catch (NullReferenceException e)
         {
             throw new Exception(string.Format("{0} The {1} does not exist in {2}", e.Message, colum, Obj.GetType().Name));
         }
-        return ConvertHelper.ConvertTo<T>(obj);
+        return ConvertHelper.ConvertTo<T>(_obj);
     }
 
     /// <summary>
@@ -123,27 +119,33 @@ public static class ObjectExtension
     /// <param name="obj"></param>
     /// <returns></returns>
     public static T ToType<T>(this object obj) => ConvertHelper.ConvertTo<T>(obj);
-
+     
     /// <summary>
     /// 转成Int
     /// </summary>
     /// <param name="obj"></param>
+    /// <param name="defaultValue">0</param>
     /// <returns></returns>
-    public static int ToInt(this object obj) => ConvertHelper.ConvertTo<int>(obj);
+    public static int ToInt(this object obj, int defaultValue = 0)
+        => ConvertHelper.ConvertTo(obj, defaultValue);
 
     /// <summary>
     /// 转成Long
     /// </summary>
     /// <param name="obj"></param>
+    /// <param name="defaultValue">0</param>
     /// <returns></returns>
-    public static long ToLong(this object obj) => ConvertHelper.ConvertTo<long>(obj);
+    public static long ToLong(this object obj, long defaultValue = 0)
+        => ConvertHelper.ConvertTo(obj, defaultValue);
 
     /// <summary>
     /// 转成Boolean
     /// </summary>
     /// <param name="obj"></param>
+    /// <param name="defaultValue">false</param>
     /// <returns></returns>
-    public static bool ToBoolean(this object obj) => ConvertHelper.ConvertTo<bool>(obj);
+    public static bool ToBoolean(this object obj, bool defaultValue = false)
+        => ConvertHelper.ConvertTo(obj, defaultValue);
 
     /// <summary>
     /// byte 数组保存到文件

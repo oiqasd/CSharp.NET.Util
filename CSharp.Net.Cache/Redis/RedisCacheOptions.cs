@@ -50,7 +50,7 @@ namespace CSharp.Net.Cache.Redis
         public int MinWorkThread { get; set; } = 100;
         /// <summary>
         /// 最小io线程数
-        /// <para >最小1，默认10</para>
+        /// <para>最小1，默认10</para>
         /// </summary>
         public int MinIOThread { get; set; } = 10;
         /// <summary>
@@ -62,7 +62,5 @@ namespace CSharp.Net.Cache.Redis
         /// dev 输出日志
         /// </summary>
         public string Environment { get; set; }
-
-
     }
 }

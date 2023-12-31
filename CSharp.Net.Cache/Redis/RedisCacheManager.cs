@@ -2,9 +2,11 @@
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache.Redis
 {
@@ -37,7 +39,7 @@ namespace CSharp.Net.Cache.Redis
                 _options = options.Value;
                 _instance = _options.InstanceName ?? string.Empty;
 
-                Connect();
+                Connect().Wait();
             }
             finally
             {
@@ -45,7 +47,7 @@ namespace CSharp.Net.Cache.Redis
             }
         }
 
-        private void Connect()
+        private async Task Connect()
         {
             CheckDisposed();
             if (_db != null)
@@ -62,7 +64,7 @@ namespace CSharp.Net.Cache.Redis
                     {
                         if (_options.ConfigurationOptions != null)
                         {
-                            _connection = ConnectionMultiplexer.Connect(_options.ConfigurationOptions);
+                            _connection = await ConnectionMultiplexer.ConnectAsync(_options.ConfigurationOptions);
                         }
                         else
                         {
@@ -70,7 +72,7 @@ namespace CSharp.Net.Cache.Redis
                             //option.AsyncTimeout = option.AsyncTimeout < 5000 ? 5000 : option.AsyncTimeout;
                             //option.ConnectTimeout = option.ConnectTimeout < 15000 ? 15000 : option.ConnectTimeout;
                             //option.AbortOnConnectFail = false;
-                            _connection = ConnectionMultiplexer.Connect(option);
+                            _connection = await ConnectionMultiplexer.ConnectAsync(option);
                         }
                         _connection.ConnectionFailed += MuxerConnectionFailed;
                         _connection.ConnectionRestored += MuxerConnectionRestored;
@@ -82,9 +84,8 @@ namespace CSharp.Net.Cache.Redis
                     }
                     else
                     {
-                        _connection = _options.ConnectionMultiplexerFactory().GetAwaiter().GetResult();
+                        _connection = await _options.ConnectionMultiplexerFactory();
                     }
-
                     TryRegisterProfiler();
                     _db = _connection.GetDatabase(_options.DefaultDB);
                 }

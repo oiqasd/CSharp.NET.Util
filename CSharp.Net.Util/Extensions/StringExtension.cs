@@ -114,7 +114,6 @@ public static class StringExtension
         return obj.ToString();
     }
 
-
     /// <summary>
     /// 隐藏字符串
     /// <param name="str"></param>
@@ -357,4 +356,14 @@ public static class StringExtension
     /// </example>
     public static byte[] ToBytes(this string value, string encoding = null) =>
           StringHelper.GetBytes(value, encoding);
+
+    /// <summary>
+    ///获取json对象下属性值
+    /// </summary>
+    /// <typeparam name="T">属性类型</typeparam>
+    /// <param name="obj">json对象</param>
+    /// <param name="key">字段名</param>
+    /// <returns></returns>  
+    public static T GetProperty<T>(this string obj, string key)
+       => ConvertHelper.ConvertTo<T>(JsonHelper.GetFieldValue(obj, key));
 }

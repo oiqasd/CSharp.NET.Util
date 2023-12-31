@@ -213,41 +213,55 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 获取json对象列表
+        /// <para>获取json对象列表</para>
+        /// 本方法可减少反复拆装箱操作因此有一定局限性,可使用<see cref="GetObject"/>方法自行转换
+        /// <para>取对象下的数组使用<paramref name="dataKey"/>字段</para>
         /// </summary>
-        /// <param name="input">json data</param>
-        /// <param name="dataKey">默认空,如果<paramref name="input"/>是对象且需要指定key时可用该字段</param>
-        /// <returns></returns>
+        /// <param name="jsonData">json data</param>
+        /// <param name="dataKey">默认空,适用于对象下的某个字段是数组</param>
+        /// <returns>Null or empty return null</returns>
         /// <exception cref="JsonFormatterException"></exception>
-        public static List<Dictionary<string, string>> GetList(string input, string dataKey = null)
+        public static List<Dictionary<string, object>> GetList(string jsonData, string dataKey = null)
         {
-            var node = GetJsonNode(input);
+            var node = GetJsonNode(jsonData);
             if (node is JsonValue)
                 throw new JsonFormatterException("input is a value");
-
-            Func<JsonArray, List<Dictionary<string, string>>> func = (array) =>
+            Func<JsonArray, List<Dictionary<string, object>>> funArr = null;
+            Func<JsonObject, Dictionary<string, object>> funObj = null;
+            funObj = (obj) =>
             {
-                List<Dictionary<string, string>> data = new List<Dictionary<string, string>>();
+                var dic = new Dictionary<string, object>();
+                foreach (var item in obj)
+                {
+                    dic.Add(item.Key, item.Value);
+                }
+                return dic;
+            };
+            funArr = (array) =>
+            {
+                if (array.IsNullOrEmpty()) return null;
+                List<Dictionary<string, object>> data = new List<Dictionary<string, object>>();
                 foreach (var arr in array)
                 {
-                    Dictionary<string, string> dt = new Dictionary<string, string>();
+                    Dictionary<string, object> dt = new Dictionary<string, object>();
                     foreach (var o in (JsonObject)arr)
-                        dt.Add(o.Key, o.Value.ToString());
-
+                        if (o.Value is JsonObject)
+                            dt.Add(o.Key, funObj((JsonObject)o.Value));
+                        else
+                            dt.Add(o.Key, o.Value);
                     data.Add(dt);
                 }
                 return data;
             };
-
             if (node is JsonObject)
             {
                 foreach (var item in node.AsObject())
                     if (item.Value is JsonArray && (dataKey.IsNullOrEmpty() || dataKey == item.Key))
-                        return func((JsonArray)item.Value);
+                        return funArr((JsonArray)item.Value);
             }
             else if (node is JsonArray)
             {
-                return func(node.AsArray());
+                return funArr(node.AsArray());
             }
             return null;
         }
@@ -259,6 +273,14 @@ namespace CSharp.Net.Util
         /// <returns>AS <![CDATA[string,decimal,bool,object,Dictionary<string, object>,List<object>]]></returns>
         public static object GetObject(string jsonData)
             => ToObject(JsonDocument.Parse(jsonData).RootElement);
+
+        /// <summary>
+        /// 获取对象字典
+        /// </summary>
+        /// <param name="jsonData"></param>
+        /// <returns></returns>
+        public static Dictionary<string, object> GetObjectDict(string jsonData)
+            => GetObject(jsonData) as Dictionary<string, object>;
 
         /// <summary>
         /// 获取json中指定的字段
@@ -287,7 +309,7 @@ namespace CSharp.Net.Util
                     else if (item.Value is JsonArray)
                         jobj = (JsonObject)item.Value[0];
                     else
-                        throw new JsonFormatterException($"node {item.Key} not object or array,please check dataKey.");
+                        throw new JsonFormatterException($"Node '{item.Key}' not object or array,please check dataKey.");
                     break;
                 }
             }

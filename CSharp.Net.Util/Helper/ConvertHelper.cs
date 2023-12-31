@@ -1,5 +1,4 @@
-﻿using NPOI.SS.Formula.Functions;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -88,6 +87,10 @@ namespace CSharp.Net.Util
             else if (obj.GetType().Equals(typeof(DateTimeOffset)) && (underlyingType ?? type).Equals(typeof(DateTime)))
             {
                 return DateTimeHelper.ConvertToDateTime((DateTimeOffset)obj);
+            }
+            else if (obj.ToString().Contains(".") && (underlyingType ?? type).Equals(typeof(int)))
+            {
+                return (int)Convert.ToDecimal(obj);
             }
             else if (typeof(IConvertible).IsAssignableFrom(underlyingType ?? type))
             {
