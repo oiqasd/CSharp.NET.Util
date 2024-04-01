@@ -327,30 +327,35 @@ namespace CSharp.Net.Cache
         #endregion
 
         #region key
-
-        /// <summary>
-        /// 删除单个key
-        /// </summary>
-        /// <param name="key">redis key</param>
-        /// <returns>是否删除成功</returns>
-        //bool KeyDelete(string key);
         /// <summary>
         /// 删除多个key
         /// </summary>
         /// <param name="keys">rediskey</param>
         /// <returns>成功删除的个数</returns>
         long KeyDelete(List<string> keys);
-        /// <summary>
-        /// 删除以<paramref name="pattern"/>开头的key
-        /// </summary>
-        /// <param name="pattern"></param>
-        //void KeyDeleteStartWith(string pattern);
-        /// <summary>
-        /// 判断key是否存储
-        /// </summary>
-        /// <param name="key">redis key</param>
-        /// <returns></returns>
-        //bool KeyExists(string key);
+        /*
+          /// <summary>
+          /// 删除单个key
+          /// </summary>
+          /// <param name="key">redis key</param>
+          /// <returns>是否删除成功</returns>
+          //bool KeyDelete(string key);
+          /// <summary>
+          /// 删除以<paramref name="pattern"/>开头的key
+          /// </summary>
+          /// <param name="pattern"></param>
+          //void KeyDeleteStartWith(string pattern);
+          /// <summary>
+          /// 判断key是否存储
+          /// </summary>
+          /// <param name="key">redis key</param>
+          /// <returns></returns>
+          //bool KeyExists(string key);
+          /// <summary>
+          /// 清空缓存
+          /// </summary>
+          //void FlushDb();
+          */
         /// <summary>
         /// 重新命名key
         /// </summary>
@@ -372,10 +377,7 @@ namespace CSharp.Net.Cache
         /// <param name="dateTime"></param>
         /// <returns></returns>
         bool KeyExpire(string key, DateTime dateTime);
-        /// <summary>
-        /// 清空缓存
-        /// </summary>
-        //void FlushDb();
+
         /// <summary>
         /// 分布式锁
         /// </summary>
@@ -398,19 +400,22 @@ namespace CSharp.Net.Cache
         /// <param name="value">标记，必须与锁的时候一直</param>
         /// <returns></returns>
         bool LockRelease(string key, string value = "");
+
+        /*
         /// <summary>
         /// 根据值获取key
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
-        //List<string> GetKeys<T>(T value);
+        List<string> GetKeys<T>(T value);
+        */
         #endregion
 
         #region Set 无序集合
 
         #region 同步方法
-        /**
+        /*
         /// <summary>
         /// 添加对象
         /// </summary>
@@ -466,7 +471,7 @@ namespace CSharp.Net.Cache
         /// <param name="value"></param>
         /// <returns></returns>
         bool SetContains<T>(string key, T value);
-        **/
+        */
 
         /// <summary>
         ///  随机删除key集合中的一个值，并返回该值

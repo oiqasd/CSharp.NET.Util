@@ -6,11 +6,11 @@
         /// 设置异常状态码
         /// </summary>
         /// <param name="exception"></param>
-        /// <param name="statusCode"></param>
+        /// <param name="errorCode"></param>
         /// <returns></returns>
-        public static AppException StatusCode(this AppException exception, int statusCode = 0)
+        public static AppException ErrorCode(this AppException exception, int errorCode = 0)
         {
-            exception.StatusCode = statusCode;
+            exception.ErrorCode = errorCode;
             return exception;
         }
 

@@ -21,7 +21,7 @@ namespace CSharp.Net.Util.Stack
 
         public int MetadataToken { get; private set; }
 
-        public MemberInfo? Operand { get; private set; }
+        public MemberInfo Operand { get; private set; }
 
         public ILReader(byte[] cil)
         {
@@ -51,7 +51,7 @@ namespace CSharp.Net.Util.Stack
             return doubleByteOpCode[ReadByte()];
         }
 
-        private MemberInfo? ReadOperand(OpCode code, MethodBase methodInfo)
+        private MemberInfo ReadOperand(OpCode code, MethodBase methodInfo)
         {
             MetadataToken = 0;
             int num;
@@ -69,7 +69,7 @@ namespace CSharp.Net.Util.Stack
                         Type[] genericTypeArguments = null;
                         if (methodInfo.DeclaringType != null)
                         {
-                            genericTypeArguments = methodInfo.DeclaringType!.GetGenericArguments();
+                            genericTypeArguments = methodInfo.DeclaringType.GetGenericArguments();
                         }
 
                         try
@@ -157,7 +157,7 @@ namespace CSharp.Net.Util.Stack
 
         private static FieldInfo[] GetOpCodeFields()
         {
-            return typeof(OpCodes)!.GetFields(BindingFlags.Static | BindingFlags.Public);
+            return typeof(OpCodes).GetFields(BindingFlags.Static | BindingFlags.Public);
         }
     }
 }

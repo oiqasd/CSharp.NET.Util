@@ -207,7 +207,7 @@ namespace CSharp.Net.Util
             int num = 0;
             if (type.IsNested && (object)type.DeclaringType != null)
             {
-                num = type.DeclaringType!.GetGenericArguments().Length;
+                num = type.DeclaringType.GetGenericArguments().Length;
             }
 
             if (options.FullName)

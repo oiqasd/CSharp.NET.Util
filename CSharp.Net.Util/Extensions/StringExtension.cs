@@ -3,6 +3,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 
 /// <summary>
 /// StringExtension
@@ -117,29 +118,40 @@ public static class StringExtension
     /// <summary>
     /// 隐藏字符串
     /// <param name="str"></param>
-    /// <param name="showStart">显示头几位,默认全部,不够则全显</param>
-    /// <param name="showEnd">显示尾几位,默认全部</param>
+    /// <param name="showStart">显示头几位,默认全部隐藏,不够则全显</param>
+    /// <param name="showEnd">显示尾几位,默认全部隐藏</param>
+    /// <param name="replaceChar">显示字符</param>
     /// <returns></returns>
     /// </summary>
-    public static string HideStr(this string str, uint showStart = 0, uint showEnd = 0)
+    public static string HideStr(this string str, uint showStart = 0, uint showEnd = 0, char replaceChar = '*')
     {
-        if (string.IsNullOrWhiteSpace(str)) return "";
-
+        if (string.IsNullOrWhiteSpace(str)) return replaceChar.ToString();
         if (str.Length <= showStart) return str;
-
+#if NET
+        string nstr = string.Create(str.Length, str.ToCharArray(), (Span<char> strContent, char[] charArray) =>
+        {
+            uint len = (uint)charArray.Length;
+            for (int i = 0; i < len; i++)
+            {
+                if (i >= showStart && (i < len - showEnd || showEnd == 0))
+                    strContent[i] = replaceChar;
+                else
+                    strContent[i] = charArray[i];
+            }
+        });
+        return nstr;
+#else
         StringBuilder newstr = new StringBuilder();
         if (showStart > 0)
             newstr.Append(str.Substring(0, (int)showStart));
-
         for (int i = 0; i < (str.Length - showStart - showEnd); i++)
         {
-            newstr.Append("*");
+            newstr.Append(replaceChar);
         }
-
         if (showEnd > 0)
             newstr.Append(str.Substring(str.Length - (int)showEnd));
-
         return newstr.ToString();
+#endif
     }
 
     /// <summary>
@@ -293,7 +305,6 @@ public static class StringExtension
 
         return string.Concat(str.First().ToString().ToUpper(), str.AsSpan(1));
     }
-#endif
 
     /// <summary>
     /// 清除字符串前后缀
@@ -333,6 +344,7 @@ public static class StringExtension
         }
         return !string.IsNullOrWhiteSpace(tempStr) ? tempStr : str;
     }
+#endif
 
     /// <summary>
     /// 反转字符串

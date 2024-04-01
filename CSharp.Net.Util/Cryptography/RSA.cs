@@ -29,8 +29,7 @@ namespace CSharp.Net.Util.Cryptography
                 throw new Exception("Private key can't be null.");
             }
             byte[] bt = Encoding.GetEncoding(charset).GetBytes(data);
-
-            using (System.Security.Cryptography.RSA rsa = CreateRSAProviderFromPrivateKey(privateKey))
+            using (var rsa = CreateRSAProviderFromPrivateKey(privateKey))
             {
                 if (rsa == null) throw new Exception("Private key is error");
                 var signatureBytes = rsa.SignData(bt, DicAlgorithmName[rsaType], RSASignaturePadding.Pkcs1);
@@ -57,7 +56,7 @@ namespace CSharp.Net.Util.Cryptography
             byte[] bt = Encoding.GetEncoding(charset).GetBytes(data);
             byte[] signBytes = Convert.FromBase64String(sign);
 
-            using (RSACryptoServiceProvider rsa = CreateRSAProviderFromPublicKey(publicKey))
+            using (var rsa = CreateRSAProviderFromPublicKey(publicKey))
             {
                 var verify = rsa.VerifyData(bt, signBytes, DicAlgorithmName[rsaType], RSASignaturePadding.Pkcs1);
                 return verify;
@@ -100,7 +99,8 @@ namespace CSharp.Net.Util.Cryptography
                         var len = msread.Read(buffer, 0, buffer.Length);
                         while (len > 0)
                         {
-                            mswrite.Write(rsa.Decrypt(buffer, false));
+                            var data = rsa.Decrypt(buffer, false);
+                            mswrite.Write(data, 0, data.Length);
                             buffer = new byte[maxBufferSize];
                             len = msread.Read(buffer, 0, buffer.Length);
                         }
@@ -114,21 +114,6 @@ namespace CSharp.Net.Util.Cryptography
         #endregion
 
         #region 加密
-        static RSACryptoServiceProvider CreateRSAProviderFromPublicKey(string publicKey)
-        {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-            var bt = Convert.FromBase64String(publicKey);
-            rsa.ImportRSAPublicKey(bt, out int bytesreadPublic);
-            return rsa;
-        }
-        static RSACryptoServiceProvider CreateRSAProviderFromPrivateKey(string privateKey)
-        {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-            var bt = Convert.FromBase64String(privateKey);
-            rsa.ImportRSAPrivateKey(bt, out int bytesreadPrivate);
-
-            return rsa;
-        }
 
         /// <summary>
         /// 加密
@@ -139,13 +124,14 @@ namespace CSharp.Net.Util.Cryptography
         /// <returns></returns>
         public static string Encrypt(string text, string publicKey, string charset = "utf-8")
         {
-            using (RSACryptoServiceProvider rsa = CreateRSAProviderFromPublicKey(publicKey))
+            using (var rsa = CreateRSAProviderFromPublicKey(publicKey))
             {
                 var dataArr = Encoding.GetEncoding(charset).GetBytes(text);
                 var maxBufferSize = rsa.KeySize / 8 - 11;
                 if (dataArr.Length < maxBufferSize)
                 {
-                    return Convert.ToBase64String(rsa.Encrypt(dataArr, false));
+                    var data = rsa.Encrypt(dataArr, RSAEncryptionPadding.Pkcs1);
+                    return Convert.ToBase64String(data);
                 }
 
                 using (MemoryStream msread = new MemoryStream(dataArr))
@@ -156,7 +142,8 @@ namespace CSharp.Net.Util.Cryptography
                         var len = msread.Read(buffer, 0, buffer.Length);
                         while (len > 0)
                         {
-                            mswrite.Write(rsa.Encrypt(buffer, false));
+                            var data = rsa.Encrypt(buffer, RSAEncryptionPadding.Pkcs1);
+                            mswrite.Write(data, 0, data.Length);
                             buffer = new byte[maxBufferSize];
                             len = msread.Read(buffer, 0, buffer.Length);
                         }
@@ -171,12 +158,30 @@ namespace CSharp.Net.Util.Cryptography
 
         #region 创建RSA实例
 
+#if NET
+        private static RSACryptoServiceProvider CreateRSAProviderFromPublicKey(string publicKey)
+        {
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            var bt = Convert.FromBase64String(publicKey);
+            rsa.ImportRSAPublicKey(bt, out int bytesreadPublic);
+            return rsa;
+        }
+        private static RSACryptoServiceProvider CreateRSAProviderFromPrivateKey(string privateKey)
+        {
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            var bt = Convert.FromBase64String(privateKey);
+            rsa.ImportRSAPrivateKey(bt, out int bytesreadPrivate);
+
+            return rsa;
+        }
+#else
+
         /// <summary>
         /// 使用私钥创建RSA实例
         /// </summary>
         /// <param name="privateKey"></param>
         /// <returns></returns>
-        private static RSACryptoServiceProvider CreateRsaProviderFromPrivateKey(string privateKey)
+        private static RSACryptoServiceProvider CreateRSAProviderFromPrivateKey(string privateKey)
         {
             var privateKeyBits = Convert.FromBase64String(privateKey);
 
@@ -227,7 +232,7 @@ namespace CSharp.Net.Util.Cryptography
         /// </summary>
         /// <param name="publicKeyString"></param>
         /// <returns></returns>
-        private static System.Security.Cryptography.RSA CreateRsaProviderFromPublicKey(string publicKeyString)
+        private static System.Security.Cryptography.RSA CreateRSAProviderFromPublicKey(string publicKeyString)
         {
             // encoded OID sequence for  PKCS #1 rsaEncryption szOID_RSA_RSA = "1.2.840.113549.1.1.1"
             byte[] seqOid = { 0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01, 0x05, 0x00 };
@@ -319,7 +324,7 @@ namespace CSharp.Net.Util.Cryptography
 
             }
         }
-
+#endif
         #endregion
 
         #region 创建私钥公钥

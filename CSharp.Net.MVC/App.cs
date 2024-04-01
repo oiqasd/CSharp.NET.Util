@@ -29,7 +29,7 @@ namespace CSharp.Net.Mvc
         /// 获取请求上下文
         /// </summary>
         public static HttpContext HttpContext =>
-            Try.CatchOrDefault(() => RootServices?.GetService<IHttpContextAccessor>()?.HttpContext);
+            Try.Func(() => RootServices?.GetService<IHttpContextAccessor>()?.HttpContext);
 
         /// <summary>
         /// 解析服务提供器

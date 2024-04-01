@@ -121,6 +121,21 @@ public static class ArrayExtension
     }
 
     /// <summary>
+    /// 字节数组转字符串
+    /// </summary>
+    /// <param name="byteList">byteList</param>
+    /// <returns></returns>
+    public static string ToStringValue(this IList<byte> byteList)
+    {
+        List<string> list = new List<string>();
+        foreach (byte b in byteList)
+        {
+            list.Add(b.ToString("X2"));
+        }
+        return string.Join(" ", list);
+    }
+
+    /// <summary>
     /// 字符串分割,支持多种分割符号
     /// </summary>
     /// <param name="value"></param>
@@ -152,6 +167,58 @@ public static class ArrayExtension
             }
         }
     }
+
+    #region 数组复制
+    /// <summary>
+    /// 数组复制
+    /// </summary>
+    public static void CopyTo(this byte[] bArrSource, List<byte> listTarget, int sourceIndex, int length)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            if (sourceIndex + i < bArrSource.Length)
+            {
+                listTarget.Add(bArrSource[sourceIndex + i]);
+            }
+        }
+    }
+
+    public static void CopyTo(this List<byte> listSource, byte[] bArrTarget, int sourceIndex, int targetIndex, int length)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            if (targetIndex + i < bArrTarget.Length && sourceIndex + i < listSource.Count)
+            {
+                bArrTarget[targetIndex + i] = listSource[sourceIndex + i];
+            }
+        }
+    }
+
+    public static void CopyTo(this byte[] bArrSource, byte[] bArrTarget, int sourceIndex, int targetIndex, int length)
+    {
+        for (int i = 0; i < length; i++)
+        {
+            if (targetIndex + i < bArrTarget.Length && sourceIndex + i < bArrSource.Length)
+            {
+                bArrTarget[targetIndex + i] = bArrSource[sourceIndex + i];
+            }
+        }
+    }
+    #endregion
+
+    /// <summary>
+    /// 数组追加
+    /// </summary>
+    public static List<byte> Append(this List<byte> list, byte[] bArr)
+    {
+        for (int i = 0; i < bArr.Length; i++)
+        {
+            list.Add(bArr[i]);
+        }
+        return list;
+    }
+
+
     /// <summary>
     /// [推荐]使用IEqualityComparer通过指定属性去重
     /// list.Distinct((a, b) => a.x == b.x &amp;&amp; a.y == b.y)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET5
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -399,7 +400,6 @@ public class ValidateCoder
         }
         return destBmp;
     }
-
     #endregion
-
 }
+#endif

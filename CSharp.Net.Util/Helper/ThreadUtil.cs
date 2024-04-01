@@ -7,14 +7,48 @@ using System.Threading.Tasks;
 namespace CSharp.Net.Util
 {
     /// <summary>
-    /// https://www.cnblogs.com/wei325/p/16065342.html
+    /// 
     /// </summary>
-    class ThreadUtil
+    public class ThreadUtil
     {
+
+        /// <summary>
+        /// 执行 
+        /// 例：ThreadUtil.Run(() => { }, (ex) => { });
+        /// </summary>
+        /// <param name="action">在线程中执行</param>
+        /// <param name="errorAction">错误处理</param>
+        public static Task Run(Action action, Action<Exception> errorAction = null)
+        {
+            Task task = Task.Factory.StartNew(() =>
+            {
+                Try.Action(action, errorAction);
+            });
+            return task;
+        }
+
+        /// <summary>
+        /// 执行 
+        /// 例：ThreadUtil.Run((obj) => { }, arg, (ex) => { });
+        /// </summary>
+        /// <param name="action">在线程中执行</param>
+        /// <param name="arg">参数</param>
+        /// <param name="errorAction">错误处理</param>
+        public static Task Run(Action<object> action, object arg = null, Action<Exception> errorAction = null)
+        {
+            Task task = Task.Factory.StartNew((obj) =>
+            {
+                Try.Action(action, obj, errorAction);
+            }, arg);
+            return task;
+        }
+
+
+        //https://www.cnblogs.com/wei325/p/16065342.html
         /// <summary>
         /// CAS原子操作加减 替换lock
         /// </summary>
-        public static void AtomicityForInterLock()
+        static void AtomicityForInterLock()
         {
             long result = 0;
             Console.WriteLine("开始计算");

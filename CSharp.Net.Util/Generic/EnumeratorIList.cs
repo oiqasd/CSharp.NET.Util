@@ -12,7 +12,7 @@ namespace CSharp.Net.Util
 
         public T Current => _list[_index];
 
-        object? IEnumerator.Current => Current;
+        object IEnumerator.Current => Current;
 
         public EnumeratorIList(IList<T> list)
         {

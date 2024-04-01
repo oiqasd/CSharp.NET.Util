@@ -9,11 +9,11 @@ namespace CSharp.Net.Util.Stack
     public class ResolvedParameter
     {
 
-        public string? Name { get; set; }
+        public string Name { get; set; }
 
         public Type ResolvedType { get; set; }
 
-        public string? Prefix { get; set; }
+        public string Prefix { get; set; }
 
         public bool IsDynamicType { get; set; }
 

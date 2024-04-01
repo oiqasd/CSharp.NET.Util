@@ -21,10 +21,10 @@ namespace CSharp.Net.Util
         /// </summary>
         public object ErrorMessage { get; set; }
 
-        /// <summary>
-        /// 状态码
-        /// </summary>
-        public int StatusCode { get; set; }
+        ///// <summary>
+        ///// 状态码
+        ///// </summary>
+        //public int StatusCode { get; set; }
 
         /// <summary>
         /// 额外数据
@@ -33,7 +33,7 @@ namespace CSharp.Net.Util
 
         public AppException() { }
 
-        public AppException(object code, string message, Exception innerException) : base(message, innerException)
+        public AppException(object code, string message, Exception innerException = null) : base(message, innerException)
         {
             ErrorCode = code;
             ErrorMessage = message;

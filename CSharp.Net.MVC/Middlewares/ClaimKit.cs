@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Mvc.Middlewares
+namespace CSharp.Net.Mvc
 {
     /// <summary>
     /// 缓存套件

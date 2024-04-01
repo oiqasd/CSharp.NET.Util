@@ -65,7 +65,7 @@ namespace CSharp.Net.Util.Stack
 
     internal static class ReflectionHelper
     {
-        private static PropertyInfo? tranformerNamesLazyPropertyInfo;
+        private static PropertyInfo tranformerNamesLazyPropertyInfo;
         public static bool IsValueTuple(this Type type)
         {
             if (type.Namespace == "System")
@@ -86,12 +86,12 @@ namespace CSharp.Net.Util.Stack
 
             return false;
         }
-        public static IList<string>? GetTransformerNames(this Attribute attribute)
+        public static IList<string> GetTransformerNames(this Attribute attribute)
         {
             return GetTransformNamesPropertyInfo(attribute.GetType())?.GetValue(attribute) as IList<string>;
         }
 
-        private static PropertyInfo? GetTransformNamesPropertyInfo(Type attributeType)
+        private static PropertyInfo GetTransformNamesPropertyInfo(Type attributeType)
         {
             Type attributeType2 = attributeType;
             return LazyInitializer.EnsureInitialized(ref tranformerNamesLazyPropertyInfo, () => attributeType2.GetProperty("TransformNames", BindingFlags.Instance | BindingFlags.Public));

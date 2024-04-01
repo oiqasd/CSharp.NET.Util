@@ -60,55 +60,49 @@ class RedisPreHoldService : BackgroundService
     public RedisPreHoldService(IRedisCache redisCache, IOptions<RedisCacheOptions> option)
     {
         redisCache.StringGet("_");
-        if (option != null)
-        {
-            cacheOptions = option.Value;
-        }
-        else
-        {
-            cacheOptions = new RedisCacheOptions();
-        }
-
+        if (option != null) cacheOptions = option.Value;
+        else cacheOptions = new RedisCacheOptions();
         if (cacheOptions.RunThreadIntervalMilliseconds < 100) cacheOptions.RunThreadIntervalMilliseconds = 100;
         if (cacheOptions.MinWorkThread < 8) cacheOptions.MinWorkThread = 8;
         if (cacheOptions.MinIOThread < 1) cacheOptions.MinIOThread = 1;
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        /**
-#pragma warning disable CS4014
-        Task.Factory.StartNew(async () =>
-        {
-            while (true)
-            {
-                Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
-                AppDomainHelper.GetThreadPoolStats();
+        /*
+         * #pragma warning disable CS4014
+         * Task.Factory.StartNew(async () =>
+         * {
+         *     while (true)
+         *     {
+         *         Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
+         *         AppDomainHelper.GetThreadPoolStats();
+         * 
+         *         await Task.Delay(1000 * 3);
+         *     }
+         * }, TaskCreationOptions.LongRunning);
+         * #pragma warning restore CS4014
+         * return;
+         */
 
-                await Task.Delay(1000 * 3);
-            }
-        }, TaskCreationOptions.LongRunning);
-#pragma warning restore CS4014
-        return;
-        **/
         if (!stoppingToken.IsCancellationRequested)
         {
             timer = new Timer(call =>
-           {
-               try
-               {
-                   if (cacheOptions.Environment == "dev")
-                   {
-                       Console.WriteLine($"{DateTime.Now.ToString(1)} CurrentThread ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
-                   }
+            {
+                try
+                {
+                    if (cacheOptions.Environment == "dev")
+                    {
+                        Console.WriteLine($"{DateTime.Now.ToString(1)} CurrentThread ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
+                    }
 
-                   AppDomainHelper.GetThreadPoolStats(cacheOptions.MinWorkThread, cacheOptions.MinIOThread, cacheOptions.Environment);
-               }
-               catch (Exception ex)
-               {
-                   Console.WriteLine(ex.Message);
-               }
+                    AppDomainHelper.GetThreadPoolStats(cacheOptions.MinWorkThread, cacheOptions.MinIOThread, cacheOptions.Environment);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
 
-           }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(cacheOptions.RunThreadIntervalMilliseconds));
+            }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(cacheOptions.RunThreadIntervalMilliseconds));
         }
 
         await Task.CompletedTask;

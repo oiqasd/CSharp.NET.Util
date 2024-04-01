@@ -1451,6 +1451,7 @@ namespace CSharp.Net.Util
             return DecryptFromByteArray(HexStringToBytes(encrypted_bytes_string), password);
         }
 
+
         /// <summary>
         /// Encrypt or decrypt a byte array using the TripleDESCryptoServiceProvider crypto provider and Rfc2898DeriveBytes to build the key and initialization vector.
         /// </summary>
@@ -1536,7 +1537,11 @@ namespace CSharp.Net.Util
         /// <remarks></remarks>
         private static void MakeKeyAndIV(String password, byte[] salt, int key_size_bits, int block_size_bits, ref byte[] key, ref byte[] iv)
         {
+#if NET6_0_OR_GREATER
             var derive_bytes = new Rfc2898DeriveBytes(password, salt, 1234, HashAlgorithmName.MD5);
+#else
+            var derive_bytes = new Rfc2898DeriveBytes(password, salt, 1234);
+#endif
             key = derive_bytes.GetBytes(key_size_bits / 8);
             iv = derive_bytes.GetBytes(block_size_bits / 8);
         }
@@ -2477,7 +2482,7 @@ namespace CSharp.Net.Util
             return string.Join(Environment.NewLine, text.Split(new[] { Environment.NewLine, "\n" }, StringSplitOptions.None)
                          .Select(line => string.Empty.PadLeft(6, ' ') + line));
         }
-
+#if NET
         /// <summary>
         /// 从配置中渲染字符串模板
         /// </summary>
@@ -2488,7 +2493,6 @@ namespace CSharp.Net.Util
         public static string Render(string template, string value = "", bool encode = false)
         {
             if (template == null) return default;
-
             // 判断字符串是否包含模板
             if (!Regex.IsMatch(template, @"\#\((?<p>.*?)\)")) return template;
 
@@ -2500,8 +2504,29 @@ namespace CSharp.Net.Util
             {
                 template = template.Replace($"#({item.Template})", encode ? Uri.EscapeDataString(item.Value?.ToString() ?? string.Empty) : item.Value?.ToString());
             }
-
             return template;
+        }
+#endif
+        /// <summary>
+        /// 获取最长公共前缀
+        /// </summary>
+        /// <param name="strs"></param>
+        /// <returns></returns>
+        public static string GetLongestCommonPrefix(params string[] strs)
+        {
+            if (strs.IsNullOrEmpty()) return "";
+            for (int i = 0; i < strs[0].Length; i++)
+            {
+                char c = strs[0][i];
+                for (int j = 1; j < strs.Length; j++)
+                {
+                    if (i == strs[j].Length || strs[j][i] != c)
+                    {
+                        return strs[0].Substring(0, i);
+                    }
+                }
+            }
+            return strs[0];
         }
     }
 }

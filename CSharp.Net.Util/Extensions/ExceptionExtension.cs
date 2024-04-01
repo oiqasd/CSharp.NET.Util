@@ -16,16 +16,12 @@ public static class ExceptionExtension
     /// <returns></returns>
     public static string GetExcetionMessage(this Exception ex, [CallerMemberName] string memberName = null)
     {
+        if (ex == null) return "";
         string exceMsg = "";
-        if (ex != null)
-        {
-            exceMsg += ex.Message + "\n" + ex.StackTrace;
-            if (ex.InnerException != null)
-            {
-                exceMsg += "\n" + ex.InnerException.GetExcetionMessage();
-            }
-        }
-
+        exceMsg += ex.Message + "\n" + ex.StackTrace;
+        if (ex.InnerException == null)
+            return exceMsg;
+        exceMsg += "\n" + ex.InnerException.GetExcetionMessage();
         return exceMsg;
     }
 }

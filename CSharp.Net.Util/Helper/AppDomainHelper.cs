@@ -159,19 +159,37 @@ namespace CSharp.Net.Util
               .AppendLine(GetDotNetVersion)
               .AppendLine(iocp)
               .AppendLine(worker)
-              .AppendLine($"分配物理内存：{GetMemory / 1024 / 1024} mb")
-              .AppendLine($"当前堆大小(不含碎片)：{GC.GetTotalMemory(false) / 1024 / 1024.0}mb");
+              .AppendLine($"分配内存：{(GetMemory / 1024 / 1024.0).ToString("#.#")} mb")//分配物理内存
+              .AppendLine($"GC：{(GC.GetTotalMemory(false) / 1024 / 1024.0).ToString("#.#")}mb");//当前堆大小(不含碎片)
 #if NET5_0_OR_GREATER
-            sb.AppendLine($"GC托管堆已提交的总量：{GC.GetGCMemoryInfo().TotalCommittedBytes / 1024 / 1024.0}mb");
+            sb.AppendLine($"GC总提交：{(GC.GetGCMemoryInfo().TotalCommittedBytes / 1024 / 1024.0).ToString("#.#")}mb");//GC托管堆已提交的总量
 #endif
-            sb.AppendLine($"自创建程序域内存分配的总量(含已回收的内存)：{AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize / 1024 / 1024.0}mb");
+            //sb.AppendLine($"自创建程序域内存分配的总量(含已回收的内存)：{AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize / 1024 / 1024.0}mb");
+
             //if (gc == 1) GC.Collect(); 
             //if (gc == 2) GC.Collect(GC.MaxGeneration); 
 
             return sb.ToString();
         }
-
-        //public static Timer timer(int interval = 5) => new Timer(_ => { GC.Collect(); }, null, TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+        private static Timer _timer;
+        /// <summary>
+        /// 设置自动GC机制
+        /// </summary>
+        /// <param name="create">true创建,false销毁</param>
+        /// <param name="interval">回收间隔,默认5s;修改间隔请销毁后重新创建</param>
+        public static void AutoGC(bool create = true, int interval = 5)
+        {
+            if (_timer != null && !create)
+            {
+                _timer.Dispose();
+                _timer = null;
+                return;
+            }
+            if (_timer != null && create) return;
+            if (_timer == null && create)
+                _timer = new Timer(_ => GC.Collect(),
+                null, TimeSpan.Zero, TimeSpan.FromSeconds(interval));
+        }
 
         /// <summary>
         /// 获取当前服务器IP

@@ -47,7 +47,7 @@ public static class ObjectExtension
         }
         return ConvertHelper.ConvertTo<T>(_obj);
     }
-
+#if NET6_0_OR_GREATER
     /// <summary>
     /// 合并两个字典
     /// </summary>
@@ -61,6 +61,7 @@ public static class ObjectExtension
             dic.AddOrUpdate(key, value, (key, old) => value);
         }
     }
+#endif
 
     /// <summary>
     /// 判断方法是否是异步
@@ -109,7 +110,7 @@ public static class ObjectExtension
         }
 
         return false;
-        bool IsTheRawGenericType(Type type) => generic == (type.IsGenericType ? type.GetGenericTypeDefinition() : type);
+        bool IsTheRawGenericType(Type _type) => generic == (_type.IsGenericType ? _type.GetGenericTypeDefinition() : _type);
     }
 
     /// <summary>
@@ -119,7 +120,7 @@ public static class ObjectExtension
     /// <param name="obj"></param>
     /// <returns></returns>
     public static T ToType<T>(this object obj) => ConvertHelper.ConvertTo<T>(obj);
-     
+
     /// <summary>
     /// 转成Int
     /// </summary>
@@ -145,6 +146,15 @@ public static class ObjectExtension
     /// <param name="defaultValue">false</param>
     /// <returns></returns>
     public static bool ToBoolean(this object obj, bool defaultValue = false)
+        => ConvertHelper.ConvertTo(obj, defaultValue);
+
+    /// <summary>
+    /// 转成DateTime
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="defaultValue">false</param>
+    /// <returns></returns>
+    public static DateTime ToDateTime(this object obj, DateTime defaultValue = default(DateTime))
         => ConvertHelper.ConvertTo(obj, defaultValue);
 
     /// <summary>
@@ -183,4 +193,17 @@ public static class ObjectExtension
         return (int)Utils.CalcBitwiseValue((uint)source, move);
     }
 
+
+    /// <summary>
+    /// 判断泛型是否List
+    /// </summary>
+    /// <typeparam name="T">必须是泛型</typeparam>
+    /// <param name="t"></param>
+    /// <returns></returns>
+    public static bool IsList<T>(T t)
+    {
+        if (t.GetType().IsGenericTypeDefinition && typeof(List<>).IsAssignableFrom(t.GetType().GetGenericTypeDefinition()))
+            return true;
+        return false;
+    }
 }

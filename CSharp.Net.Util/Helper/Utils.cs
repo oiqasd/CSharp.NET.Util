@@ -62,7 +62,7 @@ namespace CSharp.Net.Util
             //StringBuilder sbMax = new StringBuilder();             
             //for (int i = 0; i < length; i++) 
             //    sbMax.Append("9"); 
-#if NET
+#if NET6_0_OR_GREATER
             return Random.Shared.Next(0, (int)Math.Pow(10, length));
 #else
             Random rand = new Random(Guid.NewGuid().GetHashCode());
@@ -78,7 +78,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static int GetRandom(int min, int max)
         {
-#if NET
+#if NET6_0_OR_GREATER
             return Random.Shared.Next(min, max);
 #else
             Random rand = new Random(Guid.NewGuid().GetHashCode());
@@ -103,7 +103,6 @@ namespace CSharp.Net.Util
                 return orderId.Append(strTime).Append(iRand).ToString();
             else
                 return orderId.Append(headCode).Append(strTime).Append(iRand).ToString();
-
         }
 
         /// <summary>
@@ -214,6 +213,10 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static int[] GetRandomArray(int[] arr)
         {
+#if NET8_0_OR_GREATER
+            Random.Shared.Shuffle(arr);
+            return arr;
+#else
             int[] arr2 = new int[arr.Length];
 
             for (int i = 0; i <= arr.Length - 1; i++)
@@ -224,8 +227,8 @@ namespace CSharp.Net.Util
                 arr2[i] = arr[pos];
                 arr[pos] = arr[r - 1];
             }
-
             return arr2;
+#endif
         }
 
         /// <summary>
@@ -243,6 +246,7 @@ namespace CSharp.Net.Util
             }
             return newList;
         }
+
         /// <summary>
         /// 将对象属性转换为key-value对
         /// </summary>
@@ -331,10 +335,12 @@ namespace CSharp.Net.Util
         {
             if (remainSize == 1)
                 return remainMoney;
-
+#if NET6_0_OR_GREATER
+            Random random = Random.Shared;
+#else
             Random random = new Random();
+#endif
             double money = random.NextDouble() * remainMoney / remainSize * 2;
-
             money = Math.Floor(money);
             return (int)money;
         }
@@ -352,6 +358,5 @@ namespace CSharp.Net.Util
             stopwatch.Stop();
             return stopwatch.ElapsedMilliseconds;
         }
-
     }
 }

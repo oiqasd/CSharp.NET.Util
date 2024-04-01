@@ -1,5 +1,7 @@
-﻿using System;
+﻿using CSharp.Net.Util.CsHttp;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -39,9 +41,10 @@ namespace CSharp.Net.Util
     /// </summary>
     public class HttpClientUtil
     {
-        private static readonly HttpClient _httpClient = null;
+        //private static readonly HttpClient _httpClient = null;
         private static object _obj = new object();
 
+        private static CsHttpClientFactory _csHttpFactory = null;
         /// <summary>
         /// 
         /// </summary>
@@ -74,66 +77,69 @@ namespace CSharp.Net.Util
 
         static HttpClientUtil()
         {
-            if (_httpClient == null)
+            if (_csHttpFactory == null)
                 lock (_obj)
-                    if (_httpClient == null)
-                    {
-                        HttpClientHandler handler = new HttpClientHandler
-                        {
-                            UseDefaultCredentials = true,
-                            SslProtocols = SslProtocols.None, // SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
-                            ClientCertificateOptions = ClientCertificateOption.Automatic,
-                            ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) =>
-                           {
-#if DEBUG
-                               Console.WriteLine("\r\n\r\n==================message==================\r\n\r\n{0}", message.ToString());
-                               //Console.WriteLine("\r\n\r\n==================cert=====================\r\n\r\n{0}", certificate.ToString());
-                               //Console.WriteLine("\r\n\r\n==================chain====================\r\n\r\n{0}", chain.ToString());
-                               //Console.WriteLine("\r\n\r\n==================chain status=============\r\n\r\n{0}", chain.ChainStatus.ToString());
-                               //Console.WriteLine("\r\n\r\n==================errors===================\r\n\r\n{0}", sslPolicyErrors.ToString());
-                               //Console.WriteLine("\r\n\r\n====================================================\r\n\r\n");
-                               //Console.WriteLine($"Received certificate with subject {certificate.Subject}");
-                               //Console.WriteLine("\r\n\r\n====================================================\r\n\r\n");
-                               //Console.WriteLine($"Current policy errors: {sslPolicyErrors}");
-                               //Console.WriteLine("\r\n\r\n====================================================\r\n\r\n");
-#endif
-
-                               if (sslPolicyErrors == SslPolicyErrors.None)
-                                   return true;
-                               else
-                               {
-                                   if ((SslPolicyErrors.RemoteCertificateNameMismatch & sslPolicyErrors) == SslPolicyErrors.RemoteCertificateNameMismatch)
-                                       Console.WriteLine("HttpClientUtil:cert name not match: {0}.", sslPolicyErrors);
-
-                                   if ((SslPolicyErrors.RemoteCertificateChainErrors & sslPolicyErrors) == SslPolicyErrors.RemoteCertificateChainErrors)
-                                   {
-                                       foreach (X509ChainStatus status in chain.ChainStatus)
+                    if (_csHttpFactory == null)
+                        _csHttpFactory = new CsHttpClientFactory();
+            /*
+                        if (_httpClient == null)
+                            lock (_obj)
+                                if (_httpClient == null)
+                                {
+                                    HttpClientHandler handler = new HttpClientHandler
+                                    {
+                                        UseDefaultCredentials = true,
+                                        SslProtocols = SslProtocols.None, // SslProtocols.Tls | SslProtocols.Tls11 | SslProtocols.Tls12,
+                                        ClientCertificateOptions = ClientCertificateOption.Automatic,
+                                        ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) =>
                                        {
-                                           Console.WriteLine("HttpClientUtil:status code = {0}.", status.Status);
-                                           Console.WriteLine("HttpClientUtil:Status info = {0}.", status.StatusInformation);
+            #if DEBUG
+                                           //Console.WriteLine("\r\n\r\n==================message==================\r\n\r\n{0}", message.ToString());
+                                           //Console.WriteLine("\r\n\r\n==================cert=====================\r\n\r\n{0}", certificate.ToString());
+                                           //Console.WriteLine("\r\n\r\n==================chain====================\r\n\r\n{0}", chain.ToString());
+                                           //Console.WriteLine("\r\n\r\n==================chain status=============\r\n\r\n{0}", chain.ChainStatus.ToString());
+                                           //Console.WriteLine("\r\n\r\n==================errors===================\r\n\r\n{0}", sslPolicyErrors.ToString());
+                                           //Console.WriteLine("\r\n\r\n====================================================\r\n\r\n");
+                                           //Console.WriteLine($"Received certificate with subject {certificate.Subject}");
+                                           //Console.WriteLine("\r\n\r\n====================================================\r\n\r\n");
+                                           //Console.WriteLine($"Current policy errors: {sslPolicyErrors}");
+                                           //Console.WriteLine("\r\n\r\n====================================================\r\n\r\n");
+            #endif
+                                           if (sslPolicyErrors == SslPolicyErrors.None)
+                                               return true;
+                                           else
+                                           {
+                                               if ((SslPolicyErrors.RemoteCertificateNameMismatch & sslPolicyErrors) == SslPolicyErrors.RemoteCertificateNameMismatch)
+                                                   Console.WriteLine("HttpClientUtil:cert name not match: {0}.", sslPolicyErrors);
+
+                                               if ((SslPolicyErrors.RemoteCertificateChainErrors & sslPolicyErrors) == SslPolicyErrors.RemoteCertificateChainErrors)
+                                               {
+                                                   foreach (X509ChainStatus status in chain.ChainStatus)
+                                                   {
+                                                       Console.WriteLine("HttpClientUtil:status code = {0}.", status.Status);
+                                                       Console.WriteLine("HttpClientUtil:Status info = {0}.", status.StatusInformation);
+                                                   }
+                                               }
+                                               Console.WriteLine("HttpClientUtil:cert check failed: {0}.", sslPolicyErrors);
+                                           }
+                                           return false;
                                        }
-
-                                   }
-                                   Console.WriteLine("HttpClientUtil:cert check failed: {0}.", sslPolicyErrors);
-                               }
-                               return false;
-                           }
-                        };
-                        _httpClient = new HttpClient(handler);
-#if NET6_0_OR_GREATER
-                        //var socketsHttpHandler = new SocketsHttpHandler()
-                        //{
-                        //    ConnectTimeout = TimeSpan.FromSeconds(20),
-                        //};
-                        //var httpClient = new HttpClient(socketsHttpHandler)
-                        //{
-                        //    Timeout = Timeout.InfiniteTimeSpan
-                        //};
-#endif
-                        _httpClient.DefaultRequestHeaders.ConnectionClose = true;//短链接
-                        _httpClient.Timeout = Timeout.InfiniteTimeSpan;//禁用默认的超时设置
-
-                    }
+                                    };
+                                    _httpClient = new HttpClient(handler, false);
+            #if NET6_0_OR_GREATER
+                                    //var socketsHttpHandler = new SocketsHttpHandler()
+                                    //{
+                                    //    ConnectTimeout = TimeSpan.FromSeconds(20),
+                                    //};
+                                    //var httpClient = new HttpClient(socketsHttpHandler)
+                                    //{
+                                    //    Timeout = Timeout.InfiniteTimeSpan
+                                    //};
+            #endif
+                                    _httpClient.DefaultRequestHeaders.ConnectionClose = true;//短链接
+                                    _httpClient.Timeout = Timeout.InfiniteTimeSpan;//禁用默认的超时设置
+                                }
+            */
         }
 
         /// <summary>
@@ -154,8 +160,6 @@ namespace CSharp.Net.Util
             string result = string.Empty;
             try
             {
-                SetHeader(headers);
-
                 HttpContent httpContent = null;
                 if ((httpContentType == HttpContentType.FormData) && dataDic != null)
                 {
@@ -201,12 +205,17 @@ namespace CSharp.Net.Util
 
                     url = $"{url}{sb.ToString().TrimEnd('&')}";
                 }
-                PrintRequestLog("post", url, out string trackId, dataDic);
-                CancellationTokenSource cts = new CancellationTokenSource();
-                if (timeOutSecond > 0)
-                    cts.CancelAfter(timeOutSecond * 1000);
 
-                using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent, cts.Token))
+
+                PrintRequestLog("post", url, out string trackId, dataDic);
+                //CancellationTokenSource cts = new CancellationTokenSource();
+                //if (timeOutSecond > 0)
+                //    cts.CancelAfter(timeOutSecond * 1000);
+                var _httpClient = _csHttpFactory.CreateClient();
+                if (timeOutSecond > 0)
+                    _httpClient.Timeout = TimeSpan.FromSeconds(timeOutSecond);
+                SetHeader(_httpClient, headers);
+                using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))//, cts.Token
                 {
                     response.EnsureSuccessStatusCode();
                     result = await response.Content.ReadAsStringAsync();
@@ -239,7 +248,6 @@ namespace CSharp.Net.Util
             string result = string.Empty;
             try
             {
-                SetHeader(headers);
                 using (var fromData = new MultipartFormDataContent())
                 {
                     foreach (var f in files)
@@ -275,11 +283,12 @@ namespace CSharp.Net.Util
 
                     HttpContent httpContent = fromData;
                     PrintRequestLog("post file", url, out string trackId, "file");
-                    CancellationTokenSource cts = new CancellationTokenSource();
-                    if (timeOutSecond > 0)
-                        cts.CancelAfter(timeOutSecond * 1000);
-
-                    using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent, cts.Token))
+                    //CancellationTokenSource cts = new CancellationTokenSource();
+                    //if (timeOutSecond > 0)
+                    //    cts.CancelAfter(timeOutSecond * 1000);
+                    var _httpClient = _csHttpFactory.CreateClient();
+                    SetHeader(_httpClient, headers);
+                    using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))//, cts.Token
                     {
                         response.EnsureSuccessStatusCode();
                         result = await response.Content.ReadAsStringAsync();
@@ -322,7 +331,6 @@ namespace CSharp.Net.Util
             string result = string.Empty;
             try
             {
-                SetHeader(headers);
                 HttpContent httpContent = null;
                 if (dataStr.IsHasValue() && httpContentType != HttpContentType.QueryString)
                 {
@@ -335,13 +343,15 @@ namespace CSharp.Net.Util
                     if (!url.Contains("?") && !dataStr.StartsWith("?")) url += "?";
                     url = url + dataStr;
                 }
-
                 PrintRequestLog("post", url, out string trackId, dataStr);
-                CancellationTokenSource cts = new CancellationTokenSource();
+                //CancellationTokenSource cts = new CancellationTokenSource();
+                //if (timeOutSecond > 0)
+                //    cts.CancelAfter(timeOutSecond * 1000);
+                var _httpClient = _csHttpFactory.CreateClient();
                 if (timeOutSecond > 0)
-                    cts.CancelAfter(timeOutSecond * 1000);
-
-                using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent, cts.Token))
+                    _httpClient.Timeout = TimeSpan.FromSeconds(timeOutSecond);
+                SetHeader(_httpClient, headers);
+                using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))//, cts.Token
                 {
                     response.EnsureSuccessStatusCode();
                     result = await response.Content.ReadAsStringAsync();
@@ -405,38 +415,73 @@ namespace CSharp.Net.Util
         public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeOutSecond = 5, bool throwEx = true)
         {
             string result = string.Empty;
+
+            if (pramstr.IsHasValue())
+            {
+                if (!url.Contains("?") && !pramstr.Contains("?")) url += "?";
+                if (!url.Contains("?") && pramstr.Contains("?") && (!pramstr.StartsWith("?") || !pramstr.StartsWith("/"))) url += "/";
+                if (url.Contains("&") && !pramstr.StartsWith("&")) url += "&";
+                url = $"{url}{pramstr}";
+            }
+
+            //Func<Task<string>> action = async () =>
+            //{
             try
             {
-                SetHeader(headers);
-                if (pramstr.IsHasValue())
-                {
-                    if (!url.Contains("?") && !pramstr.Contains("?")) url += "?";
-                    if (!url.Contains("?") && pramstr.Contains("?") && (!pramstr.StartsWith("?") || !pramstr.StartsWith("/"))) url += "/";
-                    if (url.Contains("&") && !pramstr.StartsWith("&")) url += "&";
-                    url = $"{url}{pramstr}";
-                }
-
                 PrintRequestLog("get", url, out string trackId);
-                CancellationTokenSource cts = new CancellationTokenSource();
-                if (timeOutSecond > 0) cts.CancelAfter(timeOutSecond * 1000);
-
-                using (var response = await _httpClient.GetAsync(url, cts.Token))
+                //using (var _httpClient = _csHttpFactory.CreateClient())
                 {
-                    response.EnsureSuccessStatusCode();
-                    result = await response.Content.ReadAsStringAsync();
+                    var _httpClient = _csHttpFactory.CreateClient();
+                    //CancellationTokenSource cts = new CancellationTokenSource();
+                    if (timeOutSecond > 0)
+                        //cts.CancelAfter(timeOutSecond * 1000);
+                        _httpClient.Timeout = TimeSpan.FromSeconds(timeOutSecond);
+                    SetHeader(_httpClient, headers);
+                    using (var response = await _httpClient.GetAsync(url))//, cts.Token
+                    {
+                        response.EnsureSuccessStatusCode();
+                        result = await response.Content.ReadAsStringAsync();
+                    }
+                    PrintResponseLog(trackId, result);
+                    return result;
                 }
-                PrintResponseLog(trackId, result);
-            }
-            catch (TaskCanceledException)
-            {
-                DoPrintRequestErrorConsoleLog(new TimeoutException(), url, throwEx);
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
+                LogHelper.Fatal("HttpClientUtil", ex.Message + url, ex);
+                if (throwEx)
+                    throw;
+                else return null;
             }
+            //};
 
-            return result;
+            //result = await Invoke(action, url, throwEx);
+            //return result;
+        }
+
+        static async Task<string> Invoke(Func<Task<string>> action, string url, bool throwEx)
+        {
+            try
+            {
+                var ret = await action();
+                return ret;
+            }
+            catch (Exception ex)
+            {
+                if (ex.GetType() == typeof(TaskCanceledException))
+                    ex = new TimeoutException();
+
+                string msg = DateTime.Now.ToString(1) + ex.Message + url;
+                if (PrintRequestErrorConsoleLog)
+                    Console.WriteLine(msg);
+
+                LogHelper.Fatal("HttpClientUtil", msg, ex);
+
+
+                if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw;
+                if (ThrowExceptionMode == ThrowExceptionMode.Always) throw;
+                return null;
+            }
         }
 
         /// <summary>
@@ -455,6 +500,7 @@ namespace CSharp.Net.Util
             //_httpClient.DefaultRequestHeaders.ConnectionClose = true;
             //_httpClient.Timeout = TimeSpan.FromSeconds(3);
             request.Content = content;
+            var _httpClient = _csHttpFactory.CreateClient();
             var response = await _httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
@@ -474,13 +520,15 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 设置表头
         /// </summary>
+        /// <param name="httpClient"></param>
         /// <param name="headers"></param>
-        private static void SetHeader(Dictionary<string, string> headers)
+        private static void SetHeader(HttpClient httpClient, Dictionary<string, string> headers)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            if (headers == null || headers.Count <= 0)
-                return;
-            headers.ForEach(x => _httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
+            //_httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.Clear();
+            if (headers.IsHasValue())
+                headers.ForEach(x => httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
+            httpClient.DefaultRequestHeaders.ConnectionClose = true;
         }
 
         /// <summary>

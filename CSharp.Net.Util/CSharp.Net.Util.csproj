@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net6.0;net7.0;net8.0;</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
-		<Version>7.1.21</Version>
+		<Version>7.2.1</Version>
 		<Copyright></Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<!--<FileVersion>2.2.1.0</FileVersion>-->
-		<AssemblyVersion>7.1.0</AssemblyVersion>
+		<AssemblyVersion>7.2.0</AssemblyVersion>
 		<Deterministic>False</Deterministic>
 		<!--<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>-->
@@ -30,7 +30,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Platform)'=='AnyCPU'">
-		<NoWarn>1701;1702;1591</NoWarn>
+		<NoWarn>1701;1702;1591;4014;8632</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -57,7 +57,7 @@
 		</COMReference>
 	</ItemGroup>	-->
 	<!-- 在 .NET Standard 2.0 目标框架下需要引用的项目 -->
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net5.0'">
 		<PackageReference Include="System.Text.Json" Version="7.0.3" />
 	</ItemGroup>
 
@@ -66,7 +66,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
 	</ItemGroup>
 	-->
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' Or '$(TargetFramework)' == 'net8.0'">
 		<Using Include="System" />
-	</ItemGroup> 
+	</ItemGroup>
 </Project>

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
+using System.Text.Json.Nodes;
 
 namespace CSharp.Net.Util
 {
@@ -49,12 +50,23 @@ namespace CSharp.Net.Util
         /// <param name="defaultValue"></param> 
         /// <param name="provider">格式信息,默认null, 例:Thread.CurrentThread.CurrentCulture</param>
         /// <returns></returns>
-        public static T ConvertTo<T>(object param, T defaultValue = default(T), IFormatProvider? provider = null)
+        public static T ConvertTo<T>(object param, T defaultValue = default(T), IFormatProvider provider = null)
         {
-            return Try.CatchOrDefault(() => (T)ChangeType(param, typeof(T), provider), defaultValue);
-            //if (typeof(System.Enum).IsAssignableFrom(typeof(T)))
-            //    return (T)Enum.Parse(typeof(T), param.ToString());
-            //return (T)Convert.ChangeType(param, typeof(T), provider); 
+            if (typeof(JsonValue).IsAssignableFrom(param.GetType()))
+            {
+                if (typeof(DateTime).IsAssignableFrom(typeof(T)))
+                    return Try.Func(() => (T)ChangeType((param as JsonValue).ToString(), typeof(T), provider), defaultValue);
+                return (param as JsonValue).GetValue<T>();
+            }
+
+            if (typeof(JsonObject).IsAssignableFrom(param.GetType())
+                || typeof(JsonArray).IsAssignableFrom(param.GetType()))
+                return JsonHelper.Deserialize<T>(param.ToString());
+
+            if (typeof(Enum).IsAssignableFrom(typeof(T)))
+                return (T)Enum.Parse(typeof(T), param.ToString());
+
+            return Try.Func(() => (T)ChangeType(param, typeof(T), provider), defaultValue);
         }
 
         /// <summary>
@@ -64,7 +76,7 @@ namespace CSharp.Net.Util
         /// <param name="type">目标类型</param>
         /// <param name="provider"><see cref="IFormatProvider"/></param>
         /// <returns>转换后的对象</returns>
-        public static object ChangeType(object obj, Type type, IFormatProvider? provider)
+        public static object ChangeType(object obj, Type type, IFormatProvider provider)
         {
             if (type == null) return obj;
             if (type == typeof(string)) return obj?.ToString();

@@ -1,4 +1,4 @@
-﻿#if NET
+﻿#if NET6_0_OR_GREATER
 using CSharp.Net.Util.AException;
 using System;
 using System.Collections.Concurrent;
@@ -48,7 +48,7 @@ namespace CSharp.Net.Util
         /// <returns>异常实例</returns>
         public static AppException Throw(string errorMessage, params object[] args)
         {
-            var exception = Out(errorMessage, typeof(ValidationException), args).StatusCode(400);
+            var exception = Out(errorMessage, typeof(ValidationException), args).ErrorCode(400);
             throw exception;
         }
 
@@ -60,7 +60,7 @@ namespace CSharp.Net.Util
         /// <returns>异常实例</returns>
         public static AppException Throw(object errorCode, params object[] args)
         {
-            var exception = Out(errorCode, typeof(ValidationException), args).StatusCode(400);
+            var exception = Out(errorCode, typeof(ValidationException), args).ErrorCode(400);
 
             throw exception;
         }

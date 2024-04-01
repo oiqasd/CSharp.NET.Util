@@ -114,6 +114,7 @@ namespace CSharp.Net.Util
                 }
 
                 EnhancedStackFrame enhancedStackFrame = frames[i];
+                if (enhancedStackFrame.GetILOffset() == System.Diagnostics.StackFrame.OFFSET_UNKNOWN) continue;
                 sb.Append("   at ");
                 enhancedStackFrame.MethodInfo.Append(sb);
                 string fileName = enhancedStackFrame.GetFileName();

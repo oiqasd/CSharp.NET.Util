@@ -9,7 +9,7 @@ namespace CSharp.Net.Util.Stack
     /// </summary>
     public class EnhancedStackFrame : StackFrame
     {
-        private readonly string? _fileName;
+        private readonly string _fileName;
 
         private readonly int _lineNumber;
 
@@ -31,7 +31,7 @@ namespace CSharp.Net.Util.Stack
 
         public ResolvedMethod MethodInfo { get; }
 
-        internal EnhancedStackFrame(StackFrame stackFrame, ResolvedMethod methodInfo, string? fileName, int lineNumber, int colNumber)
+        internal EnhancedStackFrame(StackFrame stackFrame, ResolvedMethod methodInfo, string fileName, int lineNumber, int colNumber)
             : base(fileName, lineNumber, colNumber)
         {
             StackFrame = stackFrame;
@@ -41,7 +41,7 @@ namespace CSharp.Net.Util.Stack
             _colNumber = colNumber;
         }
 
-        internal bool IsEquivalent(ResolvedMethod methodInfo, string? fileName, int lineNumber, int colNumber)
+        internal bool IsEquivalent(ResolvedMethod methodInfo, string fileName, int lineNumber, int colNumber)
         {
             if (_lineNumber == lineNumber && _colNumber == colNumber && _fileName == fileName)
             {
@@ -61,7 +61,7 @@ namespace CSharp.Net.Util.Stack
             return _lineNumber;
         }
 
-        public override string? GetFileName()
+        public override string GetFileName()
         {
             return _fileName;
         }
@@ -71,7 +71,7 @@ namespace CSharp.Net.Util.Stack
             return StackFrame.GetILOffset();
         }
 
-        public override MethodBase? GetMethod()
+        public override MethodBase GetMethod()
         {
             return StackFrame.GetMethod();
         }

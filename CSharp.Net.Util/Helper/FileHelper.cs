@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Linq;
-using System.Reflection;
 using System.IO.MemoryMappedFiles;
-using System.Drawing;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Runtime.Versioning;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Transactions;
 
 namespace CSharp.Net.Util
@@ -40,10 +37,17 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static string GetFilePath(string path, string file, bool notExistsToCreate = false)
         {
-            var filepath = Path.Combine(GetRealPath(path), file);
-
-            if (notExistsToCreate) CreateFile(filepath);
-            return filepath;
+            try
+            {
+                var filepath = Path.Combine(GetRealPath(path), file);
+                if (notExistsToCreate) CreateFile(filepath);
+                return filepath;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            return "";
         }
 
         /// <summary>
@@ -85,10 +89,12 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static byte[] GetBytes(string file)
         {
-            using FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read);
-            byte[] byteArray = new byte[fs.Length];
-            fs.Read(byteArray, 0, byteArray.Length);
-            return byteArray;
+            using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
+            {
+                byte[] byteArray = new byte[fs.Length];
+                fs.Read(byteArray, 0, byteArray.Length);
+                return byteArray;
+            }
         }
 
         /// <summary>
@@ -131,6 +137,7 @@ namespace CSharp.Net.Util
             }*/
         }
 
+#if NET6_0_OR_GREATER
         /// <summary>
         /// 读取所有行
         /// </summary>
@@ -138,13 +145,22 @@ namespace CSharp.Net.Util
         /// <param name="encoding">default:utf-8</param>
         /// <returns></returns>
         public static async IAsyncEnumerable<string> ReadAllLines(string file, string encoding = "utf-8")
+#else
+        public static IEnumerable<string> ReadAllLines(string file, string encoding = "utf-8")
+#endif
         {
             if (!CheckFileExists(file))
                 yield break;
 
-            StreamReader reader = new StreamReader(file, Encoding.GetEncoding(encoding));
-            while (!reader.EndOfStream)
-                yield return await reader.ReadLineAsync();
+            using (StreamReader reader = new StreamReader(file, Encoding.GetEncoding(encoding)))
+            {
+                while (!reader.EndOfStream)
+#if NET6_0_OR_GREATER
+                    yield return await reader.ReadLineAsync();
+#else
+                    yield return reader.ReadLine();
+#endif
+            }
         }
 
         /// <summary>
@@ -197,8 +213,11 @@ namespace CSharp.Net.Util
                     Directory.CreateDirectory(filePath);
             }
             catch (NotSupportedException) { }
-
+#if NET
             await File.WriteAllTextAsync(path: Path.Combine(filePath, fileName), contents: text, cancellationToken);
+#else
+            File.WriteAllText(path: Path.Combine(filePath, fileName), contents: text);
+#endif
         }
 
         /// <summary>
@@ -368,7 +387,7 @@ namespace CSharp.Net.Util
             }
         }
 
-#if NET5_0_OR_GREATER
+#if NET
         /// <summary>
         /// 操作共享内存
         /// </summary>

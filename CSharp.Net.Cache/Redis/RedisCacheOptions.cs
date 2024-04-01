@@ -2,11 +2,9 @@
 using StackExchange.Redis;
 using StackExchange.Redis.Profiling;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Cache.Redis
+namespace CSharp.Net.Cache
 {
     public class RedisCacheOptions : IOptions<RedisCacheOptions>
     {

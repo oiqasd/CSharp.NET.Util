@@ -18,8 +18,11 @@ namespace CSharp.Net.Util
         string Title { get; set; }
         string Message { get; set; }
         string Exception { get; set; }
-        DateTime CreateTime { get; set; }
-
+        DateTime? LoggerTime { get; set; }
+        /// <summary>
+        /// 文件名,默认用level
+        /// </summary>
+        string LoggerName { get; set; }
         /// <summary>
         /// 从进程开始到现在的时长，毫秒数
         /// </summary>

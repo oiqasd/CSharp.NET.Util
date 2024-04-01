@@ -8,7 +8,7 @@ using CSharp.Net.Util;
 
 namespace CSharp.Net.Mvc;
 
-public class SignNotExistException : AppException
+public class SignNotFoundException : AppException
 {
-    public SignNotExistException(string message = "签名信息不存在") : base(message) { }
+    public SignNotFoundException(string message = "签名信息不存在") : base(message) { }
 }

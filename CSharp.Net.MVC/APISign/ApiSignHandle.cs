@@ -83,7 +83,7 @@ public class ApiSignHandle : ActionFilterAttribute
         if (signData == null)
             signData = parmObjProp.FirstOrDefault(q => q.Name.ToLower() == signField)?.GetValue(parmObj) as string;
 
-        if (signData.IsNullOrEmpty()) throw new SignNotExistException();
+        if (signData.IsNullOrEmpty()) throw new SignNotFoundException();
 
         /*
         SortedList<string, string> listd = new SortedList<string, string>();

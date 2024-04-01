@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace CSharp.Net.Mvc.Middlewares
+namespace CSharp.Net.Mvc
 {
     public static class EnableBuffer
     {

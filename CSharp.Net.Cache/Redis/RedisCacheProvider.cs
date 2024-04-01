@@ -1,16 +1,14 @@
-﻿using CSharp.Net.Util;
+﻿using CSharp.Net.Cache.Redis;
+using CSharp.Net.Util;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Text;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Cache.Redis
+namespace CSharp.Net.Cache
 {
     public class RedisCacheProvider : RedisCacheManager, IRedisCache
     {

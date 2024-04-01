@@ -127,7 +127,7 @@ namespace CSharp.Net.Util
         //return t.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null); 
 
         /// <summary>
-        /// 反射获取所有带有<paramref name="TAttribute"/>特性的类
+        /// 反射获取所有带有 <typeparamref name="TAttribute"/> 特性的类
         /// </summary>
         /// <typeparam name="TAttribute"></typeparam>
         /// <param name="assemblyName">指定程序集,默认全部</param>

@@ -3,10 +3,13 @@ using CSharp.Net.Util.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace CSharp.Net.Util
 {
@@ -45,7 +48,7 @@ namespace CSharp.Net.Util
         {
             if (jsonSerializerOptions == null) jsonSerializerOptions = new JsonSerializerOptions();
             //反序列化时不区分属性大小写
-            jsonSerializerOptions.PropertyNameCaseInsensitive = false;
+            jsonSerializerOptions.PropertyNameCaseInsensitive = true;
             //使用 camel 大小写 
             jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             //字典key驼峰
@@ -67,8 +70,12 @@ namespace CSharp.Net.Util
             jsonSerializerOptions.Converters.Add(new StringToIntegerConverter());
             jsonSerializerOptions.Converters.Add(new StringToLongConverter());
             jsonSerializerOptions.Converters.Add(new NumberToStringConverter());
+#if !NET6_0
+            //jsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+#endif
             return jsonSerializerOptions;
         }
+
         static JsonHelper()
         {
             _options = SetJsonSerializerOptions(_options);
@@ -112,6 +119,8 @@ namespace CSharp.Net.Util
         {
             if (string.IsNullOrEmpty(json))
                 return default(T);
+            //判断是否List
+            //if(typeof(List<>).IsAssignableFrom(typeof(T).GetGenericTypeDefinition()))
             return JsonSerializer.Deserialize<T>(json, _options);
         }
 
@@ -125,7 +134,6 @@ namespace CSharp.Net.Util
         {
             if (string.IsNullOrEmpty(json))
                 return default(List<T>);
-
             return JsonSerializer.Deserialize<List<T>>(json, _options);
         }
 
@@ -158,7 +166,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static object Deserialize(string json, Type type, JsonSerializerOptions options = null)
         {
-            return JsonSerializer.Deserialize(json, type, options ?? _options)!;
+            return JsonSerializer.Deserialize(json, type, options ?? _options);
         }
         ///// <summary>
         ///// 将转换后的Key全部设置为小写
@@ -282,6 +290,9 @@ namespace CSharp.Net.Util
         public static Dictionary<string, object> GetObjectDict(string jsonData)
             => GetObject(jsonData) as Dictionary<string, object>;
 
+        public static JsonObject GetJObject(string jsonData)
+           => JsonNode.Parse(jsonData).AsObject();
+
         /// <summary>
         /// 获取json中指定的字段
         /// </summary>
@@ -334,11 +345,15 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static bool IsJson(string input)
         {
+            int type = 0;
             try
             {
                 input = input.Trim();
-                return input.StartsWith("{") && input.EndsWith("}")
-                       || input.StartsWith("[") && input.EndsWith("]");
+                if (input.StartsWith("{") && input.EndsWith("}"))
+                    type = 1;
+                else if (input.StartsWith("[") && input.EndsWith("]"))
+                    type = 2;
+                return type > 0;
             }
             catch
             {

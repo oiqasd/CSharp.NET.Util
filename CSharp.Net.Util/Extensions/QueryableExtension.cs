@@ -52,24 +52,24 @@ public static class QueryableExtension
     public static Expression<Func<T, bool>> False<T>() { return f => false; }
 
     /// <summary>
-    /// 使用 Expression.OrElse 的方式拼接两个 System.Linq.Expression。
+    /// 使用 Expression.OrElse 的方式拼接两个 <see cref="Expression"/>
     /// </summary>
     /// <typeparam name="T">表达式方法类型</typeparam>
-    /// <param name="left">左边的 System.Linq.Expression 。</param>
-    /// <param name="right">右边的 System.Linq.Expression。</param>
-    /// <returns>拼接完成的 System.Linq.Expression。</returns>
+    /// <param name="left">左边的 <see cref="Expression"/></param>
+    /// <param name="right">右边的 <see cref="Expression"/></param>
+    /// <returns>拼接完成的 <see cref="Expression"/></returns>
     public static Expression<T> Or<T>(this Expression<T> left, Expression<T> right)
     {
         return MakeBinary(left, right, Expression.OrElse);
     }
 
     /// <summary>
-    /// 使用 Expression.AndAlso 的方式拼接两个 System.Linq.Expression。
+    /// 使用 Expression.AndAlso 的方式拼接两个 <see cref="Expression"/>
     /// </summary>
     /// <typeparam name="T">表达式方法类型</typeparam>
-    /// <param name="left">左边的 System.Linq.Expression 。</param>
-    /// <param name="right">右边的 System.Linq.Expression。</param>
-    /// <returns>拼接完成的 System.Linq.Expression。</returns>
+    /// <param name="left">左边的 <see cref="Expression"/></param>
+    /// <param name="right">右边的 <see cref="Expression"/></param>
+    /// <returns>拼接完成的 <see cref="Expression"/></returns>
     public static Expression<T> And<T>(this Expression<T> left, Expression<T> right)
     {
         return MakeBinary(left, right, Expression.AndAlso);
@@ -89,25 +89,25 @@ public static class QueryableExtension
     }
 
     /// <summary>
-    /// 使用自定义的方式拼接两个 System.Linq.Expression。
+    /// 使用自定义的方式拼接两个 <see cref="Expression"/>
     /// </summary>
     /// <typeparam name="T">表达式中的元素类型</typeparam>
-    /// <param name="left">左边的 System.Linq.Expression 。</param>
-    /// <param name="right">右边的 System.Linq.Expression。</param>
+    /// <param name="left">左边的 <see cref="Expression"/></param>
+    /// <param name="right">右边的 <see cref="Expression"/></param>
     /// <param name="func"></param>
-    /// <returns>拼接完成的 System.Linq.Expression。</returns>
+    /// <returns>拼接完成的 <see cref="Expression"/></returns>
     public static Expression<T> MakeBinary<T>(this Expression<T> left, Expression<T> right, Func<Expression, Expression, Expression> func)
     {
         return MakeBinary((LambdaExpression)left, right, func) as Expression<T>;
     }
 
     /// <summary>
-    /// 拼接两个 <paramref name="System.Linq.Expression"/> ，两个 <paramref name="System.Linq.Expression"/> 的参数必须完全相同。
+    /// 拼接两个 <see cref="Expression"/> ，两个 <see cref="Expression"/> 的参数必须完全相同。
     /// </summary>
-    /// <param name="left">左边的 <paramref name="System.Linq.Expression"/></param>
-    /// <param name="right">右边的 <paramref name="System.Linq.Expression"/></param>
+    /// <param name="left">左边的 <see cref="Expression"/></param>
+    /// <param name="right">右边的 <see cref="Expression"/></param>
     /// <param name="func">表达式拼接的具体逻辑</param>
-    /// <returns>拼接完成的 <paramref name="System.Linq.Expression"/></returns>
+    /// <returns>拼接完成的 <see cref="Expression"/></returns>
     public static LambdaExpression MakeBinary(this LambdaExpression left, LambdaExpression right, Func<Expression, Expression, Expression> func)
     {
         var data = Combinate(right.Parameters, left.Parameters).ToArray();
