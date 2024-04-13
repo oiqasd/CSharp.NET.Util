@@ -11,7 +11,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 客户端写日志帮助文件
     /// </summary>
-    public class LogHelper
+    public sealed class LogHelper
     {
         public static string Appid { get; set; }
         public static string Log_Level { get; set; }
@@ -24,9 +24,36 @@ namespace CSharp.Net.Util
         /// <param name="ex"></param>
         /// <param name="loggerName">文件名,默认用level</param>
         /// <param name="dateTime">default:now</param>
-        public static async Task Debug(string title, string message, Exception ex, string loggerName = null, DateTime? dateTime = null)
+        /// <param name="eventId"></param>
+        public static async Task Debug(string title, string message, Exception ex, string eventId = null, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Debug, title, message, dateTime, loggerName, ex.GetExcetionMessage());
+            ISystemLog log = new SystemLog(LogLevel.Debug, title, message, dateTime, loggerName, ex, eventId: eventId);
+            await WriteLog(log);
+        }
+
+        /// <summary>
+        /// 记录调试日志
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="ex"></param>
+        /// <param name="loggerName">文件名,默认用level</param>
+        /// <param name="dateTime">default:now</param>
+        /// <param name="eventId"></param>
+        public static async Task Debug(string message, Exception ex = null, string eventId = null, string loggerName = null, DateTime? dateTime = null)
+        {
+            ISystemLog log = new SystemLog(LogLevel.Debug, string.Empty, message, dateTime, loggerName, ex, eventId: eventId);
+            await WriteLog(log);
+        }
+
+        /// <summary>
+        /// 记录调试日志
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="loggerName">文件名,默认用level</param>
+        /// <param name="eventId"></param>
+        public static async Task Debug(Exception ex, string eventId = null, string loggerName = null)
+        {
+            ISystemLog log = new SystemLog(LogLevel.Debug, null, null, null, loggerName, ex, eventId: eventId);
             await WriteLog(log);
         }
 
@@ -37,16 +64,35 @@ namespace CSharp.Net.Util
         /// <param name="message"></param>
         /// <param name="loggerName">文件名,默认用level</param>
         /// <param name="dateTime">default:now</param>
-        public static async Task Debug(string title, string message, string loggerName = null, DateTime? dateTime = null)
+        /// <param name="eventId"></param>
+        public static async Task Debug(string title, string message, string eventId = null, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Debug, title, message, dateTime, loggerName);
+            ISystemLog log = new SystemLog(LogLevel.Debug, title, message, dateTime, loggerName, eventId: eventId);
             await WriteLog(log);
         }
-        public static async Task Info(string message, string loggerName = null, DateTime? dateTime = null)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public static async Task Info(string message)
         {
-            ISystemLog log = new SystemLog(LogLevel.Info, null, message, dateTime, loggerName);
+            ISystemLog log = new SystemLog(LogLevel.Info, null, message, null, null);
             await WriteLog(log);
         }
+
+        /// <summary>
+        /// 记录信息日志
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="message"></param>
+        public static async Task Info(string title, string message)
+        {
+            ISystemLog log = new SystemLog(LogLevel.Info, title, message, null, null);
+            await WriteLog(log);
+        }
+
         /// <summary>
         /// 记录信息日志
         /// </summary>
@@ -57,9 +103,10 @@ namespace CSharp.Net.Util
         /// <param name="dateTime">default:now</param>
         public static async Task Info(string title, string message, Exception ex, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Info, title, message, dateTime, loggerName, ex.GetExcetionMessage());
+            ISystemLog log = new SystemLog(LogLevel.Info, title, message, dateTime, loggerName, ex);
             await WriteLog(log);
         }
+
         /// <summary>
         /// 记录信息日志
         /// </summary>
@@ -67,7 +114,7 @@ namespace CSharp.Net.Util
         /// <param name="message"></param>
         /// <param name="loggerName">文件名,默认用level</param>
         /// <param name="dateTime">default:now</param>
-        public static async Task Info(string title, string message, string loggerName = null, DateTime? dateTime = null)
+        public static async Task Info(string title, string message, string loggerName, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog(LogLevel.Info, title, message, dateTime, loggerName);
             await WriteLog(log);
@@ -83,7 +130,7 @@ namespace CSharp.Net.Util
         /// <param name="dateTime">default:now</param>
         public static async Task Warn(string title, string message, Exception ex, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Warn, title, message, dateTime, loggerName, ex.GetExcetionMessage());
+            ISystemLog log = new SystemLog(LogLevel.Warn, title, message, dateTime, loggerName, ex);
             await WriteLog(log);
         }
         /// <summary>
@@ -108,7 +155,7 @@ namespace CSharp.Net.Util
         /// <param name="dateTime">default:now</param>
         public static async Task Error(string title, string message, Exception ex, string loggerName, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Error, title, message, dateTime, loggerName, ex.GetExcetionMessage());
+            ISystemLog log = new SystemLog(LogLevel.Error, title, message, dateTime, loggerName, ex);
             await WriteLog(log);
         }
         public static async Task Error(string message, string loggerName = null, DateTime? dateTime = null)
@@ -119,7 +166,7 @@ namespace CSharp.Net.Util
 
         public static async Task Error(Exception ex, string message = null, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Error, null, message, dateTime, loggerName, ex.GetExcetionMessage());
+            ISystemLog log = new SystemLog(LogLevel.Error, null, message, dateTime, loggerName, ex);
             await WriteLog(log);
         }
 
@@ -136,10 +183,24 @@ namespace CSharp.Net.Util
         /// <param name="ex"></param>
         /// <param name="loggerName">文件名,默认用level</param>
         /// <param name="dateTime"></param>
-        public static async Task Fatal(string title, string message, Exception ex, string loggerName = null, DateTime? dateTime = null)
+        /// <param name="eventId"></param>
+        public static async Task Fatal(string title, string message, Exception ex, string eventId = null, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, ex.GetExcetionMessage());
-
+            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, ex, eventId);
+            await WriteLog(log);
+        }
+        /// <summary>
+        /// 记录崩溃日志
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="message"></param>
+        /// <param name="ex"></param>
+        /// <param name="loggerName">文件名,默认用level</param>
+        /// <param name="dateTime"></param>
+        /// <param name="eventId"></param>
+        public static async Task Fatal(string title, Exception ex, string message = null, string eventId = null, string loggerName = null, DateTime? dateTime = null)
+        {
+            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, ex, eventId);
             await WriteLog(log);
         }
 
@@ -150,10 +211,10 @@ namespace CSharp.Net.Util
         /// <param name="ex"></param>
         /// <param name="loggerName">文件名,默认用level</param>
         /// <param name="dateTime"></param>
-        public static async Task Fatal(Exception ex, string loggerName = null, string message = null, DateTime? dateTime = null)
+        /// <param name="eventId"></param>
+        public static async Task Fatal(Exception ex, string message = null, string eventId = null, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, null, message, dateTime, loggerName, ex.GetExcetionMessage());
-
+            ISystemLog log = new SystemLog(LogLevel.Fatal, null, message, dateTime, loggerName, ex, eventId);
             await WriteLog(log);
         }
 
@@ -164,10 +225,10 @@ namespace CSharp.Net.Util
         /// <param name="message"></param>
         /// <param name="loggerName">文件名,默认用level</param>
         /// <param name="dateTime"></param>
-        public static async Task Fatal(string title, string message, string loggerName = null, DateTime? dateTime = null)
+        /// <param name="eventId"></param>
+        public static async Task Fatal(string title, string message, string eventId = null, string loggerName = null, DateTime? dateTime = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName);
-
+            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, eventId: eventId);
             await WriteLog(log);
         }
 
@@ -185,9 +246,17 @@ namespace CSharp.Net.Util
             try
             {
                 StringBuilder msg = new StringBuilder((log.LoggerTime ?? DateTime.Now).ToString(1))
-                    .Append(string.IsNullOrEmpty(log.Title) ? "" : log.Title)
-                    .Append(string.IsNullOrEmpty(log.Message) ? "" : log.Message)
-                    .AppendLine(string.IsNullOrEmpty(log.Exception) ? "" : log.Exception);
+                      .Append(log.EventId.IsNullOrEmpty() ? " " : "[EventId]:" + log.EventId + " ")
+                      .Append(log.Title.IsNullOrEmpty() ? null : log.Title + " ")
+                      .AppendLine(log.Message.IsNullOrEmpty() ? null : log.Message);
+
+                if (log.Exception != null)
+                    msg.Append($"【")
+                       .Append(log.Exception.GetType().Name)
+                       .Append("】") //.Append("位置："+log.Exception.TargetSite?.DeclaringType.FullName)
+                       .Append("详情：")
+                       .AppendLine(log.Exception.GetExcetionMessage())
+                       .Append("----------------------Exception End--------------------------");
 
                 //LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, dateTime);
 

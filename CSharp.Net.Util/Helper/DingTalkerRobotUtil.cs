@@ -1,7 +1,5 @@
 ﻿using CSharp.Net.Util.Cryptography;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Util

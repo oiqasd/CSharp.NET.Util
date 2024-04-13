@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace CSharp.Net.Util.Json.Converters
 {
-    internal class StringToLongConverter : JsonConverter<long>
+    internal sealed class StringToLongConverter : JsonConverter<long>
     {
         public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

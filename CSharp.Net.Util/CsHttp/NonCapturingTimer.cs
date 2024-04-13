@@ -20,7 +20,6 @@ namespace CSharp.Net.Util.CsHttp
                     ExecutionContext.SuppressFlow();
                     flag = true;
                 }
-
                 return new Timer(callback, state, dueTime, period);
             }
             finally

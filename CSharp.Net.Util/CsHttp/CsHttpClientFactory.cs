@@ -2,25 +2,24 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 
 namespace CSharp.Net.Util.CsHttp
 {
-    internal class CsHttpClientFactory
+    internal sealed class CsHttpClientFactory
     {
         private static readonly TimerCallback _cleanupCallback = delegate (object s)
         {
             ((CsHttpClientFactory)s).CleanupTimer_Tick();
         };
         private Timer _cleanupTimer;
+        internal readonly ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>> _activeHandlers;
         private readonly Func<string, Lazy<ActiveHandlerTrackingEntry>> _entryFactory;
         //IOptionsMonitor<HttpClientFactoryOptions> optionsMonitor;
         private readonly object _cleanupTimerLock;
         private readonly List<IHttpMessageHandlerBuilderFilter> _filters;
         private readonly object _cleanupActiveLock;
         private readonly TimeSpan DefaultCleanupInterval = TimeSpan.FromSeconds(10.0);
-        internal readonly ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>> _activeHandlers;
 
         internal readonly ConcurrentQueue<ExpiredHandlerTrackingEntry> _expiredHandlers;
         internal readonly HttpClientFactoryOptions options;
@@ -35,10 +34,16 @@ namespace CSharp.Net.Util.CsHttp
             _cleanupTimerLock = new object();
             _cleanupActiveLock = new object();
             _filters = new List<IHttpMessageHandlerBuilderFilter>();
-            options = new HttpClientFactoryOptions();
+            options = new HttpClientFactoryOptions() { HandlerLifetime = TimeSpan.FromMinutes(2) };
+
+            //启用保活机制,默认保持连接超时2小时,保持连接间隔1秒
+            //SocketError枚举:https://learn.microsoft.com/ZH-CN/dotnet/api/system.net.sockets.socketerror?view=net-8.0
+            //ServicePointManager.SetTcpKeepAlive(true, 7200000, 1000);
+            //设置最大连接数
+            //ServicePointManager.DefaultConnectionLimit = 512;
         }
 
-        public HttpClient CreateClient(string name = null)
+        public HttpClient CreateClient(bool connectionClose = false, string name = null)
         {
             name = name ?? string.Empty;
             if (name == null)
@@ -47,14 +52,20 @@ namespace CSharp.Net.Util.CsHttp
             }
 
             HttpMessageHandler handler = CreateHandler(name);
-            HttpClient httpClient = new HttpClient(handler, disposeHandler: false);
+            HttpClient client = new HttpClient(handler, disposeHandler: false);
+            //client.DefaultRequestHeaders.Clear();
+            if (connectionClose)
+                client.DefaultRequestHeaders.ConnectionClose = connectionClose;
+            //client.DefaultRequestHeaders.Connection.Add("keep-alive");
+            //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            //client.DefaultRequestHeaders.Add("ContentType", "application/json");
+
             //HttpClientFactoryOptions httpClientFactoryOptions = _optionsMonitor.Get(name);
             //for (int i = 0; i < httpClientFactoryOptions.HttpClientActions.Count; i++)
             //{
             //    httpClientFactoryOptions.HttpClientActions[i](httpClient);
             //}
-
-            return httpClient;
+            return client;
         }
 
         public HttpMessageHandler CreateHandler(string name)
@@ -80,7 +91,6 @@ namespace CSharp.Net.Util.CsHttp
             //    serviceScope = _scopeFactory.CreateScope();
             //    provider = serviceScope.ServiceProvider;
             //}
-
             try
             {
                 //HttpMessageHandlerBuilder requiredService = provider.GetRequiredService<HttpMessageHandlerBuilder>();
@@ -96,9 +106,10 @@ namespace CSharp.Net.Util.CsHttp
                 LifetimeTrackingHttpMessageHandler handler = new LifetimeTrackingHttpMessageHandler(requiredService.Build());
                 return new ActiveHandlerTrackingEntry(name, handler, options.HandlerLifetime);
             }
-            catch
+            catch (Exception ex)
             {
                 //serviceScope?.Dispose();
+                LogHelper.Fatal(ex);
                 throw;
             }
 
@@ -118,16 +129,15 @@ namespace CSharp.Net.Util.CsHttp
             bool flag = _activeHandlers.TryRemove(activeHandlerTrackingEntry.Name, out value);
             ExpiredHandlerTrackingEntry item = new ExpiredHandlerTrackingEntry(activeHandlerTrackingEntry);
             _expiredHandlers.Enqueue(item);
-            // Log.HandlerExpired(_logger, activeHandlerTrackingEntry.Name, activeHandlerTrackingEntry.Lifetime);
             StartCleanupTimer();
         }
 
-        internal virtual void StartHandlerEntryTimer(ActiveHandlerTrackingEntry entry)
+        internal void StartHandlerEntryTimer(ActiveHandlerTrackingEntry entry)
         {
             entry.StartExpiryTimer(_expiryCallback);
         }
 
-        internal virtual void StartCleanupTimer()
+        internal void StartCleanupTimer()
         {
             lock (_cleanupTimerLock)
             {
@@ -138,7 +148,7 @@ namespace CSharp.Net.Util.CsHttp
             }
         }
 
-        internal virtual void StopCleanupTimer()
+        internal void StopCleanupTimer()
         {
             lock (_cleanupTimerLock)
             {
@@ -158,9 +168,6 @@ namespace CSharp.Net.Util.CsHttp
             try
             {
                 int count = _expiredHandlers.Count;
-                //Log.CleanupCycleStart(_logger, count);
-                ValueStopwatch valueStopwatch = ValueStopwatch.StartNew();
-                int num = 0;
                 for (int i = 0; i < count; i++)
                 {
                     _expiredHandlers.TryDequeue(out ExpiredHandlerTrackingEntry result);
@@ -170,12 +177,12 @@ namespace CSharp.Net.Util.CsHttp
                         {
                             result.InnerHandler.Dispose();
                             //result.Scope?.Dispose();
-                            num++;
+                            //LogHelper.Debug("CsHttpClientFactory", "HttpMessageHandler is Disposed.");
                         }
                         catch (Exception exception)
                         {
-                            throw exception;
-                            // Log.CleanupItemFailed(_logger, result.Name, exception);
+                            LogHelper.Fatal(exception);
+                            throw;
                         }
                     }
                     else
@@ -183,8 +190,8 @@ namespace CSharp.Net.Util.CsHttp
                         _expiredHandlers.Enqueue(result);
                     }
                 }
-
-                //Log.CleanupCycleEnd(_logger, valueStopwatch.GetElapsedTime(), num, _expiredHandlers.Count);
+                if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                    LogHelper.Debug("CsHttpClientFactory", $"CleanupCycleBefore:{count},End:" + _expiredHandlers.Count);
             }
             finally
             {

@@ -11,7 +11,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 枚举帮助类
     /// </summary>
-    public static class EnumHelper
+    public sealed class EnumHelper
     {
         private static readonly Dictionary<string, FieldInfo> PropertyDictionary = new Dictionary<string, FieldInfo>();
 
@@ -51,7 +51,7 @@ namespace CSharp.Net.Util
                 throw new ArgumentNullException("description");
             }
 
-            List<EnumItem> list = enumType.GetEnumItems();
+            List<EnumItem> list = EnumHelper.GetEnumItems(enumType);
 
             foreach (EnumItem item in list)
             {
@@ -234,7 +234,7 @@ namespace CSharp.Net.Util
                 //对应的int值
                 var valueNum = enumValue.GetHashCode();
                 var name = Enum.GetName(enumType, enumValue);
-                FieldInfo field = enumType.GetFieldInfo(name);
+                FieldInfo field = GetFieldInfo(enumType, name);
                 //中文描述
                 DescriptionAttribute attributeN = field.GetCustomAttribute(typeof(DescriptionAttribute)) as DescriptionAttribute;
                 //英文描述
@@ -262,7 +262,7 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="enumType">枚举类型</param>
         /// <returns>条目列表</returns>
-        public static List<EnumItem> GetEnumItems(this Type enumType)
+        public static List<EnumItem> GetEnumItems(Type enumType)
         {
             if (enumType.IsEnum != true)
             {
@@ -317,7 +317,7 @@ namespace CSharp.Net.Util
             {
                 var key = enumValue;
                 var name = Enum.GetName(enumType, enumValue);
-                FieldInfo field = enumType.GetFieldInfo(name);
+                FieldInfo field = GetFieldInfo(enumType, name);
 
                 DescriptionAttribute attribute =
                     Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
@@ -469,7 +469,7 @@ namespace CSharp.Net.Util
             foreach (T enumValue in enumValues)
             {
                 var name = Enum.GetName(enumType, enumValue);
-                FieldInfo field = enumType.GetFieldInfo(name);
+                FieldInfo field = GetFieldInfo(enumType, name);
 
                 DescriptionAttribute attribute = field.GetCustomAttribute(typeof(DescriptionAttribute)) as DescriptionAttribute;
                 var key = attribute == null ? name : attribute.Description;
@@ -521,7 +521,7 @@ namespace CSharp.Net.Util
             foreach (T enumValue in enumValues)
             {
                 var name = Enum.GetName(enumType, enumValue);
-                FieldInfo field = enumType.GetFieldInfo(name);
+                FieldInfo field = GetFieldInfo(enumType, name);
 
                 EDescriptionAttribute attribute = field.GetCustomAttribute(typeof(EDescriptionAttribute)) as EDescriptionAttribute;
                 var key = attribute == null ? name : attribute.EDescription;
@@ -539,7 +539,7 @@ namespace CSharp.Net.Util
         /// <param name="modelType"></param>
         /// <param name="fieldName"></param>
         /// <returns></returns>
-        private static FieldInfo GetFieldInfo(this Type modelType, string fieldName)
+        private static FieldInfo GetFieldInfo(Type modelType, string fieldName)
         {
             FieldInfo fieldInfo = null;
             var propertyFullName = $"{modelType.FullName}.{fieldName}";

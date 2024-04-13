@@ -17,7 +17,6 @@ namespace CSharp.Net.Util
         {
             _startTimestamp = startTimestamp;
         }
-
         public static ValueStopwatch StartNew() => new ValueStopwatch(Stopwatch.GetTimestamp());
 
         public TimeSpan GetElapsedTime()

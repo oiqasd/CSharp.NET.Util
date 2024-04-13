@@ -58,41 +58,10 @@ namespace CSharp.Net.Util.CsHttp
             set
             {
                 if (value != Timeout.InfiniteTimeSpan && value < MinimumHandlerLifetime)
-                {
-                    throw new ArgumentException("HandlerLifetime_InvalidValue");
-                }
-
-                _handlerLifetime = value;
+                    _handlerLifetime = MinimumHandlerLifetime;
+                else
+                    _handlerLifetime = value;
             }
         }
-
-        //
-        // 摘要:
-        //     The System.Func`2 which determines whether to redact the HTTP header value before
-        //     logging.
-        public Func<string, bool> ShouldRedactHeaderValue { get; set; } = (string header) => false;
-
-
-        //
-        // 摘要:
-        //     Gets or sets a value that determines whether the System.Net.Http.IHttpClientFactory
-        //     will create a dependency injection scope when building an System.Net.Http.HttpMessageHandler.
-        //     If false (default), a scope will be created, otherwise a scope will not be created.
-        //
-        //
-        //     This option is provided for compatibility with existing applications. It is recommended
-        //     to use the default setting for new applications.
-        //
-        // 言论：
-        //     The System.Net.Http.IHttpClientFactory will (by default) create a dependency
-        //     injection scope each time it creates an System.Net.Http.HttpMessageHandler. The
-        //     created scope has the same lifetime as the message handler, and will be disposed
-        //     when the message handler is disposed.
-        //
-        //     When operations that are part of Microsoft.Extensions.Http.HttpClientFactoryOptions.HttpMessageHandlerBuilderActions
-        //     are executed they will be provided with the scoped System.IServiceProvider via
-        //     Microsoft.Extensions.Http.HttpMessageHandlerBuilder.Services. This includes retrieving
-        //     a message handler from dependency injection, such as one registered using Microsoft.Extensions.DependencyInjection.HttpClientBuilderExtensions.AddHttpMessageHandler``1(Microsoft.Extensions.DependencyInjection.IHttpClientBuilder).
-        public bool SuppressHandlerScope { get; set; }
     }
 }

@@ -16,7 +16,7 @@ namespace CSharp.Net.Util
     /// IpHelper
     /// 获取客户端ip地址请使用ZJHW_Common_System.Mvc.General.IPAddress
     /// </summary>
-    public class IpHelper
+    public sealed class IpUtil
     {
         /// <summary>
         /// 校验IP地址

@@ -29,17 +29,6 @@ namespace CSharp.Net.Util.CsHttp
         //     configure an System.Net.Http.HttpClient pipeline.
         public abstract IList<DelegatingHandler> AdditionalHandlers { get; }
 
-        //
-        // 摘要:
-        //     Gets an System.IServiceProvider which can be used to resolve services from the
-        //     dependency injection container.
-        //
-        // 言论：
-        //     This property is sensitive to the value of Microsoft.Extensions.Http.HttpClientFactoryOptions.SuppressHandlerScope.
-        //     If true this property will be a reference to the application's root service provider.
-        //     If false (default) this will be a reference to a scoped service provider that
-        //     has the same lifetime as the handler being created.
-        public virtual IServiceProvider Services { get; }
 
         //
         // 摘要:

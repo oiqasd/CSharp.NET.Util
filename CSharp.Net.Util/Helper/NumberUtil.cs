@@ -7,7 +7,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 金钱转换
     /// </summary>
-    public class MoneyHelper
+    public class MoneyUtil
     {
         /// <summary>
         /// 转大写
@@ -16,14 +16,14 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static string ToUpper(decimal money)
         {
-            return NumberHelper.NumberString(money);
+            return NumberUtil.NumberString(money);
         }
     }
     /// <summary>
     /// 数字转换大写汉字
     /// (金额)
     /// </summary>
-    public class NumberHelper
+    public class NumberUtil
     {
         #region 数字转换大写汉字
         private static string[] NumChineseCharacter = new string[] { "零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖" };

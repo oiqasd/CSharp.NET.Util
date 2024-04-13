@@ -3,6 +3,7 @@ using CSharp.Net.Cache.Memory;
 using CSharp.Net.Cache.Redis;
 using CSharp.Net.Util;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;
@@ -20,20 +21,15 @@ public static class CSharpNetCacheServiceCollectionExtensions
     public static IServiceCollection AddStackExchangeRedisCache(this IServiceCollection services, Action<RedisCacheOptions> setupAction)
     {
         if (services == null)
-        {
             throw new ArgumentNullException(nameof(services));
-        }
 
         if (setupAction == null)
-        {
             throw new ArgumentNullException(nameof(setupAction));
-        }
 
         services.AddOptions();
         services.Configure(setupAction);
-        services.Add(ServiceDescriptor.Singleton<IRedisCache, RedisCacheProvider>());
-        services.AddScoped<IHostedService, RedisPreHoldService>();
-
+        services.TryAdd(ServiceDescriptor.Singleton<IRedisCache, RedisCacheProvider>());
+        services.AddSingleton<IHostedService, RedisPreHoldService>();
         return services;
     }
 
@@ -55,11 +51,11 @@ public static class CSharpNetCacheServiceCollectionExtensions
 
 class RedisPreHoldService : BackgroundService
 {
-    Timer timer = null;
+    //Timer timer = null;
     static RedisCacheOptions cacheOptions = null;
-    public RedisPreHoldService(IRedisCache redisCache, IOptions<RedisCacheOptions> option)
+    public RedisPreHoldService(IRedisCache cache, IOptions<RedisCacheOptions> option)
     {
-        redisCache.StringGet("_");
+        cache.StringGet("_");
         if (option != null) cacheOptions = option.Value;
         else cacheOptions = new RedisCacheOptions();
         if (cacheOptions.RunThreadIntervalMilliseconds < 100) cacheOptions.RunThreadIntervalMilliseconds = 100;
@@ -68,41 +64,28 @@ class RedisPreHoldService : BackgroundService
     }
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        /*
-         * #pragma warning disable CS4014
-         * Task.Factory.StartNew(async () =>
-         * {
-         *     while (true)
-         *     {
-         *         Console.WriteLine($"ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
-         *         AppDomainHelper.GetThreadPoolStats();
-         * 
-         *         await Task.Delay(1000 * 3);
-         *     }
-         * }, TaskCreationOptions.LongRunning);
-         * #pragma warning restore CS4014
-         * return;
-         */
-
-        if (!stoppingToken.IsCancellationRequested)
+        while (!stoppingToken.IsCancellationRequested)
         {
-            timer = new Timer(call =>
+            //timer = new Timer(call =>{
+            try
             {
-                try
+                if (cacheOptions.Environment == "dev")
                 {
-                    if (cacheOptions.Environment == "dev")
-                    {
-                        Console.WriteLine($"{DateTime.Now.ToString(1)} CurrentThread ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
-                    }
-
-                    AppDomainHelper.GetThreadPoolStats(cacheOptions.MinWorkThread, cacheOptions.MinIOThread, cacheOptions.Environment);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
+                    Console.WriteLine($"{DateTime.Now.ToString(1)} CurrentThread ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
                 }
 
-            }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(cacheOptions.RunThreadIntervalMilliseconds));
+                AppDomainHelper.GetThreadPoolStats(cacheOptions.MinWorkThread, cacheOptions.MinIOThread, cacheOptions.Environment);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                await Task.Delay(cacheOptions.RunThreadIntervalMilliseconds);
+            }
+
+            // }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(cacheOptions.RunThreadIntervalMilliseconds));
         }
 
         await Task.CompletedTask;
@@ -110,8 +93,8 @@ class RedisPreHoldService : BackgroundService
 
     public override async Task StopAsync(CancellationToken stoppingToken)
     {
-        timer?.Change(Timeout.Infinite, 0);
-        timer?.Dispose();
+        //timer?.Change(Timeout.Infinite, 0);
+        //timer?.Dispose();
         await Task.CompletedTask;
     }
 }

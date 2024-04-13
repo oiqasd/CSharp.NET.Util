@@ -47,7 +47,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 时间帮助类
     /// </summary>
-    public class DateTimeHelper
+    public sealed class DateTimeHelper
     {
         /// <summary>
         /// 时间戳最大秒数

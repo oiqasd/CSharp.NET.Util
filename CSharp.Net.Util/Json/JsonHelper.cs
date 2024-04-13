@@ -13,17 +13,18 @@ using System.Text.Json.Serialization.Metadata;
 
 namespace CSharp.Net.Util
 {
-    /// <summary>
-    /// 使用System.Text.Json序列化
-    /// Newtonsoft.Json 迁移文档
-    /// https://docs.microsoft.com/zh-cn/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0
+    // 使用System.Text.Json序列化
+    // Newtonsoft.Json 迁移文档
+    // https://docs.microsoft.com/zh-cn/dotnet/standard/serialization/system-text-json-migrate-from-newtonsoft-how-to?pivots=dotnet-5-0
+    /// <summary> 
+    /// Json序列化工具
     /// <para>
     /// net8新增特性，可以反序列化只读字段或属性，此工具类未全局应用
     ///  若要选择此全局支持，请将新选项 PreferredObjectCreationHandling 设置为 JsonObjectCreationHandling.Populate。
     ///  如果考虑兼容性问题，还可通过将 [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)] 特性放置在要填充其属性的特定类型上或单个属性上来更精细地启用该功能。
     /// </para>
     /// </summary>
-    public class JsonHelper
+    public sealed class JsonHelper
     {
         static JsonSerializerOptions _options { get; }
 
@@ -168,25 +169,27 @@ namespace CSharp.Net.Util
         {
             return JsonSerializer.Deserialize(json, type, options ?? _options);
         }
-        ///// <summary>
-        ///// 将转换后的Key全部设置为小写
-        ///// </summary>
-        ///// <param name="json"></param>
-        ///// <returns></returns>
-        //public static SortedDictionary<string, object> DeserializeLower(string json)
-        //{
-        //    if (json.IsNullOrEmpty()) return new SortedDictionary<string, object>();
-        //    var obj = Deserialize<SortedDictionary<string, object>>(json);
-        //    SortedDictionary<string, object> nobj = new SortedDictionary<string, object>();
+        /*
+        /// <summary>
+        /// 将转换后的Key全部设置为小写
+        /// </summary>
+        /// <param name="json"></param>
+        /// <returns></returns>
+        public static SortedDictionary<string, object> DeserializeLower(string json)
+        {
+            if (json.IsNullOrEmpty()) return new SortedDictionary<string, object>();
+            var obj = Deserialize<SortedDictionary<string, object>>(json);
+            SortedDictionary<string, object> nobj = new SortedDictionary<string, object>();
 
-        //    foreach (var item in obj)
-        //    {
-        //        nobj[item.Key.ToLower()] = item.Value;
-        //    }
-        //    obj.Clear();
-        //    obj = null;
-        //    return nobj;
-        //}
+            foreach (var item in obj)
+            {
+                nobj[item.Key.ToLower()] = item.Value;
+            }
+            obj.Clear();
+            obj = null;
+            return nobj;
+        }
+        */
 
         /// <summary>
         /// 将value中的 双引号替换为中文双引号
@@ -256,7 +259,7 @@ namespace CSharp.Net.Util
                         if (o.Value is JsonObject)
                             dt.Add(o.Key, funObj((JsonObject)o.Value));
                         else
-                            dt.Add(o.Key, o.Value);
+                            dt.Add(o.Key,o.Value.ToValue());
                     data.Add(dt);
                 }
                 return data;

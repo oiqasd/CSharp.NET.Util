@@ -16,7 +16,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 应用程序帮助类
     /// </summary>
-    public class AppDomainHelper
+    public sealed class AppDomainHelper
     {
         /// <summary>
         /// 获取运行根目录
@@ -154,7 +154,7 @@ namespace CSharp.Net.Util
             PrintThreadPoolStats(out string iocp, out string worker);
             StringBuilder sb = new StringBuilder();
             sb.Append(GetHostName)
-              .AppendLine(IpHelper.GetLocalIP())
+              .AppendLine(IpUtil.GetLocalIP())
               .Append("程序集版本:").AppendLine(GetVersion.ToString())
               .AppendLine(GetDotNetVersion)
               .AppendLine(iocp)
@@ -197,7 +197,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static string GetCurrentIP
         {
-            get { return IpHelper.GetLocalIP(); }
+            get { return IpUtil.GetLocalIP(); }
         }
 
         /// <summary>

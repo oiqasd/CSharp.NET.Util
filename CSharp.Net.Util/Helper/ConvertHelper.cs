@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.Reflection;
 using System.Text.Json.Nodes;
 
@@ -11,7 +12,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 类型转换
     /// </summary>
-    public static class ConvertHelper
+    public sealed class ConvertHelper
     {
         #region TryPrase数据类型转换
         public static int TryPraseInt(string inValue, int defaultValue = default(int))
@@ -46,27 +47,29 @@ namespace CSharp.Net.Util
         /// 返回默认值
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="param"></param>
+        /// <param name="value">The value.</param> 
         /// <param name="defaultValue"></param> 
         /// <param name="provider">格式信息,默认null, 例:Thread.CurrentThread.CurrentCulture</param>
-        /// <returns></returns>
-        public static T ConvertTo<T>(object param, T defaultValue = default(T), IFormatProvider provider = null)
+        /// <returns>The target type</returns>
+        public static T ConvertTo<T>(object value, T defaultValue = default(T), IFormatProvider provider = null)
         {
-            if (typeof(JsonValue).IsAssignableFrom(param.GetType()))
+            //provider = provider ?? CultureInfo.d.CreateSpecificCulture("en-US");
+            Type objType = value.GetType();
+            if (typeof(JsonValue).IsAssignableFrom(objType))
             {
-                if (typeof(DateTime).IsAssignableFrom(typeof(T)))
-                    return Try.Func(() => (T)ChangeType((param as JsonValue).ToString(), typeof(T), provider), defaultValue);
-                return (param as JsonValue).GetValue<T>();
+                //if (typeof(DateTime).IsAssignableFrom(typeof(T)))
+                return Try.Func(() => (T)ChangeType((value as JsonValue).ToString(), typeof(T), provider), ex => LogHelper.Fatal("ConvertTo<>", ex), defaultValue);
+                //return (param as JsonValue).GetValue<T>();//number转换不方便故使用通用方式
             }
 
-            if (typeof(JsonObject).IsAssignableFrom(param.GetType())
-                || typeof(JsonArray).IsAssignableFrom(param.GetType()))
-                return JsonHelper.Deserialize<T>(param.ToString());
+            if (typeof(JsonObject).IsAssignableFrom(objType)
+                || typeof(JsonArray).IsAssignableFrom(objType))
+                return JsonHelper.Deserialize<T>(value.ToString());
 
             if (typeof(Enum).IsAssignableFrom(typeof(T)))
-                return (T)Enum.Parse(typeof(T), param.ToString());
+                return (T)Enum.Parse(typeof(T), value.ToString());
 
-            return Try.Func(() => (T)ChangeType(param, typeof(T), provider), defaultValue);
+            return Try.Func(() => (T)ChangeType(value, typeof(T), provider), ex => LogHelper.Fatal("ConvertTo<>", ex), defaultValue);
         }
 
         /// <summary>
@@ -76,27 +79,29 @@ namespace CSharp.Net.Util
         /// <param name="type">目标类型</param>
         /// <param name="provider"><see cref="IFormatProvider"/></param>
         /// <returns>转换后的对象</returns>
-        public static object ChangeType(object obj, Type type, IFormatProvider provider)
+        public static object ChangeType(object obj, Type type, IFormatProvider provider = null)
         {
             if (type == null) return obj;
             if (type == typeof(string)) return obj?.ToString();
             if (type == typeof(Guid) && obj != null) return Guid.Parse(obj.ToString());
             if (obj == null) return type.IsValueType ? Activator.CreateInstance(type) : null;
 
+            Type objType = obj.GetType();
+
             var underlyingType = Nullable.GetUnderlyingType(type);
-            if (type.IsAssignableFrom(obj.GetType())) return obj;
+            if (type.IsAssignableFrom(objType)) return obj;
             else if ((underlyingType ?? type).IsEnum)
             {
                 if (underlyingType != null && string.IsNullOrWhiteSpace(obj.ToString())) return null;
                 else return Enum.Parse(underlyingType ?? type, obj.ToString());
             }
             //DateTime->DateTimeOffset
-            else if (obj.GetType().Equals(typeof(DateTime)) && (underlyingType ?? type).Equals(typeof(DateTimeOffset)))
+            else if (objType.Equals(typeof(DateTime)) && (underlyingType ?? type).Equals(typeof(DateTimeOffset)))
             {
                 return DateTimeHelper.ConvertToDateTimeOffset((DateTime)obj);
             }
             //DateTimeOffset->DateTime
-            else if (obj.GetType().Equals(typeof(DateTimeOffset)) && (underlyingType ?? type).Equals(typeof(DateTime)))
+            else if (objType.Equals(typeof(DateTimeOffset)) && (underlyingType ?? type).Equals(typeof(DateTime)))
             {
                 return DateTimeHelper.ConvertToDateTime((DateTimeOffset)obj);
             }
@@ -118,18 +123,17 @@ namespace CSharp.Net.Util
             else
             {
                 var converter = TypeDescriptor.GetConverter(type);
-                if (converter.CanConvertFrom(obj.GetType())) return converter.ConvertFrom(obj);
+                if (converter.CanConvertFrom(objType)) return converter.ConvertFrom(obj);
 
                 var constructor = type.GetConstructor(Type.EmptyTypes);
                 if (constructor != null)
                 {
                     var o = constructor.Invoke(null);
                     var propertys = type.GetProperties();
-                    var oldType = obj.GetType();
 
                     foreach (var property in propertys)
                     {
-                        var p = oldType.GetProperty(property.Name);
+                        var p = objType.GetProperty(property.Name);
                         if (property.CanWrite && p != null && p.CanRead)
                         {
                             property.SetValue(o, ChangeType(p.GetValue(obj, null), property.PropertyType, provider), null);
@@ -139,31 +143,6 @@ namespace CSharp.Net.Util
                 }
             }
             return obj;
-        }
-
-        /// <summary>
-        /// Converts an object to the specified target type or returns the default value.
-        /// <para>Any exceptions are ignored. </para>
-        /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "value">The value.</param>
-        /// <returns>The target type</returns>
-        public static T ConvertToAndIgnoreException<T>(object value)
-        {
-            return ConvertToAndIgnoreException(value, default(T));
-        }
-
-        /// <summary>
-        /// Converts an object to the specified target type or returns the default value.
-        /// <para>Any exceptions are ignored. </para>
-        /// </summary>
-        /// <typeparam name = "T"></typeparam>
-        /// <param name = "value">The value.</param>
-        /// <param name = "defaultValue">The default value.</param>
-        /// <returns>The target type</returns>
-        public static T ConvertToAndIgnoreException<T>(object value, T defaultValue)
-        {
-            return ConvertTo(value, defaultValue, true);
         }
 
         /// <summary>

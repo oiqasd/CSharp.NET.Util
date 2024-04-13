@@ -27,10 +27,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CSharp.Net.Util" Version="7.2.1" />
+		<!--<PackageReference Include="CSharp.Net.Util" Version="7.2.1" />-->
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="7.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.7.33" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\CSharp.Net.Util\CSharp.Net.Util.csproj" />
 	</ItemGroup>
 
 	<!--<ItemGroup>

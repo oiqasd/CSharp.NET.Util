@@ -6,7 +6,7 @@
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
-		<Version>7.2.1</Version>
+		<Version>7.2.3</Version>
 		<Copyright></Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
@@ -19,6 +19,21 @@
 		<PackageTags>.NET;Util;Utility,Tools</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
+	
+	<!--<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+		<ItemGroup>
+			--><!--Include DLLs of Project References--><!--
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+
+			--><!--Include PDBs of Project References--><!--
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->Replace('.dll', '.pdb'))"/>
+		</ItemGroup>
+	</Target>	
+	<PropertyGroup>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+	</PropertyGroup>-->	
+	
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
 		<OutputPath>bin\</OutputPath>
 		<DocumentationFile>bin\Release\$(TargetFramework)\$(MSBuildProjectName).xml</DocumentationFile>

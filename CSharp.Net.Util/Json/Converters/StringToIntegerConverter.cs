@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace CSharp.Net.Util.Json.Converters
 {
-    internal class StringToIntegerConverter : JsonConverter<int>
+    internal sealed class StringToIntegerConverter : JsonConverter<int>
     {
         public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {

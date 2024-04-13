@@ -5,7 +5,7 @@ namespace CSharp.Net.Util.Json
     /// <summary>
     /// 字段全小写
     /// </summary>
-    public class LowerCaseNamingPolicy : JsonNamingPolicy
+    public sealed class LowerCaseNamingPolicy : JsonNamingPolicy
     {
         public static LowerCaseNamingPolicy Instance { get; } = new LowerCaseNamingPolicy();
         public override string ConvertName(string name) => name.ToLower();

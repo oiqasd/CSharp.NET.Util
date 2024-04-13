@@ -7,17 +7,17 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 程序操作日志
     /// </summary>
-    interface ISystemLog
+    public interface ISystemLog
     {
         /// <summary>
         /// 事务ID
         /// </summary>
-        string TransferId { get; set; }
+        string EventId { get; set; }
         string AppId { get; set; }
         // string Key { get; set; }
         string Title { get; set; }
         string Message { get; set; }
-        string Exception { get; set; }
+        Exception Exception { get; set; }
         DateTime? LoggerTime { get; set; }
         /// <summary>
         /// 文件名,默认用level

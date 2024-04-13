@@ -6,7 +6,7 @@ namespace CSharp.Net.Util.Json
     /// <summary>
     /// 字段蛇形命名
     /// </summary>
-    public class SnakeCaseNamingPolicy : JsonNamingPolicy
+    public sealed class SnakeCaseNamingPolicy : JsonNamingPolicy
     {
         public static SnakeCaseNamingPolicy Instance { get; } = new SnakeCaseNamingPolicy();
         public override string ConvertName(string name)

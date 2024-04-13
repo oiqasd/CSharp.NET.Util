@@ -46,7 +46,7 @@ public struct Try
     /// <param name="func"></param>
     /// <param name="errorAction"></param>
     /// <returns>true:成功,false:异常</returns>
-    public static T Func<T>(Func<T> func, Action<Exception> errorAction)
+    public static T Func<T>(Func<T> func, Action<Exception> errorAction, T defaultValue = default(T))
     {
         try
         {
@@ -55,7 +55,7 @@ public struct Try
         catch (Exception ex)
         {
             if (errorAction != null) errorAction(ex);
-            return default(T);
+            return defaultValue;
         }
     }
     /// <summary>

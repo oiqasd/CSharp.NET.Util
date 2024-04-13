@@ -11,7 +11,7 @@ using System.Transactions;
 
 namespace CSharp.Net.Util
 {
-    public class FileHelper
+    public sealed class FileHelper
     {
         /// <summary>
         /// 返回路径，不存在则创建
