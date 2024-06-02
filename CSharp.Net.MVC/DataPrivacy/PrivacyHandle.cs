@@ -19,31 +19,29 @@ namespace CSharp.Net.Mvc;
 /// <summary>
 /// 签名验证 <see cref="appsetting.json"/>
 /// <code> "ApiSign": {
-///     "IgnoreMethod": "GET",          //忽略验证请求，多个用,隔开
-///      "Algorithm": "MD5",               //加密算法，md5,rsa,aes等，默认md5
-///      "AppKey": "",                          //密钥
-///      "SignField": "sign",                 //自定义签名字段，默认sign
-///      "CheckExpired": {                   //时间戳校验请求过期
-///         "ExpiredField":"timestamp",//字段名，默认timestamp
+///      "IgnoreMethod": "GET",         //忽略验证请求，多个用,隔开
+///      "Algorithm": "MD5",            //加密算法，md5,rsa,aes等，默认md5
+///      "AppKey": "",                  //密钥
+///      "SignField": "sign",           //自定义签名字段，默认sign
+///      "CheckExpired": {              //时间戳校验请求过期
+///         "ExpiredField":"timestamp", //字段名，默认timestamp
 ///         "ExpiredSeconds": 1800      //秒,过期时间(请求时毫秒、秒皆可)
 ///        }       
 ///   }</code>
 /// </summary>
-public class ApiSignHandle : ActionFilterAttribute
+public class PrivacyHandle : ActionFilterAttribute
 {
-    ILogger _logger;
     IConfiguration _configuration { get; }
-    public ApiSignHandle(ILogger<ApiSignHandle> logger, IConfiguration configuration)
+    public PrivacyHandle(IConfiguration configuration)
     {
-        _logger = logger;
         _configuration = configuration;
     }
 
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var attrList = context.ActionDescriptor.EndpointMetadata.Select(e => e.GetType().Name).ToList();
-        var _focre = attrList.Contains(nameof(ForceSignCheckAttribute));
-        if (!_focre && (attrList.Contains(nameof(AllowAnonymousAttribute)) || attrList.Contains(nameof(IngoreSignCheckAttribute))))
+        var _focre = attrList.Contains(nameof(ForcePrivacyAttribute));
+        if (!_focre && (attrList.Contains(nameof(AllowAnonymousAttribute)) || attrList.Contains(nameof(IngorePrivacyAttribute))))
         {
             await next();
             return;
@@ -60,7 +58,7 @@ public class ApiSignHandle : ActionFilterAttribute
         if (expiredSeconds > 0)
         {
             var expiredField = _configuration["ApiSign:CheckExpired:ExpiredField"] ?? "timestamp";
-            long times = requestData.GetValue(expiredField, 0L);
+            long times = requestData.GetValueCvt(expiredField, 0L);
             if (times <= 0)
                 times = ConvertHelper.ConvertTo(parmObjProp.FirstOrDefault(q => q.Name.ToLower() == expiredField)?.GetValue(parmObj), 0L);
             var clientTime = DateTimeHelper.GetDateTimeFromTimeStamp(times);

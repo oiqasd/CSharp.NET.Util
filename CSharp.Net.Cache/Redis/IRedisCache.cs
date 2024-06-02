@@ -387,12 +387,19 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         bool LockTake(string key, string value = "", int cacheSeconds = 10);
         /// <summary>
-        /// 
+        /// 分布式锁
         /// </summary>
         /// <param name="key"></param>
         /// <param name="cacheSeconds"></param>
         /// <returns></returns>
         bool LockTake(string key, int cacheSeconds);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="waitSeconds"></param>
+        /// <returns></returns>
+        void LockWait(string key, int waitSeconds = 10);
         /// <summary>
         /// 释放锁
         /// </summary>

@@ -1,4 +1,4 @@
-﻿#if NET6_0_OR_GREATER
+﻿#if NET
 using CSharp.Net.Util.AException;
 using System;
 using System.Collections.Concurrent;
@@ -32,7 +32,7 @@ namespace CSharp.Net.Util
         static ExceptionOps()
         {
             ErrorMethods = new ConcurrentDictionary<MethodBase, MethodAException>();
-          
+
             ErrorCodeTypes = GetErrorCodeTypes();
             ErrorCodeMessages = GetErrorCodeMessages();
         }
@@ -48,7 +48,7 @@ namespace CSharp.Net.Util
         /// <returns>异常实例</returns>
         public static AppException Throw(string errorMessage, params object[] args)
         {
-            var exception = Out(errorMessage, typeof(ValidationException), args).ErrorCode(400);
+            var exception = Out(errorMessage, typeof(AppException), args).ErrorCode(400);
             throw exception;
         }
 
@@ -56,11 +56,12 @@ namespace CSharp.Net.Util
         /// 抛出业务异常信息
         /// </summary>
         /// <param name="errorCode">错误码</param>
+        /// <param name="exceptionType">错误类型</param>
         /// <param name="args">String.Format 参数</param>
         /// <returns>异常实例</returns>
-        public static AppException Throw(object errorCode, params object[] args)
+        public static AppException Throw(object errorCode, Type exceptionType, params object[] args)
         {
-            var exception = Out(errorCode, typeof(ValidationException), args).ErrorCode(400);
+            var exception = Out(errorCode, exceptionType, args).ErrorCode(400);
 
             throw exception;
         }
@@ -205,7 +206,7 @@ namespace CSharp.Net.Util
         private static IEnumerable<Type> GetErrorCodeTypes()
         {
             // 查找所有公开的枚举贴有 [ErrorCodeType] 特性的类型
-             
+
             return new List<Type>();
         }
 

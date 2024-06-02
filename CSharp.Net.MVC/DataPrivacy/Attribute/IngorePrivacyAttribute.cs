@@ -11,4 +11,4 @@ namespace CSharp.Net.Mvc;
 /// 不校验签名特性
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = true)]
-public class IngoreSignCheckAttribute : Attribute { }
+public class IngorePrivacyAttribute : Attribute { }

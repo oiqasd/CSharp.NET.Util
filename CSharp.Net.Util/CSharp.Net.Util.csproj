@@ -6,7 +6,7 @@
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
-		<Version>7.2.3</Version>
+		<Version>7.2.4</Version>
 		<Copyright></Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->

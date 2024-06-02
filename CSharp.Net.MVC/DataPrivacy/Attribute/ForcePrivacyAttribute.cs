@@ -11,4 +11,4 @@ namespace CSharp.Net.Mvc;
 /// 默认[AllowAnonymous]、[IngoreSignCheck]及[IgnoreMethod]不进行校验
 /// </summary>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = true)]
-public class ForceSignCheckAttribute : Attribute { }
+public class ForcePrivacyAttribute : Attribute { }

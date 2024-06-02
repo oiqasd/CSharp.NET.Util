@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Text.Json.Nodes;
@@ -54,6 +55,7 @@ namespace CSharp.Net.Util
         public static T ConvertTo<T>(object value, T defaultValue = default(T), IFormatProvider provider = null)
         {
             //provider = provider ?? CultureInfo.d.CreateSpecificCulture("en-US");
+            if (value == null) return defaultValue;
             Type objType = value.GetType();
             if (typeof(JsonValue).IsAssignableFrom(objType))
             {

@@ -12,7 +12,6 @@ namespace CSharp.Net.Util
     //待完善
     //1.获取主机运行资源 http://www.qb5200.com/article/475990.html
 
-
     /// <summary>
     /// 应用程序帮助类
     /// </summary>
@@ -278,7 +277,7 @@ namespace CSharp.Net.Util
         /// <param name="rootUser"></param>
         /// <param name="command"></param>
         /// <returns></returns>
-        public string ExecuteCommandSSH(string ip, string rootUser, string command)
+        public static string ExecuteCommandSSH(string ip, string rootUser, string command)
         {
             var script = $"ssh -q -o \"StrictHostKeyChecking no\" -o \"UserKnownHostsFile=/dev/null\" -i /keys/{ip}/sshkey/id_rsa \"{rootUser}@{ip}\" \"{command}\"";
             return ExecuteCommand(script);
@@ -300,8 +299,9 @@ namespace CSharp.Net.Util
                 CreateNoWindow = true
             };
 
-            var isUnix = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-            if (isUnix)
+            //var isUnix = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+            var isWin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            if (!isWin)
             {
                 info.FileName = "/bin/bash";
                 info.Arguments = $"-c \"{escapedArgs}\"";
@@ -323,6 +323,17 @@ namespace CSharp.Net.Util
             return null;
         }
 
+        public static Process ProcessApplication(string file, string args)
+        {
+            var info = new ProcessStartInfo(file, args)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            return Process.Start(info);
+        }
         //在容器中操作宿主机:
         //1.生成 ssh key :ssh-keygen -t rsa -b 4096
         //2.把 public key 加入到 authorized_keys：cat /root/.ssh/id_rsa.pub > /root/.ssh/authorized_keys

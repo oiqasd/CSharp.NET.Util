@@ -13,10 +13,11 @@ public static class DictionaryExtension
     /// </summary>
     /// <param name="sd"></param>
     /// <param name="key"></param>
-    /// <returns>default null</returns>
-    public static TValue GetValue<TValue>(this IDictionary<string, TValue> sd, string key)
+    /// <param name="defaultValue"></param>
+    /// <returns>null return default</returns>
+    public static TValue GetValue<TValue>(this IDictionary<string, TValue> sd, string key, TValue defaultValue = default)
     {
-        if (sd == null || !sd.ContainsKey(key)) return default(TValue);
+        if (sd == null || !sd.ContainsKey(key)) return defaultValue;
         //object retValue;
         //if (sd.TryGetValue(key, out retValue))
         //    return retValue;
@@ -24,32 +25,18 @@ public static class DictionaryExtension
     }
 
     /// <summary>
-    /// 从Dictionary中读取数据
-    /// </summary>
-    /// <typeparam name="TValue"></typeparam>
-    /// <param name="sd"></param>
-    /// <param name="key"></param>
-    /// <param name="defaultValue"></param>
-    /// <returns> default value</returns>
-    public static TValue GetValue<TValue>(this IDictionary<string, TValue> sd, string key, TValue defaultValue = default(TValue))
-    {
-        if (sd == null || !sd.ContainsKey(key)) return defaultValue;
-        return sd[key]; 
-    }
-
-    /// <summary>
-    /// 从Dictionary中读取数据
+    /// 从Dictionary中读取数据,TSource 2 TValue
     /// </summary>
     /// <typeparam name="TSource">source type</typeparam>
-    /// <typeparam name="TValue">target type</typeparam>
+    /// <typeparam name="TTarget">target type</typeparam>
     /// <param name="sd"></param>
     /// <param name="key"></param>
-    /// <param name="defaultValue"></param>
+    /// <param name="targetDefaultValue"></param>
     /// <returns> default value</returns>
-    public static TValue GetValue<TSource,TValue>(this IDictionary<string, TSource> sd, string key, TValue defaultValue = default(TValue))
+    public static TTarget GetValueCvt<TSource, TTarget>(this IDictionary<string, TSource> sd, string key, TTarget targetDefaultValue = default)
     {
-        if (sd == null || !sd.ContainsKey(key)) return defaultValue;
-        var retValue = ConvertHelper.ConvertTo(sd[key], defaultValue);
+        if (sd == null || !sd.ContainsKey(key)) return targetDefaultValue;
+        var retValue = ConvertHelper.ConvertTo(sd[key], targetDefaultValue);
         return retValue;
     }
 
@@ -76,7 +63,7 @@ public static class DictionaryExtension
     /// <param name="key"></param>
     /// <param name="defaultValue"></param>
     /// <returns>default value</returns>
-    public static TValue GetValue<TValue>(this IDictionary<string, object> sd, string key, TValue defaultValue = default(TValue))
+    public static TValue GetValue<TValue>(this IDictionary<string, object> sd, string key, TValue defaultValue = default)
     {
         var sdValue = sd.GetValue(key);
         var retValue = ConvertHelper.ConvertTo(sdValue, defaultValue);
@@ -93,5 +80,5 @@ public static class DictionaryExtension
         if (dictionary == null)
             throw new ArgumentNullException("dictionary");
         return new SortedDictionary<TKey, TValue>(dictionary);
-    } 
+    }
 }

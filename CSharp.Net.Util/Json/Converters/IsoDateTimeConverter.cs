@@ -7,6 +7,19 @@ namespace CSharp.Net.Util.Json
 {
     internal sealed class IsoDateTimeConverter : JsonConverter<DateTime>
     {
+        string format { get; set; }
+        /// <summary>
+        /// 默认：yyyy-MM-dd HH:mm:ss
+        /// </summary>
+        public IsoDateTimeConverter()
+        {
+            format = "yyyy-MM-dd HH:mm:ss";
+        }
+        public IsoDateTimeConverter(string format)
+        {
+            this.format = format;
+        }
+
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             if (reader.TokenType == JsonTokenType.Null) return default(DateTime);
@@ -44,7 +57,7 @@ namespace CSharp.Net.Util.Json
         /// <param name="options"></param>
         public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo));
+            writer.WriteStringValue(value.ToString(format, DateTimeFormatInfo.InvariantInfo));
         }
     }
 }

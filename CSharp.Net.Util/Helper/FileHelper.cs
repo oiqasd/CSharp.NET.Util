@@ -172,7 +172,7 @@ namespace CSharp.Net.Util
         public static async Task OverWrittenFile(string file, string contents, string encoding = "utf-8")
         {
             //File.WriteAllText(fullName, contents); 
-            using (System.IO.StreamWriter sw = new StreamWriter(file, false, Encoding.GetEncoding(encoding)))
+            using (StreamWriter sw = new StreamWriter(file, false, Encoding.GetEncoding(encoding)))
             {
                 await sw.WriteLineAsync(contents);
             }
@@ -186,11 +186,19 @@ namespace CSharp.Net.Util
         /// <param name="encoding">default:utf-8</param>
         public static async Task AppendWrittenFile(string file, string contents, string encoding = "utf-8")
         {
-            //File.AppendAllText(fullName, contents + "\n");
-            using (System.IO.StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
+            //File.AppendAllText(fullName, contents + "\n");  
+            try
             {
-                sw.BaseStream.Seek(0, System.IO.SeekOrigin.End);
-                await sw.WriteLineAsync(contents);
+                Monitor.Enter(file);
+                using (StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
+                {
+                    sw.BaseStream.Seek(0, SeekOrigin.End);
+                    await sw.WriteLineAsync(contents);
+                }
+            }
+            finally
+            {
+                Monitor.Exit(file);
             }
         }
 

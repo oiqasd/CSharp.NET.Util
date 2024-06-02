@@ -1,8 +1,5 @@
-using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache
@@ -152,8 +149,8 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
-
         List<T> SetMembers<T>(string key);
+
         /// <summary>
         /// 随机返回集合一个对象
         /// </summary>

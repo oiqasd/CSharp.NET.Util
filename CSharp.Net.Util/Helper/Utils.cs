@@ -165,20 +165,7 @@ namespace CSharp.Net.Util
         #endregion
 
         #region 其它校验
-
-        /// <summary>
-        /// 检查时间戳是否过期
-        /// 默认检查3s
-        /// </summary>
-        /// <returns></returns>
-        public static bool CheckTimeStamp(long timeStamp, int intervalSeconds = 3000)
-        {
-            long nowTimeStamp = DateTimeHelper.GetTimeStampInt();
-            if (Math.Abs(nowTimeStamp - timeStamp) > intervalSeconds)
-                return false;
-            return true;
-        }
-
+         
         /// <summary>
         /// 检查6位纯数字手机验证码
         /// </summary>
@@ -218,7 +205,6 @@ namespace CSharp.Net.Util
             return arr;
 #else
             int[] arr2 = new int[arr.Length];
-
             for (int i = 0; i <= arr.Length - 1; i++)
             {
                 Random rd = new Random();
@@ -273,13 +259,14 @@ namespace CSharp.Net.Util
         /// 记录在程序根目录下
         /// </summary>
         /// <param name="str">日志内容</param> 
-        public static async Task WriteLog(string str)
+        /// <param name="fileName">写入的文件,默认当前目录'logs/log.txt'下</param> 
+        public static async Task WriteLog(string str, string fileName = null)
         {
             try
             {
                 var path = Path.Combine(AppDomainHelper.GetRunRoot, "logs");
-                string file = FileHelper.GetFilePath(path, "log.txt", true);
-                await FileHelper.AppendWrittenFile(file, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " " + str);
+                string file = fileName ?? FileHelper.GetFilePath(path, "log.txt", true);
+                await FileHelper.AppendWrittenFile(file, str);
             }
             catch (Exception ex)
             {
@@ -287,42 +274,7 @@ namespace CSharp.Net.Util
             }
         }
 
-        /// <summary>
-        /// 获取位与运算基数
-        /// </summary>
-        /// <param name="move">value: 0~255;要返回Int,则不能超过31. 0: 返回0,代表没有意义</param>
-        /// <returns>输入0则返回0,其它返回1的左移 move-1次</returns>
-        public static uint GetBitwiseCode(byte move)
-        {
-            if (move == 0) return 0;
-            return (uint)1 << move - 1;
-            //return Math.Pow(2, target - 1);
-        }
-
-        /// <summary>
-        /// 计算位与后数值
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="move">数值,0:代表没有意义</param>
-        /// <returns></returns>
-        public static uint CalcBitwiseValue(uint source, byte move)
-        {
-            if (move == 0) return source;
-            return source | GetBitwiseCode(move);
-        }
-
-        /// <summary>
-        /// 比较位与后是否相等
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="move">数值,0:代表没有意义</param>
-        /// <returns>true,false</returns>
-        public static bool CheckBitwise(uint source, byte move)
-        {
-            var t = GetBitwiseCode(move);
-            return (source & t) == t;
-        }
-
+    
         #endregion
 
         /// <summary>
@@ -338,7 +290,7 @@ namespace CSharp.Net.Util
 #if NET6_0_OR_GREATER
             Random random = Random.Shared;
 #else
-            Random random = new Random();
+            Random random = new Random(DateTimeHelper.GetTimeStampInt());
 #endif
             double money = random.NextDouble() * remainMoney / remainSize * 2;
             money = Math.Floor(money);

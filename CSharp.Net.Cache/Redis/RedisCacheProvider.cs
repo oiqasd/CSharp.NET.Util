@@ -4,8 +4,10 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache
@@ -1456,6 +1458,33 @@ namespace CSharp.Net.Cache
         public bool LockTake(string key, int cacheSeconds)
         {
             return _db.LockTakeAsync(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds)).Result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="waitSeconds"></param>
+        /// <returns></returns>
+        public void LockWait(string key, int waitSeconds = 10)
+        {
+            try
+            {
+                CancellationTokenSource cts = new CancellationTokenSource(waitSeconds * 1000);
+                var t = Task.Run(async () =>
+                {
+                    while (!LockTake(key, waitSeconds))
+                    {
+                        await Task.Delay(1);
+                        // cts.Token.ThrowIfCancellationRequested();
+                    }
+                });
+                t.Wait(cts.Token);
+            }
+            catch
+            {
+                throw new AppTimeoutException("LockWait is timeout");
+            }
         }
 
         /// <summary>

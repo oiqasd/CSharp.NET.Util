@@ -154,7 +154,7 @@ public static class ObjectExtension
     /// <param name="obj"></param>
     /// <param name="defaultValue">false</param>
     /// <returns></returns>
-    public static DateTime ToDateTime(this object obj, DateTime defaultValue = default(DateTime))
+    public static DateTime ToDateTime(this object obj, DateTime defaultValue = default)
         => ConvertHelper.ConvertTo(obj, defaultValue);
 
     /// <summary>
@@ -175,24 +175,42 @@ public static class ObjectExtension
     /// 比较是否位与后是否相等
     /// </summary>
     /// <param name="value"></param>
-    /// <param name="move">0：代表无意义</param>
+    /// <param name="index">基码，0：无意义</param>
     /// <returns>true:包含</returns>
-    public static bool CheckBitwise(this int value, byte move)
-    => Utils.CheckBitwise((uint)value, move);
+    public static bool BitEqual(this int value, byte index)
+    => Operators.BitEqual((uint)value, index);
 
     /// <summary>
-    /// 计算位或后数值，
-    /// 适用于一对多的场景
+    /// 比较是否位与后是否相等
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="index">基码，0：无意义</param>
+    /// <returns>true:包含</returns>
+    public static bool BitEqual(this int value, int index)
+    => Operators.BitEqual((uint)value, (byte)index);
+
+    /// <summary>
+    /// 计算位或后数值
     /// </summary>
     /// <param name="source">初始值从0开始</param>
-    /// <param name="move">0~31,0：无意义</param>
-    /// <returns>source | <![CDATA[1<<move-1]]></returns>
-    public static int ToBitOr(this int source, byte move)
+    /// <param name="index">基码，0~31,0：无意义</param>
+    /// <returns>source | <![CDATA[1<<index-1]]></returns>
+    public static int BitOr(this int source, byte index)
     {
-        if (move > 31) throw new ArgumentException("pow must be less than 32.");
-        return (int)Utils.CalcBitwiseValue((uint)source, move);
+        if (index > 31) throw new ArgumentException("pow must be less than 32.");
+        return (int)Operators.BitsValue((uint)source, index);
     }
-
+    /// <summary>
+    /// 计算位或后数值
+    /// </summary>
+    /// <param name="source">初始值从0开始</param>
+    /// <param name="index">基码，0~31,0：无意义</param>
+    /// <returns>source | <![CDATA[1<<index-1]]></returns>
+    public static int BitOr(this int source, int index)
+    {
+        if (index > 31) throw new ArgumentException("pow must be less than 32.");
+        return (int)Operators.BitsValue((uint)source, (byte)index);
+    }
 
     /// <summary>
     /// 判断泛型是否List

@@ -29,7 +29,6 @@ namespace CSharp.Net.Util
 
             return lazyResult.Value;
         }
-
     }
 
 

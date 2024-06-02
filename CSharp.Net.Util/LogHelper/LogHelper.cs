@@ -182,7 +182,7 @@ namespace CSharp.Net.Util
         /// <param name="message"></param>
         /// <param name="ex"></param>
         /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime"></param>
+        /// <param name="dateTime">默认当前</param>
         /// <param name="eventId"></param>
         public static async Task Fatal(string title, string message, Exception ex, string eventId = null, string loggerName = null, DateTime? dateTime = null)
         {

@@ -370,12 +370,13 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 时间比对函数
+        /// <para>时间比对函数</para>
+        /// <para>* 以秒为基准，年月日时分都基于秒换算</para>
         /// </summary>
         /// <param name="Interval">时间比对类型</param>
         /// <param name="StartDate">开始时间</param>
         /// <param name="EndDate">结束时间</param>
-        /// <returns>两个事件的比对差值</returns>
+        /// <returns>两个时间的比对差值</returns>
         public static long DateDiff(DateInterval Interval, System.DateTime StartDate, System.DateTime EndDate)
         {
             long lngDateDiffValue = 0;
@@ -392,26 +393,27 @@ namespace CSharp.Net.Util
                     lngDateDiffValue = (long)TS.TotalHours;
                     break;
                 case DateInterval.Day:
-                    lngDateDiffValue = (long)TS.Days;
+                    lngDateDiffValue = TS.Days;
                     break;
                 case DateInterval.Week:
-                    lngDateDiffValue = (long)(TS.Days / 7);
+                    lngDateDiffValue = TS.Days / 7;
                     break;
                 case DateInterval.Month:
-                    lngDateDiffValue = (long)(TS.Days / 30);
+                    lngDateDiffValue = TS.Days / 30;
                     break;
                 case DateInterval.Quarter:
-                    lngDateDiffValue = (long)((TS.Days / 30) / 3);
+                    lngDateDiffValue = (TS.Days / 30) / 3;
                     break;
                 case DateInterval.Year:
-                    lngDateDiffValue = (long)(TS.Days / 365);
+                    lngDateDiffValue = TS.Days / 365;
                     break;
             }
-            return (lngDateDiffValue);
+            return lngDateDiffValue;
         }
 
         /// <summary>
-        /// C#计算两个日期之间相差的天数
+        /// <para>C#计算两个日期之间相差的天数</para>
+        /// <para>* 以日期为基准，不受时分秒影响</para>
         /// </summary>
         /// <param name="dateStart"></param>
         /// <param name="dateEnd"></param>
@@ -459,13 +461,13 @@ namespace CSharp.Net.Util
         /// DateTime时间格式转换为Unix时间戳格式,秒级
         /// </summary>
         /// <param name="time">默认当前时间</param>
-        /// <returns></returns>
-        public static long GetTimeStampInt(DateTime? time = null)
+        /// <returns>在2038年将会溢出</returns>
+        public static int GetTimeStampInt(DateTime? time = null)
         {
             if (time == null)
-                return DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                return (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             DateTimeOffset localtime = DateTime.SpecifyKind(time.Value, DateTimeKind.Local);
-            return localtime.ToUnixTimeSeconds();
+            return (int)localtime.ToUnixTimeSeconds();
             //return (int)(time.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
         }
 
@@ -596,6 +598,32 @@ namespace CSharp.Net.Util
                 return dateTime.ToLocalTime().DateTime;
             else
                 return dateTime.DateTime;
+        }
+
+        /// <summary>
+        /// 获取当前第几周
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <param name="firstDayOfWeek"></param>
+        /// <param name="cultureInfo"></param>
+        /// <returns></returns>
+        public static int GetWeekOfYear(DateTime dateTime, DayOfWeek firstDayOfWeek = DayOfWeek.Monday, CultureInfo cultureInfo = null)
+        {
+            cultureInfo = cultureInfo ?? CultureInfo.CurrentCulture;
+            var i = cultureInfo.Calendar.GetWeekOfYear(dateTime, cultureInfo.DateTimeFormat.CalendarWeekRule, firstDayOfWeek);
+            return i;
+        }
+        /// <summary>
+        /// 检查时间戳是否过期
+        /// 默认检查3s
+        /// </summary>
+        /// <returns></returns>
+        public static bool CheckTimeStamp(long timeStamp, int intervalSeconds = 3000)
+        {
+            long nowTimeStamp = GetTimeStampInt();
+            if (Math.Abs(nowTimeStamp - timeStamp) > intervalSeconds)
+                return false;
+            return true;
         }
     }
 }

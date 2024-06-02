@@ -64,17 +64,15 @@ namespace CSharp.Net.Util.CsHttp
             //for (int i = 0; i < httpClientFactoryOptions.HttpClientActions.Count; i++)
             //{
             //    httpClientFactoryOptions.HttpClientActions[i](httpClient);
-            //}
+            //} 
             return client;
         }
 
         public HttpMessageHandler CreateHandler(string name)
         {
             if (name == null)
-            {
                 throw new ArgumentNullException("name");
-            }
-
+            TokenBucket.Case(nameof(HttpClientUtil)).Wait();
             ActiveHandlerTrackingEntry value = _activeHandlers.GetOrAdd(name, _entryFactory).Value;
             StartHandlerEntryTimer(value);
             return value.Handler;

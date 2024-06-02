@@ -1,5 +1,6 @@
 ﻿using CSharp.Net.Util;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 public struct Try
@@ -132,7 +133,7 @@ public struct Try
         catch (Exception ex)
         {
             LogHelper.Fatal(ex);
-            if (errorAction != null) errorAction(ex);            
+            if (errorAction != null) errorAction(ex);
             return false;
         }
     }
@@ -144,7 +145,7 @@ public struct Try
     /// <param name="args"></param>
     /// <param name="errorAction">是否throw</param>
     /// <returns>true:成功,false:异常</returns>
-    public static bool Action(Action<object> action,object args, Action<Exception> errorAction)
+    public static bool Action(Action<object> action, object args, Action<Exception> errorAction)
     {
         try
         {
