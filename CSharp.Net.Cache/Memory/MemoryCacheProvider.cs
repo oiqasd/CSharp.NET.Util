@@ -74,14 +74,14 @@ namespace CSharp.Net.Cache.Memory
         /// </summary>
         /// <param name="key">key</param>
         /// <param name="func">不存在则使用该值创建</param>
-        /// <param name="seconds"></param>
+        /// <param name="seconds">默认0不过期</param>
         /// <returns></returns>
-        public T GetOrSet<T>(string key, Func<T> func, int seconds = 30)
+        public T GetOrSet<T>(string key, Func<T> func, int seconds = 0)
         {
             return _cache.GetOrCreate<T>(key, c =>
             {
                 //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
-                c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
+                if (seconds > 0) c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
                 c.SetValue(func.Invoke());
                 return func.Invoke();
             });
@@ -92,7 +92,7 @@ namespace CSharp.Net.Cache.Memory
         /// </summary>
         /// <param name="key"></param>
         /// <param name="data"></param>
-        /// <param name="cacheSeconds">秒</param>
+        /// <param name="cacheSeconds">秒,默认0不过期</param>
         /// <param name="isSliding">是否可调过期时间 自动延长/绝对时间</param>
         /// <returns></returns>
         public void Add(string key, object data, int cacheSeconds = 0, bool isSliding = true)
@@ -102,8 +102,9 @@ namespace CSharp.Net.Cache.Memory
                 throw new ArgumentException(nameof(Add));
             }
 
-            if (cacheSeconds <= 0) cacheSeconds = 30;
-            var options = isSliding ? new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(cacheSeconds)) : new MemoryCacheEntryOptions().SetAbsoluteExpiration(DateTimeOffset.Now.AddSeconds(cacheSeconds));
+            MemoryCacheEntryOptions options = null;
+            if (cacheSeconds > 0)
+                options = isSliding ? new MemoryCacheEntryOptions().SetSlidingExpiration(TimeSpan.FromSeconds(cacheSeconds)) : new MemoryCacheEntryOptions().SetAbsoluteExpiration(DateTimeOffset.Now.AddSeconds(cacheSeconds));
 
             _cache.Set(key, data, options);
         }

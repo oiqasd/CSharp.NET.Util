@@ -64,7 +64,6 @@ namespace CSharp.Net.Util
                 if (conver) File.Delete(fullName);
                 else return;
             }
-
             File.Create(fullName).Dispose();
         }
 
@@ -171,7 +170,6 @@ namespace CSharp.Net.Util
         /// <param name="encoding">default:utf-8</param>
         public static async Task OverWrittenFile(string file, string contents, string encoding = "utf-8")
         {
-            //File.WriteAllText(fullName, contents); 
             using (StreamWriter sw = new StreamWriter(file, false, Encoding.GetEncoding(encoding)))
             {
                 await sw.WriteLineAsync(contents);
@@ -186,7 +184,6 @@ namespace CSharp.Net.Util
         /// <param name="encoding">default:utf-8</param>
         public static async Task AppendWrittenFile(string file, string contents, string encoding = "utf-8")
         {
-            //File.AppendAllText(fullName, contents + "\n");  
             try
             {
                 Monitor.Enter(file);

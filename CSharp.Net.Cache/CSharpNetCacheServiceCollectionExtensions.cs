@@ -14,11 +14,12 @@ public static class CSharpNetCacheServiceCollectionExtensions
 {
     /// <summary>
     /// add redis cache
+    /// 基于StackExchange.Redis
     /// </summary>
     /// <param name="services"></param>
     /// <param name="setupAction"></param>
     /// <returns></returns>
-    public static IServiceCollection AddStackExchangeRedisCache(this IServiceCollection services, Action<RedisCacheOptions> setupAction)
+    public static IServiceCollection AddRedisCache(this IServiceCollection services, Action<RedisCacheOptions> setupAction)
     {
         if (services == null)
             throw new ArgumentNullException(nameof(services));
@@ -29,6 +30,7 @@ public static class CSharpNetCacheServiceCollectionExtensions
         services.AddOptions();
         services.Configure(setupAction);
         services.TryAdd(ServiceDescriptor.Singleton<IRedisCache, RedisCacheProvider>());
+        services.TryAdd(ServiceDescriptor.Singleton<ICache, RedisCacheProvider>());
         services.AddSingleton<IHostedService, RedisPreHoldService>();
         return services;
     }
@@ -45,6 +47,7 @@ public static class CSharpNetCacheServiceCollectionExtensions
             throw new ArgumentNullException(nameof(services));
         }
         services.Add(ServiceDescriptor.Singleton<IMemoryCache, MemoryCacheProvider>());
+        services.Add(ServiceDescriptor.Singleton<ICache, MemoryCacheProvider>());
         return services;
     }
 }

@@ -1,0 +1,124 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>$(Title)$</title>
+
+    <style>
+        .part {
+            display: flex;
+            justify-items: left; /* 水平 */
+            align-items: center; /* 垂直居中 */
+            /*place-items: center; 等同于 justify-items: center 和 align-items: center 的简写 */
+            margin: 60px;
+            width: 500px;
+            height: 80px;
+            border: 1px solid #808080;
+        }
+        .fls {
+            margin: 60px;
+            width: 500px;
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-size:8pt;
+            border: 1px solid #808080;
+        }
+    </style>
+</head>
+<body onload="load();">
+    <!--<form action="/fileSv/upload" method="post" enctype="multipart/form-data">-->
+
+    <div class="part">
+        <input type="file" id="fileUpload" multiple />
+        <input type="button" id="upload" value="上传" />
+    </div>
+    <div class="part">
+        <input type="text" id="dfName" style="width:250px" />
+        <input type="button" id="download" value="下载" />
+    </div>
+    <div class="fls">
+        <a id="fl"></a>
+    </div>
+
+    <script src="https://web-resource.17m3.com/cdn/jquery/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(function () {
+            $("#download").click(function (evt) {
+                var fileName = $("#dfName").val();
+                if (fileName === '' || fileName === undefined) {
+                    alert("内容不能为空");
+                    $("#dfName").focus();
+                    return;
+                }
+                $.ajax({
+                    type: "GET",
+                    url: "/fileSv/Download",
+                    responseType: 'blob',
+                    data: { fileName: fileName },
+                    success: function (data) {
+                        // 创建一个 Blob 对象
+                        var blob = new Blob([data]);
+                        // 创建一个临时链接
+                        var downloadUrl = URL.createObjectURL(blob);
+
+                        // 创建一个隐藏的 <a> 标签
+                        var downloadLink = document.createElement("a");
+                        downloadLink.href = downloadUrl;
+                        downloadLink.setAttribute('download', fileName);
+                        // 将创建的 <a> 标签添加到文档中
+                        document.body.appendChild(downloadLink);
+                        // 触发点击事件，开始下载
+                        downloadLink.click();
+                        // 清理创建的 <a> 标签
+                        document.body.removeChild(downloadLink);
+                        URL.revokeObjectURL(downloadUrl);
+                    },
+                    error: function () {
+                        alert("下载文件出现错误！");
+                    }
+                });
+
+            })
+            $("#upload").click(function (evt) {
+                var fileUpload = $("#fileUpload").get(0);
+                var files = fileUpload.files;
+                var data = new FormData();
+                for (var i = 0; i < files.length; i++) {
+                    data.append("files", files[i]);
+                    console.log(files[i].name, ((files[i].size) / 1024).toFixed(2), "kb")
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: "/fileSv/upload",
+                    contentType: false,
+                    processData: false,
+                    data: data,
+                    success: function (data) {
+                        alert(data.message);
+                    },
+                    error: function () {
+                        alert("上传文件出现错误！");
+                    }
+                });
+            })
+        })
+
+        function load() {
+            $.ajax({
+                type: "GET",
+                url: "/fileSv/fileList",
+                success: function (data) {
+                    $('#fl').text(data.data);
+                },
+                error: function () {
+                    alert("err！");
+                }
+            });
+        }
+    </script>
+</body>
+</html>

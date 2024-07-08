@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace CSharp.Net.Util
@@ -10,6 +8,8 @@ namespace CSharp.Net.Util
     {
         internal Queue<byte> bucket = null;
         internal int _capacity = 50;
+        const int MaxCap = 1000000;
+        const int MinCap = 1;
 
         internal void build()
         {
@@ -25,8 +25,8 @@ namespace CSharp.Net.Util
 
         internal void SetCapacity(int value)
         {
-            if (value < 1) return;
-            if (value > 1000000) return;
+            if (value < MinCap) return;
+            if (value > MaxCap) return;
             _capacity = value;
             if (bucket != null && value < (bucket.Count() / 3))
                 bucket = new Queue<byte>(_capacity);

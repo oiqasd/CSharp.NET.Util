@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSharp.Net.Util.Json.Converters;
+using System;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -7,14 +8,11 @@ namespace CSharp.Net.Util.Json
 {
     internal sealed class IsoDateTimeConverter : JsonConverter<DateTime>
     {
-        string format { get; set; }
-        /// <summary>
-        /// 默认：yyyy-MM-dd HH:mm:ss
-        /// </summary>
+        string format { get; set; } = DateTimeFormatArray.Formats[0];
         public IsoDateTimeConverter()
         {
-            format = "yyyy-MM-dd HH:mm:ss";
         }
+
         public IsoDateTimeConverter(string format)
         {
             this.format = format;
@@ -22,7 +20,7 @@ namespace CSharp.Net.Util.Json
 
         public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            if (reader.TokenType == JsonTokenType.Null) return default(DateTime);
+            if (reader.TokenType == JsonTokenType.Null) return default;
             if (reader.TokenType == JsonTokenType.Number)
             {
                 long value = reader.GetInt64();
@@ -32,14 +30,14 @@ namespace CSharp.Net.Util.Json
             {
                 string value = reader.GetString();
                 if (string.IsNullOrEmpty(value))
-                    return default(DateTime);
+                    return default;
 
                 if (DateTime.TryParse(value, out DateTime d))
                     return d;
-                if (DateTime.TryParseExact(value, "yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
-                    return d;
-                if (DateTime.TryParseExact(value, "yyyy-MM-dd'T'HH:mm:sszzz", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
-                    return d;
+                foreach (var f in DateTimeFormatArray.Formats)
+                    if (DateTime.TryParseExact(value, f, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
+                        return d;
+
 
                 if ((options.NumberHandling & JsonNumberHandling.AllowReadingFromString) > 0)
                 {

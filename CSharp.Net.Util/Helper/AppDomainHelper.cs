@@ -148,14 +148,14 @@ namespace CSharp.Net.Util
         /// worker:(Busy=2,Free=32765,Min=100,Max=32767)
         /// 分配物理内存：100 mb
         /// </returns>
-        public static string PrintRuntimeInfo()
+        public static string PrintRuntimeInfo(bool dotnetInfo = false)
         {
             PrintThreadPoolStats(out string iocp, out string worker);
             StringBuilder sb = new StringBuilder();
             sb.Append(GetHostName)
               .AppendLine(IpUtil.GetLocalIP())
               .Append("程序集版本:").AppendLine(GetVersion.ToString())
-              .AppendLine(GetDotNetVersion)
+              .AppendLine(dotnetInfo ? GetDotNetVersion : "")
               .AppendLine(iocp)
               .AppendLine(worker)
               .AppendLine($"分配内存：{(GetMemory / 1024 / 1024.0).ToString("#.#")} mb")//分配物理内存

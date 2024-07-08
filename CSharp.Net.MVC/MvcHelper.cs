@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -8,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace CSharp.Net.Mvc;
 
-public static class MvcHelper
+public class MvcHelper
 {
     #region
     /// <summary>
@@ -50,7 +49,7 @@ public static class MvcHelper
     /// <param name="inputName">字段名</param>
     /// <param name="method">post和get</param>
     /// <returns></returns>
-    public static T Get<T>(string inputName, MethodType method)
+    public static T GetForm<T>(string inputName, MethodType method)
     {
         string tempValue = GetPostOrRequestValue(inputName, method);
         T result = ChangeTypeValue<T>(tempValue);

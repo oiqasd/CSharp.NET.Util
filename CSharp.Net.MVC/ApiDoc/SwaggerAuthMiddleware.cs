@@ -28,8 +28,15 @@ public class SwaggerAuthMiddleware
             //var encodeU = authHeader.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries)[1]?.Trim();
             //var decodeU = Encoding.UTF8.GetString(Convert.FromBase64String(encodeU));
 
-            context.Request.Cookies.TryGetValue("_DCC878Ad0cFFCb", out string val);
-            if (_configuration["env"] == "test" || _configuration["env"] == "dev" || (val.IsHasValue() && val == _configuration["appid"]))
+            string key = App.Configuration["CMVC:AuthKey"];
+            if (key.IsNullOrEmpty())
+            {
+                await next.Invoke(context);
+                return;
+            }
+
+            context.Request.Cookies.TryGetValue(key, out string val);
+            if (val.IsHasValue() && val == _configuration["CMVC:AuthValue"])
             {
                 await next.Invoke(context);
                 return;

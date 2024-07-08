@@ -128,7 +128,11 @@ public static class ObjectExtension
     /// <param name="defaultValue">0</param>
     /// <returns></returns>
     public static int ToInt(this object obj, int defaultValue = 0)
-        => ConvertHelper.ConvertTo(obj, defaultValue);
+    {
+        if (int.TryParse(obj.ToString(), out int r))
+            return r;
+        return ConvertHelper.ConvertTo(obj, defaultValue);
+    }
 
     /// <summary>
     /// 转成Long
@@ -137,7 +141,11 @@ public static class ObjectExtension
     /// <param name="defaultValue">0</param>
     /// <returns></returns>
     public static long ToLong(this object obj, long defaultValue = 0)
-        => ConvertHelper.ConvertTo(obj, defaultValue);
+    {
+        if (long.TryParse(obj.ToString(), out long r))
+            return r;
+        return ConvertHelper.ConvertTo(obj, defaultValue);
+    }
 
     /// <summary>
     /// 转成Boolean
@@ -146,7 +154,11 @@ public static class ObjectExtension
     /// <param name="defaultValue">false</param>
     /// <returns></returns>
     public static bool ToBoolean(this object obj, bool defaultValue = false)
-        => ConvertHelper.ConvertTo(obj, defaultValue);
+    {
+        if (bool.TryParse(obj.ToString(), out bool r))
+            return r;
+        return ConvertHelper.ConvertTo(obj, defaultValue);
+    }
 
     /// <summary>
     /// 转成DateTime
@@ -155,7 +167,11 @@ public static class ObjectExtension
     /// <param name="defaultValue">false</param>
     /// <returns></returns>
     public static DateTime ToDateTime(this object obj, DateTime defaultValue = default)
-        => ConvertHelper.ConvertTo(obj, defaultValue);
+    {
+        if (DateTime.TryParse(obj.ToString(), out DateTime r))
+            return r;
+        return ConvertHelper.ConvertTo(obj, defaultValue);
+    }
 
     /// <summary>
     /// byte 数组保存到文件

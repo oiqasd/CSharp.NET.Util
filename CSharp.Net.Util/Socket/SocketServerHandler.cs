@@ -29,7 +29,7 @@ namespace CSharp.Net.Util
 #if NET
             do
             {
-                received = await client.ReceiveAsync(buffer, SocketFlags.None);
+                received = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
                 data += Encoding.GetEncoding(encoding).GetString(buffer, 0, received);
             } while (received == buffer.Length);
 #else

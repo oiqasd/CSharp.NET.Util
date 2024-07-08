@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace CSharp.Net.Util
@@ -10,13 +8,13 @@ namespace CSharp.Net.Util
     /// </summary>
     public sealed class IdWorkerHelper
     {
-        private static IdWorker _IdWorkInstance = null;
+        private static Snowflake _IdWorkInstance = null;
         private static object _obj = new object();
 
         /// <summary>
         /// work实例
         /// </summary>
-        public static IdWorker Instance => _IdWorkInstance;
+        public static Snowflake Instance => _IdWorkInstance;
 
         /// <summary>
         /// 设置参数，建议程序初始化时执行一次
@@ -34,14 +32,14 @@ namespace CSharp.Net.Util
                         {
                             options = new IdWorkerOptions();
                             string ip = IpUtil.GetLocalIP();
-                            if (IpUtil.CheckIp(ip))
+                            if (options.MachineId < 1 && IpUtil.CheckIp(ip))
                             {
                                 options.MachineId = ConvertHelper.ConvertTo<ushort>(ip.Split('.')[3], 1);
                             }
                             //var id = ((0x000000FF & (long)mac[mac.length - 2]) | (0x0000FF00 & (((long)mac[mac.length - 1]) << 8))) >> 6;
                             //id = id % (maxDatacenterId + 1);
                         }
-                        _IdWorkInstance = new IdWorker(options);
+                        _IdWorkInstance = new Snowflake(options);
                     }
                 }
             }
@@ -52,7 +50,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 雪花算法
     /// </summary>
-    public sealed class IdWorker
+    public sealed class Snowflake
     {
         /// <summary>
         /// 机器ID
@@ -80,32 +78,37 @@ namespace CSharp.Net.Util
         /// </summary>
         private int sequenceBits = 10;
         /// <summary>
-        /// 机器码数据左移位数，就是后面计数器占用的位数
+        /// 机器码数据左移位数，后面计数器占用的位数
         /// </summary>
         private int workerIdShift = 10;// sequenceBits;
         /// <summary>
-        /// 时间戳左移动位数就是机器码和计数器总字节数
+        /// 时间戳左移动位数,机器码和计数器总字节数
         /// </summary>
-        private int timestampLeftShift = 14;// sequenceBits + workerIdBits;
+        private int timestampShift = 14;// sequenceBits + workerIdBits;
         /// <summary>
+        /// 支持的最大序列id数量.
         /// 一毫秒内可以产生计数，如果达到该值则等到下一毫秒再进行生成
         /// 默认1023
         /// </summary>
         private long sequenceMax = -1L ^ (-1L << 10);//-1L ^ (-1L << sequenceBits);
         private long lastTimestamp = -1L;
+        //数据中心配置
+        //int datacenterIdBits = 1;// 数据中心id所占位数
+        //int datacenterIdShift = sequenceBits + workerIdBits;// 数据中心id左移位数
+        //long datacenterIdMax = -1L ^ (-1L << datacenterIdBits));// 支持的最大数据中心id数量
 
         /// <summary>
         /// 机器码
         /// </summary>
         /// <param name="machineId"></param>
-        public IdWorker(int machineId = 1)
+        public Snowflake(int machineId = 1)
         {
             if (machineId > maxMachineId || machineId < 0)
                 throw new WorkIdException($"machineId can't be greater than {maxMachineId} or less than 0 ");
             this.machineId = machineId;
         }
 
-        public IdWorker(IdWorkerOptions options)
+        public Snowflake(IdWorkerOptions options)
         {
             machineId = options.MachineId;
             twepoch = DateTimeHelper.GetTimeStampLong(options.BaseUtcTime);
@@ -114,14 +117,14 @@ namespace CSharp.Net.Util
             if (options.SequenceMask <= 0)
                 options.SequenceMask = -1L ^ (-1L << options.SequenceBits);
             maxMachineId = -1L ^ -1L << workerIdBits;
-            timestampLeftShift = sequenceBits + workerIdBits;
+            timestampShift = sequenceBits + workerIdBits;//+datacenteridBits
             sequenceMax = options.SequenceMask;
             workerIdShift = sequenceBits;
 
             if (machineId > maxMachineId || machineId < 0)
                 throw new WorkIdException($"machineId can't be greater than {maxMachineId} or less than 0 ");
 
-            timestampLeftShift = (int)Math.Ceiling(Math.Log((machineId << workerIdShift) | sequenceMax, 2));
+            timestampShift = (int)Math.Ceiling(Math.Log((machineId << workerIdShift) | sequenceMax, 2));
         }
 
         /// <summary>
@@ -129,11 +132,11 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public long NextId()
+        public long NextId(DateTime? baseTime = null)
         {
             lock (this)
             {
-                long timestamp = timeGen();
+                long timestamp = DateTimeHelper.GetTimeStampLong();
                 int r = 0;
                 while (timestamp < lastTimestamp)
                 {
@@ -143,7 +146,7 @@ namespace CSharp.Net.Util
                     r++;
                     if (r > 1000 * 10)
                     {
-                        LogHelper.Fatal("WorkId Error", string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
+                        LogHelper.Fatal("WorkId Error", string.Format("Clock moved backwards.Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
                         return Guid.NewGuid().GetHashCode();
                         //throw new WorkIdException(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
                     }
@@ -164,7 +167,7 @@ namespace CSharp.Net.Util
                     sequence = 0; //计数清0
                 }
                 this.lastTimestamp = timestamp;
-                long nextId = ((timestamp - twepoch) << timestampLeftShift) | (machineId << workerIdShift) | sequence;
+                long nextId = ((timestamp - (baseTime.HasValue ? DateTimeHelper.GetTimeStampLong(baseTime) : twepoch)) << timestampShift) | (machineId << workerIdShift) | sequence;//|(s.datacenterId << datacenterIdShift)
                 return nextId;
             }
         }
@@ -176,21 +179,13 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         private long tillNextMillis(long lastTimestamp)
         {
-            long timestamp = timeGen();
+            long timestamp = DateTimeHelper.GetTimeStampLong();
             while (timestamp <= lastTimestamp)
             {
-                timestamp = timeGen();
+                timestamp = DateTimeHelper.GetTimeStampLong();
             }
             return timestamp;
         }
 
-        /// <summary>
-        /// 生成当前毫秒时间戳
-        /// </summary>
-        /// <returns></returns>
-        private long timeGen()
-        {
-            return (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
-        }
     }
 }

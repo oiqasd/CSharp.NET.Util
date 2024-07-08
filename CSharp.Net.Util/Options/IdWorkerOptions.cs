@@ -6,9 +6,9 @@ namespace CSharp.Net.Util
     {
         /// <summary>
         /// 机器码
-        /// <para>默认:1,最大值 2^workerIdBits-1</para>
+        /// <para>最大值 2^workerIdBits-1</para>
         /// </summary>
-        public virtual int MachineId { get; set; } = 1;
+        public virtual int MachineId { get; set; }
 
         /// <summary>
         /// 机器码字节数

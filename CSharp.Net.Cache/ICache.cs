@@ -44,7 +44,7 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="obj"></param>
-        /// <param name="cacheSeconds"></param>
+        /// <param name="cacheSeconds">默认0，不过期</param>
         /// <returns></returns>
         bool StringSet(string key, object obj, int cacheSeconds = 0);
         /// <summary>
@@ -82,9 +82,9 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key">key</param>
         /// <param name="func">不存在则使用该值创建</param>
-        /// <param name="seconds">绝对过期时间 默认30秒</param>
+        /// <param name="seconds">绝对过期时间 默认0秒不过期</param>
         /// <returns></returns>
-        T GetOrSet<T>(string key, Func<T> func, int seconds = 30);
+        T GetOrSet<T>(string key, Func<T> func, int seconds = 0);
         /// <summary>
         /// 删除以<paramref name="pattern"/>开头的key
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSharp.Net.Util.Json.Converters;
+using System;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -16,16 +17,16 @@ namespace CSharp.Net.Util.Json
             string value = reader.GetString();
             if (DateTimeOffset.TryParse(value, out DateTimeOffset d))
                 return d;
-            if (DateTimeOffset.TryParseExact(value, "yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
-                return d;
-            if (DateTimeOffset.TryParseExact(value, "yyyy-MM-dd'T'HH:mm:sszzz", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
-                return d;
+            foreach (var f in DateTimeFormatArray.Formats)
+                if (DateTimeOffset.TryParseExact(value, f, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
+                    return d;
+
             throw new JsonException($"Could not parse String '{value}' to DateTimeOffset.");
         }
 
         public override void Write(Utf8JsonWriter writer, DateTimeOffset value, JsonSerializerOptions options)
         {
-            writer.WriteStringValue(value.ToString("yyyy-MM-dd HH:mm:ss", DateTimeFormatInfo.InvariantInfo));
+            writer.WriteStringValue(value.ToString(DateTimeFormatArray.Formats[0], DateTimeFormatInfo.InvariantInfo));
         }
     }
 }

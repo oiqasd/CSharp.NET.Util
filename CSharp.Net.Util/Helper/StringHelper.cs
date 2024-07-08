@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CSharp.Net.Util.Cryptography;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
@@ -2044,6 +2045,46 @@ namespace CSharp.Net.Util
             //950 big5 繁体中文 (Big5)
             return HttpUtility.UrlDecode(value, encoding);
         }
+
+        /// <summary>
+        /// utf8转GBK
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string UTF82GBK(string value)
+        {
+            var ed = Encoding.GetEncoding("GBK");
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(value);
+            byte[] gbkBytes = Encoding.Convert(Encoding.UTF8, ed, utf8Bytes);
+            return ed.GetString(gbkBytes);
+        }
+
+        /// <summary>
+        /// GBK转utf8
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string GBK2UTF8(string value)
+        {
+            var ed = Encoding.GetEncoding("GBK");
+            byte[] gbkBytes = ed.GetBytes(value);
+            byte[] utf8Bytes = Encoding.Convert(ed, Encoding.UTF8, gbkBytes);
+            return Encoding.UTF8.GetString(utf8Bytes);
+        }
+
+        /// <summary>
+        /// 字符转码
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        public static string Encoding2(string value, Encoding source, Encoding target)
+        {
+            byte[] sb = source.GetBytes(value);
+            byte[] tb = Encoding.Convert(source, target, sb);
+            return target.GetString(tb);
+        }
         #endregion
 
         /// <summary>
@@ -2528,5 +2569,11 @@ namespace CSharp.Net.Util
             }
             return strs[0];
         }
+
+        public static byte[] String2Bytes(string input)
+        {
+            return Encoding.ASCII.GetBytes(input);
+        }
+         
     }
 }

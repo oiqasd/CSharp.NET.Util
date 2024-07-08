@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using CSharp.Net.Util;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -17,7 +18,7 @@ public static class HttpContextExtensions
     //{
     //    services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     //}
-
+    [Obsolete("使用App.HttpContext")]
     public static IApplicationBuilder UseStaticHttpContext(this IApplicationBuilder app)
     {
         var httpContextAccessor = app.ApplicationServices.GetRequiredService<IHttpContextAccessor>();
@@ -32,7 +33,45 @@ public static class HttpContextExtensions
     /// <returns></returns>
     public static string GetRemoteIP(this HttpContext httpContext)
     {
-        return httpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
+        string result = string.Empty;
+        var headers = httpContext.Request.Headers;
+        if (headers == null)
+        {
+            return result;
+        }
+        result = headers["X-Forwarded-For"].FirstOrDefault();
+        if (result != null && result != string.Empty)
+        {
+            if (result.IndexOf(".") == -1)
+                result = null;
+            else
+            {
+                if (result.IndexOf(",") != -1)
+                {
+                    result = result.Replace(" ", "").Replace("\"", "");
+                    string[] temparyip = result.Split(",;".ToCharArray());
+                    for (int i = 0; i < temparyip.Length; i++)
+                    {
+                        if (RegexUtil.CheckIp(temparyip[i])
+                            && temparyip[i].Substring(0, 3) != "10."
+                            && temparyip[i].Substring(0, 7) != "192.168")
+                        {
+                            return temparyip[i];
+                        }
+                    }
+                }
+                else if (RegexUtil.CheckIp(result))
+                    return result;
+                else
+                    result = null;
+            }
+        }
+        result = result ?? headers["HTTP_X_FORWARDED_FOR"].FirstOrDefault() ?? headers["REMOTE_ADDR"].FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(result))
+            result = httpContext.Connection.RemoteIpAddress?.MapToIPv4()?.ToString();
+        //result = HttpContextExt.Current.Connection.RemoteIpAddress.ToString().Replace("::ffff:", "").Replace("::1", "127.0.0.1");
+
+        return result;
     }
 
     /// <summary>

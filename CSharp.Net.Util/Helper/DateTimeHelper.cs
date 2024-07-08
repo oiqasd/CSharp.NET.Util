@@ -11,6 +11,10 @@ namespace CSharp.Net.Util
     public enum DateInterval
     {
         /// <summary>
+        /// 毫秒
+        /// </summary>
+        Milliseconds,
+        /// <summary>
         /// 秒
         /// </summary>
         Second,
@@ -383,6 +387,9 @@ namespace CSharp.Net.Util
             System.TimeSpan TS = new System.TimeSpan(EndDate.Ticks - StartDate.Ticks);
             switch (Interval)
             {
+                case DateInterval.Milliseconds:
+                    lngDateDiffValue = (long)TS.TotalMilliseconds;
+                    break;
                 case DateInterval.Second:
                     lngDateDiffValue = (long)TS.TotalSeconds;
                     break;
@@ -476,7 +483,7 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="time">默认当前时间</param>
         /// <returns></returns>
-        public static long GetTimeStampLong(System.DateTime? time = null)
+        public static long GetTimeStampLong(DateTime? time = null)
         {
             if (time == null)
                 time = DateTime.Now;

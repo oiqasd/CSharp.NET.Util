@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
@@ -15,12 +12,21 @@ namespace CSharp.Net.Util
     {
         IPAddress _ipAddress = null;
         int _port = 80;
+        //最大连接数队列
+        int _maxQueues = 10;
         IPEndPoint ipEndPoint = null;
         Socket _listener = null;
 
         public SocketServer(int port)
         {
             _port = port;
+            ipEndPoint = new IPEndPoint(IPAddress.Any, _port);
+            listen();
+        }
+        public SocketServer(int port, int maxQueues)
+        {
+            _port = port;
+            _maxQueues = maxQueues;
             ipEndPoint = new IPEndPoint(IPAddress.Any, _port);
             listen();
         }
@@ -58,7 +64,7 @@ namespace CSharp.Net.Util
                 ipEndPoint = new IPEndPoint(_ipAddress, _port);
             _listener = new Socket(ipEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             _listener.Bind(ipEndPoint);
-            _listener.Listen(5000);
+            _listener.Listen(_maxQueues);
             Trace.WriteLine("Server is start.");
             return _listener;
         }
@@ -129,7 +135,7 @@ namespace CSharp.Net.Util
 #if NET
             do
             {
-                received = await socket.ReceiveAsync(buffer, SocketFlags.None);
+                received = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
                 data += Encoding.UTF8.GetString(buffer, 0, received);
             } while (received == buffer.Length);
 #else

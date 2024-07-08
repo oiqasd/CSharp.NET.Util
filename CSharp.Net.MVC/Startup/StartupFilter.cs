@@ -1,19 +1,25 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using CSharp.Net.Util;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using System.Diagnostics;
+using System.Text;
 
 namespace CSharp.Net.Mvc
 {
-    internal class StartupFilter : IStartupFilter
+    public class StartupFilter : IStartupFilter
     {
         public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
         {
             return app =>
             {
                 App.RootServices = app.ApplicationServices;
+                //app.UseStaticHttpContext();
                 app.EnableBuffering();
                 //app.UseHttpLogging();
                 app.UseW3CLogging();
+                // 配置跨域
+                app.UseCors("AllowCorsAny");
                 app.Use(next =>
                 {
                     return async (context) =>
@@ -35,9 +41,11 @@ namespace CSharp.Net.Mvc
                 //AutofacUtil.Container = app.ApplicationServices.GetAutofacRoot();
                 app.UseStaticFiles();
                 app.UseRouting();
-#if DEBUG
-                app.UseApiDocument(virPath: App.Configuration["VirPath"]);
-#endif
+                if (App.Configuration["CMVC:FileSv"].ToBoolean())
+                    app.UseFileSvUI();
+                if (App.Configuration["CMVC:ApiDoc"].ToBoolean())
+                    app.UseApiDocument(virPath: App.Configuration["CMVC:VirPath"]);
+
                 {
                     /*
                     //负载均衡器转发获取真实ip配置 亲测不要也能获取X-Forwarded-For
@@ -81,10 +89,27 @@ namespace CSharp.Net.Mvc
                      */
                 }
 
-                app.UseEndpoints(endpoints =>
+                app.Map("/health", (_map) =>
                 {
-                    endpoints.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { });
+                    _map.Run(async (context) =>
+                    {
+                        await context.Response.WriteAsync("ok");
+                    });
                 });
+                app.Map("/runtime", (_map) =>
+                {
+                    _map.Run(async (context) =>
+                    {
+                        var ri = AppDomainHelper.PrintRuntimeInfo();
+                        await context.Response.WriteAsync(ri, Encoding.GetEncoding("GBK"));
+                    });
+                });
+
+                //app.UseEndpoints(endpoints =>
+                //{
+                //    endpoints.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions { });
+                //});
+
                 //app.UseHealthChecks();
 
                 /*
@@ -98,9 +123,6 @@ namespace CSharp.Net.Mvc
                 }
                 app.UseResponseCaching();
                 */
- 
-                // 配置跨域
-                app.UseCors("AllowCorsAny");
 
                 // 配置权限验证
                 //app.UseAuthorization();

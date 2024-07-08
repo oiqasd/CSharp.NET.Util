@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace CSharp.Net.Util
@@ -27,6 +28,7 @@ namespace CSharp.Net.Util
     {
         #region 数字转换大写汉字
         private static string[] NumChineseCharacter = new string[] { "零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖" };
+        const string baseChars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ=+-*/!@#$%^&().,:;<>~[]?";
         /// <summary>
         /// 数字转换成大写汉字主函数
         /// </summary>
@@ -160,26 +162,61 @@ namespace CSharp.Net.Util
         }
         #endregion
 
+
         /// <summary>
-        /// 62进制转换
+        /// 进制转化
         /// </summary>
-        /// <param name="num"></param>
+        /// <param name="number">10进制数</param>
+        /// <param name="b">进制，支持2-86，数字字母最大62</param>
         /// <returns></returns>
-        public static string EncodeHexadecimal(long num)
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public static string DecimalToBinary(long number, byte b = 2)
         {
-            string characters_all = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            if (b < 2 || b > 86)
+                throw new ArgumentOutOfRangeException("2~86");
+
+            if (number == 0) return "0";
 
             StringBuilder stringBuilder = new StringBuilder();
-
-            while (num > 0)
+            while (number > 0)
             {
-                stringBuilder.Append(characters_all[(int)(num % 62)]);
-                num = num / 62;
+                stringBuilder.Insert(0, baseChars[(int)(number % b)]);
+                number /= b;
             }
-            StringHelper.Reverse(stringBuilder);
-
             return stringBuilder.ToString();
         }
+        /// <summary>
+        /// 10进制转16进制
+        /// </summary>
+        /// <param name="num">10进制数</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public static string Hexadecimal(long num)
+        {
+            return Convert.ToString(num, 16);
+        }
 
+        /// <summary>
+        /// 进制转换
+        /// </summary>
+        /// <param name="bigInt"></param>
+        /// <param name="b">2-86，数字字母最大62</param>
+        /// <returns></returns>
+        public static string StringToBaseX(BigInteger bigInt, byte b = 2)
+        {
+            if (b < 2 || b > 86)
+                throw new ArgumentOutOfRangeException("2~86");
+
+            if (bigInt == 0)
+                return "0";
+            StringBuilder result = new StringBuilder();
+            while (bigInt > 0)
+            {
+                int remainder = (int)(bigInt % b);
+                result.Insert(0, baseChars[remainder]);
+                bigInt /= b;
+            }
+            return result.ToString();
+        }
     }
 }

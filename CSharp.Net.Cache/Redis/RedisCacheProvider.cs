@@ -72,7 +72,7 @@ namespace CSharp.Net.Cache
         /// <param name="func"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
-        public T GetOrSet<T>(string key, Func<T> func, int seconds = 30)
+        public T GetOrSet<T>(string key, Func<T> func, int seconds = 0)
         {
             if (_db.KeyExists(key))
                 return StringGet<T>(key);
