@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace CSharp.Net.Util.CsHttp
 {
-    internal static class NonCapturingTimer
+    internal class NonCapturingTimer
     {
         public static Timer Create(TimerCallback callback, object state, TimeSpan dueTime, TimeSpan period)
         {

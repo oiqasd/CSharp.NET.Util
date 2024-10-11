@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -258,8 +259,6 @@ namespace CSharp.Net.Util
                        .AppendLine(log.Exception.GetExcetionMessage())
                        .Append("----------------------Exception End--------------------------");
 
-                //LogClient.Instance.Write(ConvertLogLevel(log.Level), log.AppId, "", "", "", msg, dateTime);
-
                 var path = FileHelper.GetFilePath(
                     Path.Combine(AppDomainHelper.GetRunRoot, "logs",
                          log.LoggerName.IsNullOrEmpty() ? log.Level.GetDescription().ToLower() : log.LoggerName),
@@ -284,7 +283,7 @@ namespace CSharp.Net.Util
             return GetAllowLogLists().Contains(level);
         }
         public static IList<LogLevel> AllowLogLists = null;
-
+        static readonly object _lockobj = new object();
         /// <summary>
         /// 通过配置文件设置允许记录的日志等级
         /// </summary>
@@ -293,30 +292,36 @@ namespace CSharp.Net.Util
         {
             if (AllowLogLists == null)
             {
-                AllowLogLists = new List<LogLevel>();
-                string logs = Log_Level?.Trim();
-                if (logs.IsNullOrEmpty() || logs == "*")
+                lock (_lockobj)
                 {
-                    List<EnumItem> levels = EnumHelper.GetEnumItems(typeof(LogLevel));
-                    foreach (var item in levels)
+                    if (AllowLogLists != null)
+                        return AllowLogLists;
+                    AllowLogLists = new List<LogLevel>();
+                    string logs = Log_Level?.Trim();
+                    if (logs.IsNullOrEmpty() || logs == "*")
                     {
-                        AllowLogLists.Add(EnumHelper.ParseByNameOrValue<LogLevel>(item.Name));
-                    }
-                }
-                else if (logs.Length > 2)
-                {
-                    string[] logArr = Regex.Split(logs, ",");
-                    if (logArr.Length > 0)
-                    {
-                        for (int i = 0; i < logArr.Length; i++)
+                        List<EnumItem> levels = EnumHelper.GetEnumItems(typeof(LogLevel));
+                        foreach (var item in levels)
                         {
-                            try
+                            var v = EnumHelper.ParseByNameOrValue<LogLevel>(item.Name);
+                            AllowLogLists.Add(v);
+                        }
+                    }
+                    else if (logs.Length > 2)
+                    {
+                        string[] logArr = Regex.Split(logs, ",");
+                        if (logArr.Length > 0)
+                        {
+                            for (int i = 0; i < logArr.Length; i++)
                             {
-                                AllowLogLists.Add(EnumHelper.ParseByNameOrValue<LogLevel>(logArr[i], true));
-                            }
-                            catch (Exception ex)
-                            {
-                                LogHelper.Error("日志等级配置有误", logs, ex, nameof(LogHelper));
+                                try
+                                {
+                                    AllowLogLists.Add(EnumHelper.ParseByNameOrValue<LogLevel>(logArr[i], true));
+                                }
+                                catch (Exception ex)
+                                {
+                                    LogHelper.Error("日志等级配置有误", logs, ex, nameof(LogHelper));
+                                }
                             }
                         }
                     }

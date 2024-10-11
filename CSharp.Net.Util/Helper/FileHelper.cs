@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -104,7 +106,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static void ByteToFile(byte[] bytes, string file)
         {
-            bytes.SaveToFile(file);
+            bytes.ToFile(file);
         }
 
         /// <summary>
@@ -182,20 +184,65 @@ namespace CSharp.Net.Util
         /// <param name="file"></param>
         /// <param name="contents"></param>
         /// <param name="encoding">default:utf-8</param>
+        //[MethodImpl(MethodImplOptions.Synchronized)]
         public static async Task AppendWrittenFile(string file, string contents, string encoding = "utf-8")
         {
+            /* await Task.Run(() =>{
+                 var key = fileLocks.GetOrAdd(file, _ => new LockInfo());
+                 if (fileLocks.Count > 1){
+                     Console.WriteLine("fileLocks,", fileLocks.Count());
+                 }
+                 if (key != null){
+                     lock (key.Lock){
+                         try{
+                             key.LastAccessTime = DateTime.UtcNow;
+                             FileStream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+                             using (StreamWriter sw = new StreamWriter(stream))//, true, Encoding.GetEncoding(encoding)))
+                             {
+                                 sw.BaseStream.Seek(0, SeekOrigin.End);
+                                 sw.WriteLine(contents);
+                             }
+                         }
+                         catch (Exception ex){
+                             Console.WriteLine("[WriteLog]."+ ex.GetExcetionMessage());
+                         }
+                     }
+                 }
+             });*/
+
+            bool l = false; var key = fileLocks.GetOrAdd(file.GetHashCode(), _ => new LockInfo());
             try
             {
-                Monitor.Enter(file);
-                using (StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
+                Monitor.Enter(key, ref l);
+                key.LastAccessTime = DateTime.UtcNow;
+                using (FileStream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
                 {
-                    sw.BaseStream.Seek(0, SeekOrigin.End);
-                    await sw.WriteLineAsync(contents);
+                    //using (StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
+                    using (StreamWriter sw = new StreamWriter(stream, Encoding.GetEncoding(encoding)))
+                    {
+                        sw.BaseStream.Seek(0, SeekOrigin.End);
+                        await sw.WriteLineAsync(contents);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[WriteLog]." + ex.GetExcetionMessage());
             }
             finally
             {
-                Monitor.Exit(file);
+                try
+                {
+                    if (l)
+                        Monitor.Exit(key);
+                    else
+                        Console.WriteLine("[WriteLog]." + " lock failed.");
+                    //Trace.Fail("[WriteLog]:", contents);
+                }
+                catch (Exception sex)
+                {
+                    Console.WriteLine("[WriteLog].sex:" + sex.GetExcetionMessage());
+                }
             }
         }
 
@@ -207,7 +254,7 @@ namespace CSharp.Net.Util
         /// <param name="text"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async Task WriteTextAsync(string filePath, string fileName, string text, CancellationToken cancellationToken)
+        public static void WriteTextAsync(string filePath, string fileName, string text, CancellationToken cancellationToken)
         {
             foreach (char c in Path.GetInvalidFileNameChars())
                 fileName = fileName.Replace(c.ToString(), "");
@@ -218,11 +265,17 @@ namespace CSharp.Net.Util
                     Directory.CreateDirectory(filePath);
             }
             catch (NotSupportedException) { }
+            fileName = Path.Combine(filePath, fileName);
+            var key = fileLocks.GetOrAdd(fileName.GetHashCode(), _ => new LockInfo());
+            lock (key)
+            {
+                key.LastAccessTime = DateTime.UtcNow;
 #if NET
-            await File.WriteAllTextAsync(path: Path.Combine(filePath, fileName), contents: text, cancellationToken);
+                File.WriteAllText(fileName, contents: text);
 #else
-            File.WriteAllText(path: Path.Combine(filePath, fileName), contents: text);
+                File.WriteAllText(fileName, contents: text);
 #endif
+            }
         }
 
         /// <summary>
@@ -428,5 +481,35 @@ namespace CSharp.Net.Util
             }
         }
 #endif
+
+        private static readonly Timer cleanupTimer;
+        private static readonly TimeSpan cleanupInterval = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan lockExpiryTime = TimeSpan.FromSeconds(3);
+        private static readonly LazyConcurrentDictionary<int, LockInfo> fileLocks = new LazyConcurrentDictionary<int, LockInfo>();
+
+        static FileHelper()
+        {
+            cleanupTimer = new Timer(CleanupExpiredLocks, null, cleanupInterval, cleanupInterval);
+        }
+        private static void CleanupExpiredLocks(object state)
+        {
+            foreach (var obj in fileLocks.GetDictionary())
+            {
+                if ((DateTime.UtcNow - obj.Value.Value.LastAccessTime) > lockExpiryTime)
+                {
+                    fileLocks.Remove(obj.Key);
+                }
+            }
+        }
+        public class LockInfo
+        {
+            public object Lock { get; }
+            public DateTime LastAccessTime { get; set; }
+            public LockInfo()
+            {
+                Lock = new object();
+                LastAccessTime = DateTime.UtcNow;
+            }
+        }
     }
 }

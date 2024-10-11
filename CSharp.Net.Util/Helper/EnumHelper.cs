@@ -266,7 +266,7 @@ namespace CSharp.Net.Util
         {
             if (enumType.IsEnum != true)
             {
-                string message = string.Format("", enumType.FullName);
+                string message = string.Format("{0}", enumType.FullName);
                 throw new ArgumentException(message);
             }
             var list = new List<EnumItem>();

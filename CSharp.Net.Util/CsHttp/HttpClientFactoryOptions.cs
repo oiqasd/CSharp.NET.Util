@@ -12,15 +12,12 @@ namespace CSharp.Net.Util.CsHttp
 
         private TimeSpan _handlerLifetime = TimeSpan.FromMinutes(2.0);
 
-        //
-        // 摘要:
-        //     Gets a list of operations used to configure an Microsoft.Extensions.Http.HttpMessageHandlerBuilder.
         public IList<Action<HttpMessageHandlerBuilder>> HttpMessageHandlerBuilderActions { get; } = new List<Action<HttpMessageHandlerBuilder>>();
 
 
-        //
-        // 摘要:
-        //     Gets a list of operations used to configure an System.Net.Http.HttpClient.
+        /// <summary>
+        /// Gets a list of operations used to configure an System.Net.Http.HttpClient.
+        /// </summary>        
         public IList<Action<HttpClient>> HttpClientActions { get; } = new List<Action<HttpClient>>();
 
 

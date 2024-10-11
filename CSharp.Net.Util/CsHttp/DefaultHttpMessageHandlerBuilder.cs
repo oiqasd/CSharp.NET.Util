@@ -86,7 +86,7 @@ namespace CSharp.Net.Util.CsHttp
                 string message = "HttpMessageHandlerBuilder_PrimaryHandlerIsNull";
                 throw new InvalidOperationException(message);
             }
-            return HttpMessageHandlerBuilder.CreateHandlerPipeline(PrimaryHandler, AdditionalHandlers);
+            return CreateHandlerPipeline(PrimaryHandler, AdditionalHandlers);
         }
     }
 }

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -269,13 +268,13 @@ namespace CSharp.Net.Util
         /// 记录在程序根目录下
         /// </summary>
         /// <param name="str">日志内容</param> 
-        /// <param name="fileName">写入的文件,默认当前目录'logs/log.txt'下</param> 
+        /// <param name="fileName">写入的文件,默认当前目录'log.txt'下</param> 
         public static async Task WriteLog(string str, string fileName = null)
         {
             try
             {
-                var path = Path.Combine(AppDomainHelper.GetRunRoot, "logs");
-                string file = fileName ?? FileHelper.GetFilePath(path, "log.txt", true);
+                //var path = Path.Combine(AppDomainHelper.GetRunRoot, "logs");
+                string file = fileName ?? FileHelper.GetFilePath(AppDomainHelper.GetRunRoot, "log.txt");
                 await FileHelper.AppendWrittenFile(file, str);
             }
             catch (Exception ex)

@@ -1671,7 +1671,6 @@ namespace CSharp.Net.Cache
             return $"{_options.InstanceName}{key}";
         }
 
-
         /// <summary>
         /// 序列化对象
         /// </summary>
@@ -1732,10 +1731,10 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="redisKeys"></param>
         /// <returns></returns>
-        RedisKey[] ConvertRedisKeys(string[] redisKeys)
-        {
-            return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
-        }
+        //RedisKey[] ConvertRedisKeys(string[] redisKeys)
+        //{
+        //    return redisKeys.Select(redisKey => (RedisKey)redisKey).ToArray();
+        //}
 
         RedisKey[] ConvertRedisKeys(object[] redisKeys)
         {

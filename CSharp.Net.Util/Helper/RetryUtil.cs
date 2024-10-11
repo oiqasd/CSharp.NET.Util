@@ -89,7 +89,7 @@ namespace CSharp.Net.Util
                 {
                     return await action();
                 }
-                catch (Exception ex)
+                catch (Exception ex)// when(numRetries <= 0)
                 {
                     if (Debugger.IsAttached)
                         Console.WriteLine($"You can retry {numRetries} more times.");

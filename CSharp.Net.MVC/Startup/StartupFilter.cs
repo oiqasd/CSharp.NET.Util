@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
 
@@ -13,6 +14,20 @@ namespace CSharp.Net.Mvc
         {
             return app =>
             {
+                /**
+                app.UseExceptionHandler(errorApp =>
+                {
+                    errorApp.Run(async context =>
+                    {
+                        context.Response.StatusCode = 500; // Internal Server Error  
+                        var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+                        LogHelper.Error(exceptionHandlerPathFeature.Error, "Unhandled exception.");
+                        // Respond with error details or a generic message  
+                    });
+                });
+                */
+                app.UseMiddleware<ExceptionHandlingMiddleware>();
+
                 App.RootServices = app.ApplicationServices;
                 //app.UseStaticHttpContext();
                 app.EnableBuffering();
@@ -26,7 +41,7 @@ namespace CSharp.Net.Mvc
                     {
                         try
                         {
-                            await context.Request.EnableRewindAsync().ConfigureAwait(false); ;
+                            await context.Request.EnableRewindAsync().ConfigureAwait(false);
                             await next(context);
                         }
                         catch (Exception ex)
@@ -36,6 +51,7 @@ namespace CSharp.Net.Mvc
                     };
                 });
                 //app.Use(next => new RequestDelegate(async context =>{await next(context);}));
+                //app.Use(next => async (context) =>{await next(context);});
                 //app.Use(async (context, next) => { await next(); });
                 //没有释放会造成内存泄漏
                 //AutofacUtil.Container = app.ApplicationServices.GetAutofacRoot();
@@ -88,7 +104,7 @@ namespace CSharp.Net.Mvc
                      * Nginx重新加载配置 sudo nginx -s reload
                      */
                 }
-
+                //app.UseMiddleware<RawJsonMiddleware>();
                 app.Map("/health", (_map) =>
                 {
                     _map.Run(async (context) =>

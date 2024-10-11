@@ -45,11 +45,9 @@ namespace CSharp.Net.Util.CsHttp
 
         public HttpClient CreateClient(bool connectionClose = false, string name = null)
         {
-            name = name ?? string.Empty;
-            if (name == null)
-            {
-                throw new ArgumentNullException("name");
-            }
+            //name = name ?? string.Empty;
+            //if (name == null)
+            //    throw new ArgumentNullException("name");
 
             HttpMessageHandler handler = CreateHandler(name);
             HttpClient client = new HttpClient(handler, disposeHandler: false);
@@ -64,15 +62,16 @@ namespace CSharp.Net.Util.CsHttp
             //for (int i = 0; i < httpClientFactoryOptions.HttpClientActions.Count; i++)
             //{
             //    httpClientFactoryOptions.HttpClientActions[i](httpClient);
-            //} 
+            //}
             return client;
         }
 
         public HttpMessageHandler CreateHandler(string name)
         {
-            if (name == null)
-                throw new ArgumentNullException("name");
-            TokenBucket.Case(nameof(HttpClientUtil)).Wait();
+            //if (name == null)
+            //    throw new ArgumentNullException("name");
+            name = name ?? nameof(HttpClientUtil);
+            LimitHelper.Case(name).Wait();
             ActiveHandlerTrackingEntry value = _activeHandlers.GetOrAdd(name, _entryFactory).Value;
             StartHandlerEntryTimer(value);
             return value.Handler;

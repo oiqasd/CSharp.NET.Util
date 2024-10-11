@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 public static class ObjectExtension
@@ -133,6 +134,26 @@ public static class ObjectExtension
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
     }
+    public static decimal ToDecimal(this object obj, decimal defaultValue = 0M)
+    {
+        if (decimal.TryParse(obj.ToString(), out decimal r))
+            return r;
+        return ConvertHelper.ConvertTo(obj, defaultValue);
+    }
+    /// <summary>
+    /// 上限
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static int ToCeiling(this decimal value) =>
+          (int)Math.Ceiling(value);
+    /// <summary>
+    /// 下限
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public static int ToFloor(this decimal value) =>
+      (int)Math.Floor(value);
 
     /// <summary>
     /// 转成Long
@@ -179,7 +200,7 @@ public static class ObjectExtension
     /// <param name="bytes"></param>
     /// <param name="fileName"></param>
     /// <returns></returns>
-    public static void SaveToFile(this byte[] bytes, string fileName)
+    public static void ToFile(this byte[] bytes, string fileName)
     {
         using (FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate, FileAccess.Write))
         {
@@ -239,5 +260,46 @@ public static class ObjectExtension
         if (t.GetType().IsGenericTypeDefinition && typeof(List<>).IsAssignableFrom(t.GetType().GetGenericTypeDefinition()))
             return true;
         return false;
+    }
+
+    /*
+    /// <summary>
+    /// 浅拷贝
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public static object Clone(this object obj)
+    {
+        return obj.MemberwiseClone();
+    }
+    */
+    /// <summary>
+    /// 深拷贝
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public static T DeepClone<T>(this T obj)
+    {
+#pragma warning disable SYSLIB0011 // 类型或成员已过时
+        BinaryFormatter bf = new BinaryFormatter();
+        MemoryStream ms = new MemoryStream();
+        bf.Serialize(ms, obj);
+        ms.Seek(0, SeekOrigin.Begin);
+        return (T)bf.Deserialize(ms);
+
+#pragma warning restore SYSLIB0011 // 类型或成员已过时
+    }
+
+    public static T Clone<T>(T list)
+    {
+#pragma warning disable SYSLIB0011 // 类型或成员已过时 
+        BinaryFormatter bf = new BinaryFormatter();
+        using (MemoryStream ms = new MemoryStream())
+        {
+            bf.Serialize(ms, list);
+            ms.Seek(0, SeekOrigin.Begin);
+            var a = bf.Deserialize(ms);
+            return (T)a;
+        }
     }
 }

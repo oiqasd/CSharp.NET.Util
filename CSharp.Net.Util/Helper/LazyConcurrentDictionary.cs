@@ -29,6 +29,13 @@ namespace CSharp.Net.Util
 
             return lazyResult.Value;
         }
+        public bool Remove(TKey key)
+        {
+            if (concurrentDictionary != null && concurrentDictionary.Count > 0)
+                return concurrentDictionary.TryRemove(key, out var lazyResult);
+            return true;
+        }
+        public ConcurrentDictionary<TKey, Lazy<TValue>> GetDictionary() => concurrentDictionary;
     }
 
 

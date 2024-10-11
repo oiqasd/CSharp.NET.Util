@@ -632,5 +632,20 @@ namespace CSharp.Net.Util
                 return false;
             return true;
         }
+
+        public static long DaysToHours(long timePeriodDays) =>
+                timePeriodDays * 0x18L;
+        public static long DaysToMilliseconds(long timePeriodDays) =>
+                SecondsToMilliseconds(DaysToSeconds(timePeriodDays));
+        public static long DaysToSeconds(long timePeriodDays) =>
+                MinutesToSeconds(DaysToMinutes(timePeriodDays));
+        public static long DaysToMinutes(long timePeriodDays) =>
+                HoursToMinutes(DaysToHours(timePeriodDays));
+        public static long MinutesToSeconds(long timePeriodMinutes) =>
+                timePeriodMinutes * 60L;
+        public static long HoursToMinutes(long timePeriodHours) =>
+                timePeriodHours * 60;
+        public static long SecondsToMilliseconds(long timePeriodSeconds) =>
+                timePeriodSeconds * 0x3e8L;
     }
 }

@@ -60,9 +60,14 @@ namespace CSharp.Net.Util
             jsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             //格式化输出
             jsonSerializerOptions.WriteIndented = false;
-            //jsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Skip;//允许有注释
-            jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;//等同NullValueHandling.Ignore
-            //jsonSerializerOptions.AllowTrailingCommas = true;//允许多余逗号
+            //是否允许末尾多余逗号
+            jsonSerializerOptions.AllowTrailingCommas = false;
+            //忽略只读属性
+            jsonSerializerOptions.IgnoreReadOnlyProperties = false;
+            //忽略值为Null的属性,等同NullValueHandling.Ignore    
+            jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+            //是否允许有注释，Skip:允许
+            jsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Disallow;
             jsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);//不unicode转换,解决乱码问题
             jsonSerializerOptions.Converters.Add(new IsoDateTimeConverter());
@@ -347,7 +352,7 @@ namespace CSharp.Net.Util
         /// <param name="input"></param>
         /// <returns></returns>
         public static bool IsJson(string input)
-        { 
+        {
             try
             {
 #if NET5_0_OR_GREATER

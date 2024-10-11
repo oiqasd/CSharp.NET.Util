@@ -15,7 +15,6 @@ namespace CSharp.Net.Util.CsHttp
 
         public string Name { get; }
 
-
         public ExpiredHandlerTrackingEntry(ActiveHandlerTrackingEntry other)
         {
             Name = other.Name;

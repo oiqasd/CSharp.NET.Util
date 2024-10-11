@@ -17,7 +17,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 打印请求失败控制台日志
         /// </summary>
-        public bool PrintRequestErrorConsoleLog { get; set; } = false;
+        public bool OutputErrorInConsole { get; set; } = false;
         /// <summary>
         /// 异常处理模式
         /// </summary>
@@ -52,7 +52,7 @@ namespace CSharp.Net.Util
             HttpClientSetting setting = new HttpClientSetting();
             configure.Invoke(setting);
 
-            PrintRequestErrorConsoleLog = setting.PrintRequestErrorConsoleLog;
+            OutputErrorInConsole = setting.OutputErrorInConsole;
             ThrowExceptionMode = setting.ThrowExceptionMode;
             LogLevel = setting.LogLevel;
         }
@@ -60,7 +60,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 打印请求失败控制台日志
         /// </summary>
-        static bool PrintRequestErrorConsoleLog = false;
+        static bool OutputErrorInConsole = false;
         /// <summary>
         /// 异常处理模式
         /// </summary>
@@ -222,7 +222,9 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
+                OutputErrorLog(ex, url);
+                if (IfThrow(throwEx))
+                    throw;
             }
             return result;
         }
@@ -300,7 +302,9 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
+                OutputErrorLog(ex, url);
+                if (IfThrow(throwEx))
+                    throw;
             }
 
             return result;
@@ -327,9 +331,8 @@ namespace CSharp.Net.Util
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> PostAsync(string url, string dataStr,
-            HttpContentType httpContentType = HttpContentType.JSON, Dictionary<string, string> headers = null,
-            string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
+        public static async Task<string> PostAsync(string url, string dataStr, HttpContentType httpContentType = HttpContentType.JSON,
+            Dictionary<string, string> headers = null, string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
         {
             string result = string.Empty;
             try
@@ -367,7 +370,10 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                DoPrintRequestErrorConsoleLog(ex, url, throwEx);
+                OutputErrorLog(ex, url);
+                if (IfThrow(throwEx))
+                    throw;
+                //ExceptionDispatchInfo.Capture(ex).Throw();
             }
 
             return result;
@@ -495,17 +501,10 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                string msg = ex.Message;
-                if (ex.GetType() == typeof(TaskCanceledException))
-                    ex = new TimeoutException();
-
-                if (PrintRequestErrorConsoleLog)
-                    Console.WriteLine(DateTime.Now.ToString(1) + ex.Message + url);
-
-                LogHelper.Fatal("HttpClientUtil", msg + " " + url, ex);
-
-                if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw;
-                if (ThrowExceptionMode == ThrowExceptionMode.Always) throw;
+                //if (ex.GetType() == typeof(TaskCanceledException))
+                //    ex = new TimeoutException();
+                OutputErrorLog(ex, url);               
+                if (IfThrow(throwEx)) throw;
                 return null;
             }
         }
@@ -559,22 +558,23 @@ namespace CSharp.Net.Util
                 headers.ForEach(x => httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
         }
 
+        private static bool IfThrow(bool throwEx)
+        {
+            return throwEx ||
+                   ThrowExceptionMode == ThrowExceptionMode.Always ||
+                   (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx);
+        }
         /// <summary>
         /// 打印日志
         /// </summary>
         /// <param name="ex"></param>
         /// <param name="url"></param>
-        /// <param name="throwEx"></param>
-        private static void DoPrintRequestErrorConsoleLog(Exception ex, string url, bool throwEx)
+        private static void OutputErrorLog(Exception ex, string url)
         {
             string msg = DateTime.Now.ToString(1) + ex.Message + url;
-            if (PrintRequestErrorConsoleLog)
+            if (OutputErrorInConsole)
                 Console.WriteLine(msg);
-
-            LogHelper.Fatal($"[{nameof(HttpClientUtil)}]", url, ex);
-
-            if (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx) throw ex;
-            if (ThrowExceptionMode == ThrowExceptionMode.Always) throw ex;
+            LogHelper.Fatal($"[{nameof(HttpClientUtil)}]", ex.Message + url);
         }
 
         private static void PrintRequestLog(string method, string url, out string trackId, object data = null)
