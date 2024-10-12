@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
@@ -183,9 +181,9 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="file"></param>
         /// <param name="contents"></param>
-        /// <param name="encoding">default:utf-8</param>
+        /// <param name="encoding">null:Encoding.Default</param>
         //[MethodImpl(MethodImplOptions.Synchronized)]
-        public static async Task AppendWrittenFile(string file, string contents, string encoding = "utf-8")
+        public static async Task AppendWrittenFile(string file, string contents, string encoding = null)
         {
             /* await Task.Run(() =>{
                  var key = fileLocks.GetOrAdd(file, _ => new LockInfo());
@@ -205,20 +203,20 @@ namespace CSharp.Net.Util
                          }
                          catch (Exception ex){
                              Console.WriteLine("[WriteLog]."+ ex.GetExcetionMessage());
+                            //Trace.Fail("[WriteLog]:", contents);
                          }
                      }
                  }
              });*/
 
-            bool l = false; var key = fileLocks.GetOrAdd(file.GetHashCode(), _ => new LockInfo());
+            bool l = false; var obj = LockObject.GetForLock(file);
             try
             {
-                Monitor.Enter(key, ref l);
-                key.LastAccessTime = DateTime.UtcNow;
-                using (FileStream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
+                Monitor.Enter(obj, ref l);
+                using (FileStream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
                 {
                     //using (StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
-                    using (StreamWriter sw = new StreamWriter(stream, Encoding.GetEncoding(encoding)))
+                    using (StreamWriter sw = new StreamWriter(stream, encoding == null ? Encoding.Default : Encoding.GetEncoding(encoding)))
                     {
                         sw.BaseStream.Seek(0, SeekOrigin.End);
                         await sw.WriteLineAsync(contents);
@@ -227,21 +225,20 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[WriteLog]." + ex.GetExcetionMessage());
+                Console.WriteLine("[WriteLog] error" + ex.GetExcetionMessage());
             }
             finally
             {
                 try
                 {
                     if (l)
-                        Monitor.Exit(key);
+                        Monitor.Exit(obj);
                     else
-                        Console.WriteLine("[WriteLog]." + " lock failed.");
-                    //Trace.Fail("[WriteLog]:", contents);
+                        Console.WriteLine("[WriteLog] lock failed.");
                 }
                 catch (Exception sex)
                 {
-                    Console.WriteLine("[WriteLog].sex:" + sex.GetExcetionMessage());
+                    Console.WriteLine("[WriteLog] unlock error:" + sex.GetExcetionMessage());
                 }
             }
         }
@@ -266,7 +263,7 @@ namespace CSharp.Net.Util
             }
             catch (NotSupportedException) { }
             fileName = Path.Combine(filePath, fileName);
-            var key = fileLocks.GetOrAdd(fileName.GetHashCode(), _ => new LockInfo());
+            var key = LockObject.GetForLock(fileName);
             lock (key)
             {
                 key.LastAccessTime = DateTime.UtcNow;
@@ -482,34 +479,5 @@ namespace CSharp.Net.Util
         }
 #endif
 
-        private static readonly Timer cleanupTimer;
-        private static readonly TimeSpan cleanupInterval = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan lockExpiryTime = TimeSpan.FromSeconds(3);
-        private static readonly LazyConcurrentDictionary<int, LockInfo> fileLocks = new LazyConcurrentDictionary<int, LockInfo>();
-
-        static FileHelper()
-        {
-            cleanupTimer = new Timer(CleanupExpiredLocks, null, cleanupInterval, cleanupInterval);
-        }
-        private static void CleanupExpiredLocks(object state)
-        {
-            foreach (var obj in fileLocks.GetDictionary())
-            {
-                if ((DateTime.UtcNow - obj.Value.Value.LastAccessTime) > lockExpiryTime)
-                {
-                    fileLocks.Remove(obj.Key);
-                }
-            }
-        }
-        public class LockInfo
-        {
-            public object Lock { get; }
-            public DateTime LastAccessTime { get; set; }
-            public LockInfo()
-            {
-                Lock = new object();
-                LastAccessTime = DateTime.UtcNow;
-            }
-        }
     }
 }
