@@ -7,12 +7,10 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 钉钉消息
     /// https://open.dingtalk.com/document/robots/custom-robot-access
+    /// https://open.dingtalk.com/document/orgapp/custom-bot-send-message-type
     /// </summary>
     public class DingTalkerRobotUtil
     {
-        //SEC5e578626f78045dfb80b102ba5d55f509468c97b046e978544341fd9253ff43b
-        //https://oapi.dingtalk.com/robot/send?access_token=a8b91a8f2a8c5c6d890977f8129022d2480cb10532d6d17cdd7cf36b471e106a
-
         /// <summary>
         /// 发送文本消息
         /// </summary>
@@ -35,7 +33,7 @@ namespace CSharp.Net.Util
             if (message.IsNullOrEmpty() || token.IsNullOrEmpty() || secret.IsNullOrEmpty())
                 throw new ArgumentNullException("message,token,secret can't null");
 
-            long timestamp = DateTimeHelper.GetTimeStampLong();
+            long timestamp = DateTimeHelper.GetTimeStamp();
             string sigdata = $"{timestamp}\n{secret}";
             string sign = HMAC.HmacSHA256_Base64(sigdata, secret);
 
@@ -48,7 +46,7 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
-        /// 发送markdown消息
+        /// 发送markdown消息，移动端不支持表格显示
         /// </summary>
         /// <param name="title"></param>
         /// <param name="message"></param>
@@ -59,7 +57,7 @@ namespace CSharp.Net.Util
             => await SendMarkDownMsg(title, message, token, secret, null);
 
         /// <summary>
-        /// 发送markdown消息
+        /// 发送markdown消息,移动端不支持表格显示
         /// </summary>
         /// <param name="title"></param>
         /// <param name="message"></param>
@@ -72,7 +70,7 @@ namespace CSharp.Net.Util
             if (message.IsNullOrEmpty() || token.IsNullOrEmpty() || secret.IsNullOrEmpty())
                 throw new ArgumentNullException("message,token,secret can't null");
 
-            long timestamp = DateTimeHelper.GetTimeStampLong();
+            long timestamp = DateTimeHelper.GetTimeStamp();
             string sigdata = $"{timestamp}\n{secret}";
             string sign = HMAC.HmacSHA256_Base64(sigdata, secret);
 

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0</TargetFrameworks>
 		<PackageId>CSharp.Net.Util</PackageId>
@@ -7,12 +6,12 @@
 		<Authors>Util</Authors>
 		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
 		<Version>7.2.5</Version>
-		<Copyright></Copyright>
+		<Copyright>©</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<!--<FileVersion>2.2.1.0</FileVersion>-->
-		<AssemblyVersion>7.2.5</AssemblyVersion>
+		<AssemblyVersion>7.2.7.1</AssemblyVersion>
 		<Deterministic>False</Deterministic>
 		<!--<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>-->
@@ -58,6 +57,7 @@
 
 	<ItemGroup>
 		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
+		<Compile Remove="LogHelper\ZeroCopyLogSystem.cs" />
 	</ItemGroup>
 
 	<!-- 在 .NET Framework 4.0 目标框架下需要引用的项目 -->
@@ -75,7 +75,7 @@
 	</ItemGroup>	-->
 	<!-- 在 .NET Standard 2.0 目标框架下需要引用的项目 -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' Or '$(TargetFramework)' == 'net5.0'">
-		<PackageReference Include="System.Text.Json" Version="7.0.3" />
+		<PackageReference Include="System.Text.Json" Version="9.0.0" />
 	</ItemGroup>
 
 	<!--

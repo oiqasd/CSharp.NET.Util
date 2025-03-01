@@ -58,7 +58,7 @@ public class PrivacyHandle : ActionFilterAttribute
         if (expiredSeconds > 0)
         {
             var expiredField = _configuration["ApiSign:CheckExpired:ExpiredField"] ?? "timestamp";
-            long times = requestData.GetValueCvt(expiredField, 0L);
+            long times = requestData.GetValueM(expiredField, 0L);
             if (times <= 0)
                 times = ConvertHelper.ConvertTo(parmObjProp.FirstOrDefault(q => q.Name.ToLower() == expiredField)?.GetValue(parmObj), 0L);
             var clientTime = DateTimeHelper.GetDateTimeFromTimeStamp(times);

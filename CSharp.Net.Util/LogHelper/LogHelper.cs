@@ -16,6 +16,11 @@ namespace CSharp.Net.Util
     {
         public static string Appid { get; set; }
         public static string Log_Level { get; set; }
+        //static Logger _logger;
+        static LogHelper()
+        {
+           // _logger = new Logger(Path.Combine(AppDomainHelper.GetRunRoot, "logs"));
+        }
 
         /// <summary>
         /// 记录调试日志
@@ -246,7 +251,7 @@ namespace CSharp.Net.Util
                 return;
             try
             {
-                StringBuilder msg = new StringBuilder((log.LoggerTime ?? DateTime.Now).ToString(1))
+                StringBuilder msg = new StringBuilder((log.LoggerTime ?? DateTime.Now).ToString(3))
                       .Append(log.EventId.IsNullOrEmpty() ? " " : "[EventId]:" + log.EventId + " ")
                       .Append(log.Title.IsNullOrEmpty() ? null : log.Title + " ")
                       .AppendLine(log.Message.IsNullOrEmpty() ? null : log.Message);
@@ -263,7 +268,7 @@ namespace CSharp.Net.Util
                     Path.Combine(AppDomainHelper.GetRunRoot, "logs",
                          log.LoggerName.IsNullOrEmpty() ? log.Level.GetDescription().ToLower() : log.LoggerName),
                          (log.LoggerTime ?? DateTime.Now).ToString(2) + ".log");
-
+                //await _logger.LogAsync(msg.ToString());
                 await FileHelper.AppendWrittenFile(path, msg.ToString());
             }
             catch (Exception ex)
@@ -334,6 +339,10 @@ namespace CSharp.Net.Util
             // LogClient.Instance.ClearTraceId();
         }
 
+        public static void LogCompleted()
+        {
+            //_logger.Dispose();
+        }
         public static LogLevel ConvertLogLevel(LogLevel level)
         {
             switch (level)

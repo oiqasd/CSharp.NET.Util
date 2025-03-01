@@ -38,7 +38,6 @@ namespace CSharp.Net.Util.Json
                     if (DateTime.TryParseExact(value, f, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out d))
                         return d;
 
-
                 if ((options.NumberHandling & JsonNumberHandling.AllowReadingFromString) > 0)
                 {
                     return DateTimeHelper.GetDateTimeFromTimeStamp(value);

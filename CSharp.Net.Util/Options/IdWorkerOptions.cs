@@ -12,7 +12,7 @@ namespace CSharp.Net.Util
 
         /// <summary>
         /// 机器码字节数
-        /// <para>默认:8</para>
+        /// <para>默认:8,最大偏移64</para>
         /// </summary>
         public virtual int WorkerIdBits { get; set; } = 8;
 
@@ -31,8 +31,15 @@ namespace CSharp.Net.Util
 
         /// <summary>
         /// 一毫秒内可以产生计数，如果达到该值则等到下一毫秒再进行生成
-        /// 默认: -1L ^ -1L <![CDATA[<<]]> SequenceBits ,(1023)
+        /// 默认:-1L ^ -1L <![CDATA[<<]]> SequenceBits ,(1023) 
         /// </summary>
-        public virtual long SequenceMask { get; set; }
+        public virtual long SequenceMax { get; set; }
+        public virtual WorkerType WorkerType { get; set; } = WorkerType.Millisecond;
+    }
+
+    public enum WorkerType
+    {
+        Second,
+        Millisecond
     }
 }

@@ -50,7 +50,7 @@ namespace CSharp.Net.Mvc.FileSv
                 return BadRequest("File name must be provided.");
 
             var filePath = Path.Combine(AppDomainHelper.GetRunRoot, fileName);
-            if (!FileHelper.CheckFileExists(filePath))
+            if (!FileHelper.IsFileExists(filePath))
                 return NotFound("File not found.");
 
             var fileBytes = System.IO.File.ReadAllBytes(filePath);

@@ -33,7 +33,7 @@ public static class DictionaryExtension
     /// <param name="key"></param>
     /// <param name="targetDefaultValue"></param>
     /// <returns> default value</returns>
-    public static TTarget GetValueCvt<TSource, TTarget>(this IDictionary<string, TSource> sd, string key, TTarget targetDefaultValue = default)
+    public static TTarget GetValueM<TSource, TTarget>(this IDictionary<string, TSource> sd, string key, TTarget targetDefaultValue = default)
     {
         if (sd == null || !sd.ContainsKey(key)) return targetDefaultValue;
         var retValue = ConvertHelper.ConvertTo(sd[key], targetDefaultValue);

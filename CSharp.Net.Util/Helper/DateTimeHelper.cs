@@ -57,7 +57,7 @@ namespace CSharp.Net.Util
         /// 时间戳最大秒数
         /// 9999/12/31 23:59:59
         /// </summary>
-        public static readonly long MaxUnixSeconds = 253402300799;
+        public static readonly long MaxUnixSeconds = 0x3afff4417fL; //253402300799;
 
         /// <summary>
         /// 默认时区转换
@@ -469,26 +469,40 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="time">默认当前时间</param>
         /// <returns>在2038年将会溢出</returns>
+        [Obsolete]
         public static int GetTimeStampInt(DateTime? time = null)
         {
             if (time == null)
                 return (int)DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             DateTimeOffset localtime = DateTime.SpecifyKind(time.Value, DateTimeKind.Local);
             return (int)localtime.ToUnixTimeSeconds();
+            //System.DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(new System.DateTime(1970, 1, 1));
             //return (int)(time.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
         }
 
         /// <summary>
-        /// DateTime时间格式转换为Unix时间戳格式,毫秒级
+        /// DateTime时间格式转换为Unix时间戳格式
         /// </summary>
         /// <param name="time">默认当前时间</param>
-        /// <returns></returns>
-        public static long GetTimeStampLong(DateTime? time = null)
+        /// <param name="milliseconds">默认true:毫秒，fasle:秒</param>
+        /// <returns>时间戳</returns>
+        public static long GetTimeStamp(DateTime? time = null, bool milliseconds = true)
         {
-            if (time == null)
-                time = DateTime.Now;
-            //System.DateTime startTime = TimeZoneInfo.ConvertTimeToUtc(new System.DateTime(1970, 1, 1));
-            return (long)(time.Value.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+            DateTimeOffset localtime;
+            if (time.HasValue)
+                localtime = DateTime.SpecifyKind(time.Value, DateTimeKind.Local);
+            else
+                localtime = DateTimeOffset.UtcNow;
+
+            if (milliseconds)
+                return localtime.ToUnixTimeMilliseconds();
+
+            return localtime.ToUnixTimeSeconds();
+        }
+
+        public static long GetTodayTimeStamp()
+        {
+            return GetTimeStamp(DateTime.Today);
         }
 
         /// <summary>
@@ -496,9 +510,9 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static bool IsNull(System.DateTime time)
+        public static bool IsNull(DateTime time)
         {
-            if (time == DateTime.MinValue || time == default(DateTime))
+            if (time == DateTime.MinValue || time == default)
                 return true;
             if (time == BaseDateTime)
                 return true;
@@ -622,16 +636,16 @@ namespace CSharp.Net.Util
         }
         /// <summary>
         /// 检查时间戳是否过期
-        /// 默认检查3s
+        /// 默认检查30s
         /// </summary>
         /// <returns></returns>
-        public static bool CheckTimeStamp(long timeStamp, int intervalSeconds = 3000)
+        public static bool CheckTimeStamp(long timeStamp, int intervalSeconds = 30)
         {
-            long nowTimeStamp = GetTimeStampInt();
-            if (Math.Abs(nowTimeStamp - timeStamp) > intervalSeconds)
+            long nowTimeStamp = GetTimeStamp();
+            if (Math.Abs(nowTimeStamp - timeStamp) > intervalSeconds * 1000)
                 return false;
             return true;
-        }
+        } 
 
         public static long DaysToHours(long timePeriodDays) =>
                 timePeriodDays * 0x18L;

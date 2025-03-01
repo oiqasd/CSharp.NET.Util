@@ -111,6 +111,10 @@ namespace CSharp.Net.Util
             {
                 return (int)Convert.ToDecimal(obj);
             }
+            else if (obj.ToString().Contains(".") && (underlyingType ?? type).Equals(typeof(long)))
+            {
+                return (long)Convert.ToDecimal(obj);
+            }
             else if (typeof(IConvertible).IsAssignableFrom(underlyingType ?? type))
             {
                 try

@@ -3,106 +3,12 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Text.Json.Nodes;
 
 /// <summary>
 /// StringExtension
 /// </summary>
 public static class StringExtension
 {
-    /// <summary>
-    /// 时间格式转换
-    /// <param name="time"></param>
-    /// <param name="formatType">
-    /// 1:yyyy-MM-dd HH:mm:ss 
-    /// 2:yyyy-MM-dd 
-    /// 3:yyyy-MM-dd HH:mm:ss.ffff
-    /// 4:yyyyMMddHHmmss
-    /// 5:yyyyMMddHHmmssffff
-    /// 6.yyyy年MM月dd日
-    /// 7.yyyy年MM月dd日HH时mm分ss秒
-    /// 8.yyyyMMdd
-    /// 9.yyyy-MM-dd HH:mm
-    /// 10.HH:mm:ss
-    /// 11.HH:mm
-    /// other return 1.
-    /// </param>
-    /// <param name="defaultvalue"></param>
-    /// <returns></returns>
-    /// </summary>
-    public static string ToString(this DateTime time, int formatType, string defaultvalue = "")
-    {
-        string dateStr = defaultvalue;
-        if (time == default(DateTime))
-            return dateStr;
-        if (time == DateTimeHelper.BaseDateTime)
-            return dateStr;
-        switch (formatType)
-        {
-            case 1:
-                dateStr = time.ToString("yyyy-MM-dd HH:mm:ss");
-                break;
-            case 2:
-                dateStr = time.ToString("yyyy-MM-dd");
-                break;
-            case 3:
-                dateStr = time.ToString("yyyy-MM-dd HH:mm:ss.ffff");
-                break;
-            case 4:
-                dateStr = time.ToString("yyyyMMddHHmmss");
-                break;
-            case 5:
-                dateStr = time.ToString("yyyyMMddHHmmssffff");
-                break;
-            case 6:
-                dateStr = time.ToString("yyyy年MM月dd日");
-                break;
-            case 7:
-                dateStr = time.ToString("yyyy年MM月dd日HH时mm分ss秒");
-                break;
-            case 8:
-                dateStr = time.ToString("yyyyMMdd");
-                break;
-            case 9:
-                dateStr = time.ToString("yyyy-MM-dd HH:mm");
-                break;
-            case 10:
-                dateStr = time.ToString("HH:mm:ss");
-                break;
-            case 11:
-                dateStr = time.ToString("HH:mm");
-                break;
-            default:
-                dateStr = time.ToString("yyyy-MM-dd HH:mm:ss");
-                break;
-        }
-        return dateStr;
-    }
-
-    /// <summary>
-    /// 时间格式转换
-    /// <param name="time"></param>
-    /// <param name="formatType">
-    /// 1:yyyy-MM-dd HH:mm:ss 
-    /// 2:yyyy-MM-dd 
-    /// 3:yyyy-MM-dd HH:mm:ss.ffff
-    /// 4:yyyyMMddHHmmss
-    /// 5:yyyyMMddHHmmssffff
-    /// 6.yyyy年MM月dd日
-    /// 7.yyyy年MM月dd日HH时mm分ss秒
-    /// 8.yyyyMMdd
-    /// 9.yyyy-MM-dd HH:mm
-    /// </param>
-    /// <param name="defaultvalue"></param>
-    /// <returns></returns>
-    /// </summary>
-    public static string ToString(this DateTime? time, int formatType, string defaultvalue = "")
-    {
-        if (time == null)
-            return defaultvalue;
-        return ((DateTime)time).ToString(formatType, defaultvalue);
-    }
-
     /// <summary>
     /// 字符串转换
     /// <param name="obj"></param>
@@ -378,4 +284,50 @@ public static class StringExtension
     /// <returns></returns>  
     public static T GetProperty<T>(this string obj, string key)
        => ConvertHelper.ConvertTo<T>(JsonHelper.GetFieldValue(obj, key));
+
+    /// <summary>
+    /// 右边加长度
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="length"></param>
+    /// <param name="paddingChar"></param>
+    /// <returns></returns>
+    public static string PadRFixed(this string value, int length = 0, char paddingChar = ' ')
+    {
+        if (length <= 0) return value;
+        if (value == null)
+            value = "";
+        int currentWidth = 0;
+        foreach (char c in value)
+        {
+            currentWidth += (c > 0xFF) ? 2 : 1; // 全角为2，半角为1
+        }
+        int paddingLength = length - currentWidth;
+        if (paddingLength <= 0) return value;
+        return value + new string(paddingChar, paddingLength);
+        //value.PadRight(length);
+    }
+
+    /// <summary>
+    /// 左边加长度
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="length"></param>
+    /// <param name="paddingChar"></param>
+    /// <returns></returns>
+    public static string PadLFixed(this string value, int length = 0, char paddingChar = ' ')
+    {
+        if (length <= 0) return value;
+        if (value == null)
+            value = "";
+        int currentWidth = 0;
+        foreach (char c in value)
+        {
+            currentWidth += (c > 0xFF) ? 2 : 1; // 全角为2，半角为1
+        }
+        int paddingLength = length - currentWidth;
+        if (paddingLength <= 0) return value;
+        return new string(paddingChar, paddingLength) + value;
+        //value.PadRight(length);
+    }
 }

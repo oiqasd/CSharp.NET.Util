@@ -293,10 +293,6 @@ namespace CSharp.Net.Cache
         Task<Dictionary<string, T>> HashGetAllAsync<T>(string key);
         #endregion
 
-        #region Sort
-
-        #endregion
-
         #region SortedSet
         /// <summary>
         /// 添加
@@ -304,26 +300,30 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="score"></param>
-        bool SortedSetAdd<T>(string key, T value, double score);
+        Task<bool> SortedSetAdd<T>(string key, T value, double score);
         /// <summary>
         /// 删除
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        bool SortedSetRemove<T>(string key, T value);
+        Task<bool> SortedSetRemove<T>(string key, T value);
         /// <summary>
-        /// 获取全部
+        /// Get SortedSet
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
+        /// <param name="start"></param>
+        /// <param name="stop"></param>
+        /// <param name="sortAsc"></param>
         /// <returns></returns>
-        List<T> SortedSetRangeByRank<T>(string key);
+        Task<List<T>> SortedSetRangeByRank<T>(string key, long start = 0, long stop = -1, bool sortAsc = true);
 
         /// <summary>
         /// 获取集合中的数量
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        long SortedSetLength(string key);
+        Task<long> SortedSetLength(string key);
         #endregion
 
         #region key

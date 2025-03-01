@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,7 +58,7 @@ namespace CSharp.Net.Util
         {
             if (string.IsNullOrWhiteSpace(fullName))
                 return;
-            if (CheckFileExists(fullName))
+            if (IsFileExists(fullName))
             {
                 if (conver) File.Delete(fullName);
                 else return;
@@ -72,7 +71,7 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="fullName"></param>
         /// <returns></returns>
-        public static bool CheckFileExists(string fullName)
+        public static bool IsFileExists(string fullName)
         {
             if (File.Exists(fullName))
             {
@@ -115,7 +114,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static string ReadFileText(string file, string encoding = "utf-8")
         {
-            if (!CheckFileExists(file))
+            if (!IsFileExists(file))
             {
                 return string.Empty;
             }
@@ -148,7 +147,7 @@ namespace CSharp.Net.Util
         public static IEnumerable<string> ReadAllLines(string file, string encoding = "utf-8")
 #endif
         {
-            if (!CheckFileExists(file))
+            if (!IsFileExists(file))
                 yield break;
 
             using (StreamReader reader = new StreamReader(file, Encoding.GetEncoding(encoding)))
@@ -441,43 +440,6 @@ namespace CSharp.Net.Util
                 }
             }
         }
-
-#if NET
-        /// <summary>
-        /// 操作共享内存
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="data"></param>
-        /// <param name="bSize">bytes,default:1024</param>
-        [SupportedOSPlatform("windows")]
-        public static async void WriteSharedMemory(string name, string data, int bSize = 1024)
-        {
-            using (MemoryMappedFile mmf = MemoryMappedFile.CreateOrOpen(name, bSize))
-            {
-                using (var stream = mmf.CreateViewStream())
-                {
-                    await stream.WriteAsync(Encoding.UTF8.GetBytes(data));
-                }
-            }
-        }
-
-        /// <summary>
-        /// 读取共享内存
-        /// </summary>
-        /// <param name="name"></param>
-        [SupportedOSPlatform("windows")]
-        public static string ReadSharedMemory(string name)
-        {
-            using (MemoryMappedFile mmf = MemoryMappedFile.OpenExisting(name))
-            {
-                using (var stream = mmf.CreateViewStream())
-                {
-                    BinaryReader reader = new BinaryReader(stream);
-                    return reader.ReadString();
-                }
-            }
-        }
-#endif
 
     }
 }

@@ -1,13 +1,12 @@
-﻿using System;
+﻿using CSharp.Net.Util;
+using Microsoft.Extensions.Caching.Memory;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using CSharp.Net.Util;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 
 namespace CSharp.Net.Cache.Memory
 {

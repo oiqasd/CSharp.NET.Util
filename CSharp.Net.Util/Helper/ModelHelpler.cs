@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -658,6 +659,72 @@ namespace CSharp.Net.Util
                 return dic;
             }
             throw new AppException(input.GetType().Name + "is not support");
+        }
+
+        /// <summary>
+        /// list转Markdown
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="input"></param>
+        /// <returns>Markdown 格式</returns>
+        public static string ToMarkdown<T>(List<T> input) where T : new()
+        {
+            if (input == null) return default;
+            StringBuilder sb = new StringBuilder("\n|");
+            Type tType = typeof(T);
+            PropertyInfo[] sourceProperties = tType.GetProperties();
+            string col = " \n |";
+            foreach (PropertyInfo propertyInfo in sourceProperties)
+            {
+                var bute = propertyInfo.GetCustomAttribute(typeof(DescriptionAttribute)) as DescriptionAttribute;
+                sb.Append(bute?.Description ?? propertyInfo.Name).Append("|");
+                col += "-|";
+            }
+            sb.Append(col);
+
+            foreach (var item in input)
+            {
+                sb.Append("\n |");
+                foreach (PropertyInfo propertyInfo in sourceProperties)
+                {
+                    sb.Append(propertyInfo.GetValue(item, null)).Append("|");
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// dataTable转Markdown
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns>Markdown 格式</returns>
+        public static string ToMarkdown(DataTable dt)
+        {
+            if (!dt.IsNotEmpty() || dt.Columns.Count < 1) return default;
+            StringBuilder sbTitle = new StringBuilder("\n|");
+            StringBuilder sbRow = new StringBuilder();
+            string sps = " \n |";
+
+            foreach (DataColumn col in dt.Columns)
+            {
+                sbTitle.Append(col.ColumnName).Append("|");
+                sps += "-|";
+            }
+
+            foreach (DataRow dr in dt.Rows)
+            {
+                sbRow.Append("\n|");
+                for (int i = 0; i < dr.Table.Columns.Count; i++)
+                {
+                    var columnValue = dr[i];
+                    if (columnValue != DBNull.Value)
+                    {
+                        sbRow.Append(columnValue.ToString());
+                    }
+                    sbRow.Append('|'); 
+                } 
+            }
+            return sbTitle.Append(sps).Append(sbRow).ToString();
         }
     }
 }

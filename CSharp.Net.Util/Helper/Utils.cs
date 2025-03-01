@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -129,17 +130,17 @@ namespace CSharp.Net.Util
 
         /// <summary>
         /// 生成短链接key
-        /// 0.03%的概率会重复
         /// </summary>
         /// <param name="data"></param>
         /// <returns>4段任选一段，区分大小写</returns>
-        [Obsolete]
-        public static string[] ShortKey(string data)
+        public static string[] ShortKeys(string data = null)
         {
             //自定义生成MD5加密字符传前的混合KEY
-            string key = "yvdh";
+            if (data.IsNullOrEmpty())
+                data = Guid.NewGuid().ToString();
+            string key = "yvdh" + data;
             //对传入数据进行MD5加密
-            string hex = MD5.Md5Encrypt(key + data);
+            string hex = MD5.Md5Encrypt(key);
             string[] resShortData = new string[4];
             for (int i = 0; i < 4; i++)
             {
@@ -160,6 +161,17 @@ namespace CSharp.Net.Util
             }
             return resShortData;
         }
+        /// <summary>
+        /// 返回6位随机字串
+        /// 基于 <see cref="ShortKeys"/> 算法
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns>0.01%的概率会重复</returns>
+        public static string ShortKey(string data = null)
+        {
+            var arr = Utils.ShortKeys(data);
+            return arr[0].Substring(0, 3) + arr[1].Substring(1, 3);
+        }
 
         /// <summary>
         /// 生成一个不重复的短字符串
@@ -167,7 +179,7 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static string ShortCode(DateTime? baseTime = null)
         {
-            long code = Utils.CreateWorkId(baseTime ?? DateTime.Parse("2024/07/01"));
+            long code = Utils.CreateWorkId(baseTime ?? DateTime.Parse("2024/01/01"));
             return NumberUtil.DecimalToBinary(code, 62);
         }
 
@@ -299,7 +311,7 @@ namespace CSharp.Net.Util
 #if NET6_0_OR_GREATER
             Random random = Random.Shared;
 #else
-            Random random = new Random(DateTimeHelper.GetTimeStampInt());
+            Random random = new Random(Guid.NewGuid().GetHashCode());
 #endif
             double money = random.NextDouble() * remainMoney / remainSize * 2;
             money = Math.Floor(money);
@@ -318,6 +330,31 @@ namespace CSharp.Net.Util
             action();
             stopwatch.Stop();
             return stopwatch.ElapsedMilliseconds;
+        }
+
+
+        public static bool IsPortAvailable(int port)
+        {
+            TcpListener tcpListener = null;
+            try
+            {
+                tcpListener = new TcpListener(System.Net.IPAddress.Any, port);
+                tcpListener.Start();
+                tcpListener.Stop();
+                return true;
+            }
+            catch (SocketException)
+            {
+                return false;
+            }
+            finally
+            {
+#if NET8_0_OR_GREATER
+            tcpListener?.Dispose();
+#endif
+                if (tcpListener != null)
+                    tcpListener = null;
+            }
         }
     }
 }

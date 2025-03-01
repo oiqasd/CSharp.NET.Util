@@ -125,7 +125,9 @@ namespace CSharp.Net.Util
                          //var socketsHttpHandler = new SocketsHttpHandler()
                          //{
                          //    ConnectTimeout = TimeSpan.FromSeconds(20),
-                         //    PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+                         //    PooledConnectionLifetime = TimeSpan.FromMinutes(5),//限制连接的生命周期,默认无限,缓解DNS解析问题
+                         //    PooledConnectionIdleTimeout = TimeSpan.FromMinutes(5),//空闲连接在连接池中的存活时间,<=NET5默认2min, >NET6 1min
+                         //    MaxConnectionsPerServer = 200,//每个目标服务节点能建立的最大连接数 默认int.MaxValue
                          //};
                          //var httpClient = new HttpClient(socketsHttpHandler)
                          //{
@@ -413,21 +415,19 @@ namespace CSharp.Net.Util
         /// http get
         /// </summary>
         /// <param name="url"></param>
-        /// <param name="timeOutSecond"></param>
+        /// <param name="timeoutSeconds"></param>
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, int timeOutSecond, bool throwEx = true, bool connectionClose = false) => await GetAsync(url, null, timeOutSecond, throwEx, connectionClose);
+        public static async Task<string> GetAsync(string url, int timeoutSeconds, bool throwEx = true, bool connectionClose = false) => await GetAsync(url, null, timeoutSeconds, throwEx, connectionClose);
 
 
-        static async Task<string> PostAsync(string url, HttpContent httpContent, string trackId, Dictionary<string, string> headers = null, int timeOutSecond = -1, bool connectionClose = false)
+        static async Task<string> PostAsync(string url, HttpContent httpContent, string trackId, Dictionary<string, string> headers = null, int timeoutSeconds = -1, bool connectionClose = false)
         {
             var v = ValueStopwatch.StartNew();
             string result = null;
-            var _httpClient = _csHttpFactory.CreateClient(connectionClose);
+            var _httpClient = _csHttpFactory.CreateClient(timeoutSeconds, connectionClose);
 
-            if (timeOutSecond > 0)
-                _httpClient.Timeout = TimeSpan.FromSeconds(timeOutSecond);
             SetHeader(_httpClient, headers);
             using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))
             {
@@ -447,11 +447,11 @@ namespace CSharp.Net.Util
         /// <param name="url"></param>
         /// <param name="pramstr"></param>
         /// <param name="headers"></param>
-        /// <param name="timeOutSecond">default 5 second</param>
+        /// <param name="timeoutSeconds">default 5 second</param>
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeOutSecond = 5, bool throwEx = true, bool connectionClose = false)
+        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeoutSeconds = 5, bool throwEx = true, bool connectionClose = false)
         {
             string result = string.Empty;
 
@@ -470,20 +470,18 @@ namespace CSharp.Net.Util
                 //cts.CancelAfter(timeOutSecond * 1000);
 
                 var v = ValueStopwatch.StartNew();
-                var _httpClient = _csHttpFactory.CreateClient(connectionClose);
-
-                if (timeOutSecond > 0)
-                    _httpClient.Timeout = TimeSpan.FromSeconds(timeOutSecond);
-                SetHeader(_httpClient, headers);
-                using (var response = await _httpClient.GetAsync(url))//,cts.Token
+                using (var _httpClient = _csHttpFactory.CreateClient(timeoutSeconds, connectionClose))
                 {
-                    if (v.GetElapsedTime().TotalSeconds > 1)
-                        LogHelper.Debug("[HttpGet]", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url, eventId: trackId);
+                    SetHeader(_httpClient, headers);
+                    using (var response = await _httpClient.GetAsync(url))//,cts.Token
+                    {
+                        if (v.GetElapsedTime().TotalSeconds > 1)
+                            LogHelper.Debug("[HttpGet]", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url, eventId: trackId);
 
-                    response.EnsureSuccessStatusCode();
-                    result = await response.Content.ReadAsStringAsync();
+                        response.EnsureSuccessStatusCode();
+                        result = await response.Content.ReadAsStringAsync();
+                    }
                 }
-
                 PrintResponseLog(trackId, result);
                 return result;
             };
@@ -503,22 +501,24 @@ namespace CSharp.Net.Util
             {
                 //if (ex.GetType() == typeof(TaskCanceledException))
                 //    ex = new TimeoutException();
-                OutputErrorLog(ex, url);               
+                OutputErrorLog(ex, url);
                 if (IfThrow(throwEx)) throw;
                 return null;
             }
         }
 
         /// <summary>
-        /// 发送数据
+        /// 
         /// </summary>
         /// <param name="url"></param>
         /// <param name="httpMethod"></param>
         /// <param name="content"></param>
+        /// <param name="timeout">秒 默认不超时</param>
+        /// <param name="headers">请求头</param>
+        /// <param name="connectionClose">是否短链接</param>
         /// <returns></returns>
-        public static async Task<HttpResponseDto> SendAsync(string url, HttpMethod httpMethod, HttpContent content = null, bool connectionClose = false)
+        public static async Task<HttpResponseDto> SendAsync(string url, HttpMethod httpMethod, HttpContent content = null, int timeout = -1, Dictionary<string, string> headers = null, bool connectionClose = false)
         {
-            PrintRequestLog("send", url, out string trackId);
             HttpResponseDto ret = new HttpResponseDto();
             var request = new HttpRequestMessage(httpMethod, url);
             //request.Content = new FormUrlEncodedContent(kv);
@@ -526,21 +526,32 @@ namespace CSharp.Net.Util
             //_httpClient.Timeout = TimeSpan.FromSeconds(3);
             if (content != null)
                 request.Content = content;
-            var _httpClient = _csHttpFactory.CreateClient(connectionClose);
-            var response = await _httpClient.SendAsync(request);
-            if (response.IsSuccessStatusCode)
+            var _httpClient = _csHttpFactory.CreateClient(timeout, connectionClose);
+            SetHeader(_httpClient, headers);
+
+            PrintRequestLog(httpMethod.ToString(), url, out string trackId);
+            var v = ValueStopwatch.StartNew();
+            using (var response = await _httpClient.SendAsync(request))
             {
-                var res = await response.Content.ReadAsStringAsync();
-                ret.Data = res;
-                ret.Success = true;
-                PrintResponseLog(trackId, res);
+                if (response.IsSuccessStatusCode)
+                {
+                    var res = await response.Content.ReadAsStringAsync();
+                    ret.Data = res;
+                    ret.Success = true;
+                    PrintResponseLog(trackId, res);
+                }
+                else
+                {
+                    ret.Success = false;
+                    PrintResponseLog(trackId, response.StatusCode.ToString());
+                }
+                ret.StatusCode = response.StatusCode.ToString();
             }
-            else
-            {
-                ret.Success = false;
-                PrintResponseLog(trackId, response.StatusCode.ToString());
-            }
-            ret.StatusCode = response.StatusCode.ToString();
+            request.Dispose();
+
+            if (v.GetElapsedTime().TotalSeconds > 1)
+                LogHelper.Debug("[SendAsync]", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url, eventId: trackId);
+
             return ret;
         }
 
@@ -575,20 +586,22 @@ namespace CSharp.Net.Util
             if (OutputErrorInConsole)
                 Console.WriteLine(msg);
             LogHelper.Fatal($"[{nameof(HttpClientUtil)}]", ex.Message + url);
+            if (ex is TaskCanceledException)
+                ex = new AppTimeoutException("响应超时");
         }
 
         private static void PrintRequestLog(string method, string url, out string trackId, object data = null)
         {
             trackId = string.Empty;
-            if (LogLevel == LogLevel.None || LogLevel >= LogLevel.Info) return;
+            if (LogLevel != LogLevel.Debug) return;
             trackId = Guid.NewGuid().ToString("N");
             LogHelper.Debug($"[{nameof(HttpClientUtil)}]", $" {trackId},{method},{url},Request Data:{JsonHelper.Serialize(data)}");
         }
 
         private static void PrintResponseLog(string trackId, string data)
         {
-            if (LogLevel == LogLevel.None || LogLevel >= LogLevel.Info) return;
-            LogHelper.Debug($"[{nameof(HttpClientUtil)}]", $" {trackId},Response Data:{data}");
+            if (LogLevel == LogLevel.Debug)
+                LogHelper.Debug($"[{nameof(HttpClientUtil)}]", $" {trackId},Response Data:{data}");
         }
     }
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 
@@ -43,17 +45,46 @@ namespace CSharp.Net.Util.CsHttp
             //ServicePointManager.DefaultConnectionLimit = 512;
         }
 
-        public HttpClient CreateClient(bool connectionClose = false, string name = null)
+        public HttpClient CreateClient(int timeout = -1, bool connectionClose = false, string name = null)
         {
             //name = name ?? string.Empty;
             //if (name == null)
             //    throw new ArgumentNullException("name");
+
+            /****
+              #if NET5_0_OR_GREATER
+                var handler = new SocketsHttpHandler
+                {
+                    ConnectCallback = async (context, cancellationToken) =>
+                    {
+                        Console.WriteLine($"Target Host: {context.DnsEndPoint.Host}");
+                        Console.WriteLine($"Target Port: {context.DnsEndPoint.Port}");
+                        var dnsEndPoint = context.DnsEndPoint;
+                        // 解析 DNS 并获取 IP 地址
+                        var addresses = await System.Net.Dns.GetHostAddressesAsync(dnsEndPoint.Host);
+                        Console.WriteLine($"Resolved IP: {string.Join(",", addresses.Select(a => a.ToString()))}");
+                        var endPoint = new IPEndPoint(addresses[0], context.DnsEndPoint.Port);
+                        Console.WriteLine($"Attempting to connect to: {endPoint}");
+                        // 连接到目标服务器
+                        var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                        //await socket.ConnectAsync(dnsEndPoint.Host, dnsEndPoint.Port);
+                        await socket.ConnectAsync(endPoint);
+                        Console.WriteLine($"Connected to: {endPoint}");
+                        return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+                    }
+                };
+              #else
+                 HttpMessageHandler handler = CreateHandler(name);
+              #endif
+            */
 
             HttpMessageHandler handler = CreateHandler(name);
             HttpClient client = new HttpClient(handler, disposeHandler: false);
             //client.DefaultRequestHeaders.Clear();
             if (connectionClose)
                 client.DefaultRequestHeaders.ConnectionClose = connectionClose;
+            if (timeout > 0)
+                client.Timeout = TimeSpan.FromSeconds(timeout);
             //client.DefaultRequestHeaders.Connection.Add("keep-alive");
             //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             //client.DefaultRequestHeaders.Add("ContentType", "application/json");
@@ -128,7 +159,10 @@ namespace CSharp.Net.Util.CsHttp
             _expiredHandlers.Enqueue(item);
             StartCleanupTimer();
         }
-
+        /// <summary>
+        /// 跟踪缓存过期时间
+        /// </summary>
+        /// <param name="entry"></param>
         internal void StartHandlerEntryTimer(ActiveHandlerTrackingEntry entry)
         {
             entry.StartExpiryTimer(_expiryCallback);
@@ -168,10 +202,11 @@ namespace CSharp.Net.Util.CsHttp
                 for (int i = 0; i < count; i++)
                 {
                     _expiredHandlers.TryDequeue(out ExpiredHandlerTrackingEntry result);
-                    if (result.CanDispose)
+                    if (result.CanDispose)//对象已经被gc
                     {
                         try
                         {
+                            //清理非托管资源
                             result.InnerHandler.Dispose();
                             //result.Scope?.Dispose();
                             //LogHelper.Debug("CsHttpClientFactory", "HttpMessageHandler is Disposed.");
@@ -187,7 +222,7 @@ namespace CSharp.Net.Util.CsHttp
                         _expiredHandlers.Enqueue(result);
                     }
                 }
-                if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                if (DateTime.Now.DayOfWeek == DayOfWeek.Wednesday)
                     LogHelper.Debug("CsHttpClientFactory", $"CleanupCycleBefore:{count},End:" + _expiredHandlers.Count);
             }
             finally

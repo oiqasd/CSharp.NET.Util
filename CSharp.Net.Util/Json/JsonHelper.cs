@@ -3,13 +3,10 @@ using CSharp.Net.Util.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace CSharp.Net.Util
 {
@@ -65,7 +62,7 @@ namespace CSharp.Net.Util
             //忽略只读属性
             jsonSerializerOptions.IgnoreReadOnlyProperties = false;
             //忽略值为Null的属性,等同NullValueHandling.Ignore    
-            jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
+            jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             //是否允许有注释，Skip:允许
             jsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Disallow;
             jsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;

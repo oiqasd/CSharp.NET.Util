@@ -130,12 +130,14 @@ public static class ObjectExtension
     /// <returns></returns>
     public static int ToInt(this object obj, int defaultValue = 0)
     {
+        if (obj == null) return defaultValue;
         if (int.TryParse(obj.ToString(), out int r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
     }
     public static decimal ToDecimal(this object obj, decimal defaultValue = 0M)
     {
+        if (obj == null) return defaultValue;
         if (decimal.TryParse(obj.ToString(), out decimal r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
@@ -163,6 +165,7 @@ public static class ObjectExtension
     /// <returns></returns>
     public static long ToLong(this object obj, long defaultValue = 0)
     {
+        if (obj == null) return defaultValue;
         if (long.TryParse(obj.ToString(), out long r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
@@ -176,6 +179,7 @@ public static class ObjectExtension
     /// <returns></returns>
     public static bool ToBoolean(this object obj, bool defaultValue = false)
     {
+        if (obj == null) return defaultValue;
         if (bool.TryParse(obj.ToString(), out bool r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
@@ -189,6 +193,7 @@ public static class ObjectExtension
     /// <returns></returns>
     public static DateTime ToDateTime(this object obj, DateTime defaultValue = default)
     {
+        if (obj == null) return defaultValue;
         if (DateTime.TryParse(obj.ToString(), out DateTime r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
@@ -207,7 +212,7 @@ public static class ObjectExtension
             fs.Write(bytes, 0, bytes.Length);
         }
     }
-
+    /*
     /// <summary>
     /// 比较是否位与后是否相等
     /// </summary>
@@ -216,7 +221,7 @@ public static class ObjectExtension
     /// <returns>true:包含</returns>
     public static bool BitEqual(this int value, byte index)
     => Operators.BitEqual((uint)value, index);
-
+    */
     /// <summary>
     /// 比较是否位与后是否相等
     /// </summary>
@@ -226,6 +231,7 @@ public static class ObjectExtension
     public static bool BitEqual(this int value, int index)
     => Operators.BitEqual((uint)value, (byte)index);
 
+    /*
     /// <summary>
     /// 计算位或后数值
     /// </summary>
@@ -236,7 +242,8 @@ public static class ObjectExtension
     {
         if (index > 31) throw new ArgumentException("pow must be less than 32.");
         return (int)Operators.BitsValue((uint)source, index);
-    }
+    }*/
+
     /// <summary>
     /// 计算位或后数值
     /// </summary>
