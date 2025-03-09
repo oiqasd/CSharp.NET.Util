@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -110,7 +109,7 @@ namespace CSharp.Net.Util
                     string formAddress = epoint.Address.ToString();
                     int port = epoint.Port;
 
-                    var data = await ReceiveSocketData(handler);                    
+                    var data = await ReceivePacket(handler);
                     // break;
                     //var eom = "<|EOM|>";
                     //if (response.IndexOf(eom) > -1 /* is end of message */)
@@ -175,16 +174,55 @@ namespace CSharp.Net.Util
 
             handler.Send(sendData);
         }
+        /// <summary>
+        /// 协议包：消息头+长度+数据
+        /// </summary>
+        /// <param name="socket"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        async Task<byte[]> ReceivePacket(Socket socket)
+        {
+            if (socket == null) return null;
+
+            // 先读取4字节的消息头
+            var headerBuffer = new byte[4];
+            int received = await socket.ReceiveAsync(new ArraySegment<byte>(headerBuffer), SocketFlags.None);
+            string header = Encoding.UTF8.GetString(headerBuffer);
+            if (received < 4 || header != "MSG_")
+                throw new SocketPacketException("数据头错误," + received);
+
+            var lengthBuffer = new byte[4];
+            received = await socket.ReceiveAsync(new ArraySegment<byte>(lengthBuffer), SocketFlags.None);
+            if (received < 4)
+                throw new SocketPacketException("数据长度接收错误," + received);
+
+            int dataLength = BitConverter.ToInt32(lengthBuffer, 0);
+            byte[] buffer = new byte[dataLength];
+            int totalReceived = 0;
+
+            while (totalReceived < dataLength)
+            {
+                int toReceive = Math.Min(buffer.Length, dataLength - totalReceived);
+                received = await socket.ReceiveAsync(new ArraySegment<byte>(buffer, totalReceived, toReceive), SocketFlags.None);
+                if (received == 0)
+                    throw new SocketPacketException("连接已断开，数据未接收完整");
+
+                totalReceived += received;
+            }
+            return buffer;
+
+        }
 
         /// <summary>
         /// 接收消息
+        /// 直接接收数据
         /// </summary>
         /// <param name="socket"></param>
         /// <returns></returns>
         async Task<byte[]> ReceiveSocketData(Socket socket)
         {
             if (socket == null) return null;
-            var buffer = new byte[1_024]; //每次接收1KB的数据
+            var buffer = new byte[1_024 * 1024 * 1024]; //每次接收10MB的数据
             int received = 0;
             using (var ms = new MemoryStream())
             {

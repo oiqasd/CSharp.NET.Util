@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,7 +13,6 @@ namespace CSharp.Net.Util
 {
     public class SocketClient : IDisposable
     {
-        //TcpClient client = null;
         Socket client = null;
         CancellationTokenSource cts = new CancellationTokenSource();
         public event EventHandler<SocketEventArgs> OnReceive;
@@ -42,61 +42,78 @@ namespace CSharp.Net.Util
                 return false;
             }
         }
-        //public TcpClient ConnectIP(string ip, int port)
-        //{
-        //    if (client != null)
-        //        throw new Exception("Client is created");
-        //    client = new TcpClient();
-        //    client.Client.Connect(IPAddress.Parse(ip), port);
-        //    return client;
-        //}
 
-
+        /// <summary>
+        /// 直接发送消息
+        /// </summary>
+        /// <param name="message"></param>
         public void Send(string message)
         {
             var messageBytes = Encoding.UTF8.GetBytes(message);
-            var count = client.Send(messageBytes, SocketFlags.None);
-            Console.WriteLine($"{DateTime.Now.ToString(1)} 发送了{count}个字节，应发送{messageBytes.Length}个，{message}");
+            SendBytes(messageBytes);
         }
+        /// <summary>
+        /// 直接发送消息
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <exception cref="Exception"></exception>
         public void SendBytes(byte[] bytes)
         {
-            var count = client.Send(bytes, SocketFlags.None);
-            Console.WriteLine($"{DateTime.Now.ToString(1)} 发送了{count}个字节，应发送{bytes.Length}个");
+            int totalSent = 0;
+            while (totalSent < bytes.Length)
+            {
+                int sent = client.Send(bytes, totalSent, bytes.Length - totalSent, SocketFlags.None);
+                if (sent == 0) throw new Exception("发送失败，连接可能已断开");
+                totalSent += sent;
+            }
+            //var count = client.Send(bytes, SocketFlags.None);
+            Console.WriteLine($"{DateTime.Now.ToString(1)} 发送了{totalSent}个字节，应发送{bytes.Length}个");
+        }
+        /// <summary>
+        /// 消息头 + 长度 + 数据
+        /// </summary>
+        /// <param name="data"></param>
+        public async Task SendPacket(string data) => await SendPacket(Encoding.UTF8.GetBytes(data));
+
+        /// <summary>
+        /// 消息头 + 长度 + 数据
+        /// </summary>
+        /// <param name="data"></param>
+        public async Task SendPacket(byte[] data)
+        {
+            byte[] header = Encoding.UTF8.GetBytes("MSG_"); // 4字节的消息头
+            byte[] lengthBytes = BitConverter.GetBytes(data.Length); // 4字节的数据长度
+
+            //发送 头部 + 长度 + 数据
+            await client.SendAsync(new ArraySegment<byte>(header), SocketFlags.None);
+            await client.SendAsync(new ArraySegment<byte>(lengthBytes), SocketFlags.None);
+            await client.SendAsync(new ArraySegment<byte>(data), SocketFlags.None);
         }
 
         public string Receive()
         {
             var buffer = new byte[1_024];
-            var received = client.Receive(buffer, SocketFlags.None);
-            var message = Encoding.UTF8.GetString(buffer, 0, received);
-            return message;
-        }
-
-        public async Task StartReceivingAsync(Action<string> onMessageReceived)
-        {
-            await Task.Run(() =>
+            int received = 0;
+            using (var ms = new MemoryStream())
             {
-                var buffer = new byte[1_024];
-                while (!cts.Token.IsCancellationRequested)
+                do
                 {
-                    try
+                    received = client.Receive(buffer, SocketFlags.None);
+                    if (received > 0)
                     {
-                        var received = client.Receive(buffer, SocketFlags.None);
-                        if (received > 0)
-                        {
-                            var message = Encoding.UTF8.GetString(buffer, 0, received);
-                            onMessageReceived?.Invoke(message);
-                        }
+                        ms.Write(buffer, 0, received);
                     }
-                    catch (SocketException ex)
-                    {
-                        // Handle socket exception
-                        Console.WriteLine($"Socket exception: {ex.Message}");
-                        break;
-                    }
-                }
-            }, cts.Token);
+                } while (received == buffer.Length);
+
+                var totalReceived = ms.ToArray();
+                var message = Encoding.UTF8.GetString(totalReceived, 0, received);
+                return message;
+            }
+            //var received = client.Receive(buffer, SocketFlags.None);
+            //var message = Encoding.UTF8.GetString(buffer, 0, received);
+            //return message;
         }
+         
         public void StopReceiving()
         {
             cts.Cancel();
