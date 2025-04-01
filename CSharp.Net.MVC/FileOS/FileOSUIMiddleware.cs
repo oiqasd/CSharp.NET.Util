@@ -14,19 +14,19 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace CSharp.Net.Mvc.FileSv
+namespace CSharp.Net.Mvc.FileOS
 {
-    public class FileSvUIMiddleware
+    public class FileOSUIMiddleware
     {
         private readonly RequestDelegate _next;
         private const string EmbeddedFileNamespace = "";
-        private readonly FilesvUIOptions _options;
+        private readonly FileOSOptions _options;
         //private readonly StaticFileMiddleware _staticFileMiddleware;
 
-        public FileSvUIMiddleware(RequestDelegate next, FilesvUIOptions options)
+        public FileOSUIMiddleware(RequestDelegate next, FileOSOptions options)
         {
             _next = next;
-            _options = options ?? new FilesvUIOptions();
+            _options = options ?? new FileOSOptions();
         }
 
         //public FileSvUIMiddleware(RequestDelegate next, IWebHostEnvironment hostingEnv, ILoggerFactory loggerFactory, FilesvUIOptions options)
@@ -71,12 +71,12 @@ namespace CSharp.Net.Mvc.FileSv
         }
 
 
-        private StaticFileMiddleware CreateStaticFileMiddleware(RequestDelegate next, IWebHostEnvironment hostingEnv, ILoggerFactory loggerFactory, FilesvUIOptions options)
+        private StaticFileMiddleware CreateStaticFileMiddleware(RequestDelegate next, IWebHostEnvironment hostingEnv, ILoggerFactory loggerFactory, FileOSOptions options)
         {
             StaticFileOptions options2 = new StaticFileOptions
             {
                 RequestPath = (string.IsNullOrEmpty(options.RoutePrefix) ? string.Empty : ("/" + options.RoutePrefix)),
-                FileProvider = new EmbeddedFileProvider(typeof(FileSvUIMiddleware).GetTypeInfo().Assembly, EmbeddedFileNamespace)
+                FileProvider = new EmbeddedFileProvider(typeof(FileOSUIMiddleware).GetTypeInfo().Assembly, EmbeddedFileNamespace)
             };
             return new StaticFileMiddleware(next, hostingEnv, Options.Create(options2), loggerFactory);
         }

@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Mvc.FileSv
 {
-    [Route("fileSv/[action]")]
-    public class FileSvController : BaseController
+    [Route("fileOS/[action]")]
+    public class FileOSController : BaseController
     {
-        public FileSvController()
+        public FileOSController()
         {
 
         }

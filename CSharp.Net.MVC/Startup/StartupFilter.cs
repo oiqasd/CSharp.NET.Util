@@ -57,8 +57,8 @@ namespace CSharp.Net.Mvc
                 //AutofacUtil.Container = app.ApplicationServices.GetAutofacRoot();
                 app.UseStaticFiles();
                 app.UseRouting();
-                if (App.Configuration["CMVC:FileSv"].ToBoolean())
-                    app.UseFileSvUI();
+                if (App.Configuration["CMVC:FileOS"].ToBoolean())
+                    app.UseFileOSUI();
                 if (App.Configuration["CMVC:ApiDoc"].ToBoolean())
                     app.UseApiDocument(virPath: App.Configuration["CMVC:VirPath"]);
 

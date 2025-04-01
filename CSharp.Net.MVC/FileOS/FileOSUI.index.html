@@ -28,7 +28,7 @@
     </style>
 </head>
 <body onload="load();">
-    <!--<form action="/fileSv/upload" method="post" enctype="multipart/form-data">-->
+    <!--<form action="/fileOS/upload" method="post" enctype="multipart/form-data">-->
 
     <div class="part">
         <input type="file" id="fileUpload" multiple />
@@ -55,7 +55,7 @@
                 }
                 $.ajax({
                     type: "GET",
-                    url: "/fileSv/Download",
+                    url: "/fileOS/Download",
                     responseType: 'blob',
                     data: { fileName: fileName },
                     success: function (data) {
@@ -93,7 +93,7 @@
 
                 $.ajax({
                     type: "POST",
-                    url: "/fileSv/upload",
+                    url: "/fileOS/upload",
                     contentType: false,
                     processData: false,
                     data: data,
@@ -110,7 +110,7 @@
         function load() {
             $.ajax({
                 type: "GET",
-                url: "/fileSv/fileList",
+                url: "/fileOS/fileList",
                 success: function (data) {
                     $('#fl').text(data.data);
                 },

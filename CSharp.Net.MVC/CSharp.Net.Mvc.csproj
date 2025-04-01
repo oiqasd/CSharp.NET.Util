@@ -18,11 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="FileSv\FileSvUI.index.html" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EmbeddedResource Include="FileSv\FileSvUI.index.html">
+	  <EmbeddedResource Include="FileOS\FileOSUI.index.html">
 	  </EmbeddedResource>
 	</ItemGroup>
 

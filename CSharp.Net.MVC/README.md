@@ -15,7 +15,7 @@
 - 通过`ForcePrivacy`特性配置接口强制启用加密
 - 用`AllowAnonymous`和`IngorePrivacy`忽略加密，优先级低于`ForcePrivacy`
 - 用`SignField`字段特性，配置加密规则的字段，支持多层级
-- `Appsetting.cofing`添加配置
+- `appsettings.json`添加配置
 ```
     "ApiSign": {
       "IgnoreMethod": "GET",         //忽略验证请求，多个用,隔开
@@ -30,13 +30,14 @@
 ```
 9、如要自建DI可参考`AppControllerActivator`
 
-- 组件全局配置,`Appsetting.cofing`添加如下
+- 组件全局配置,`appsettings.json`添加如下
 ```
   "CMVC": {
-    "ApiDoc": true,     //启动接口文档
-    "VirPath": "",      //二级地址
-    "AuthKey": "xxx",   //组件加密访问模块的key
-    "AuthValue": "xxx"  //组件加密访问模块的value
+    "ApiDoc": true,      //启动接口文档
+    "VirPath": "",       //二级地址
+    "AuthKey": "xxx",    //组件加密访问模块的key
+    "AuthValue": "xxx",  //组件加密访问模块的value
+    "FileOS":false,      //是否开启内置文件上传下载器
   },
 ```
 
@@ -55,9 +56,10 @@
     }
 ```
 
+
 ### 已有但未纳入的模块
-- 缓存组件，需项目单独引入`CSharp.Net.Cache`，默认可选支持`redis、memorycache`
-- 接口用户用户登录状态管理
+- 缓存组件，需项目单独引入`CSharp.Net.Cache`，可选支持`Redis、Memorycache`
+- 接口用户登录状态管理
 - 并发请求处理
 - 接口请求参数校验和返回参数的初始化处理
 - 接口性能记录

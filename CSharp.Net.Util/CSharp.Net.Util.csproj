@@ -17,7 +17,7 @@
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>-->
 		<PackageTags>.NET;Util;Utility,Tools</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 	<!--<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
