@@ -257,6 +257,20 @@ public static class ObjectExtension
     }
 
     /// <summary>
+    /// 判断值是否在范围内
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="min">最小值</param>
+    /// <param name="max">最大值</param>
+    /// <returns>true:区间内,else false.</returns>
+    public static bool CheckRange(this int value, int min, int max)
+    {
+        if (value < min || value > max)
+            return false;
+        return true;
+    }
+
+    /// <summary>
     /// 判断泛型是否List
     /// </summary>
     /// <typeparam name="T">必须是泛型</typeparam>
@@ -297,7 +311,7 @@ public static class ObjectExtension
 #pragma warning restore SYSLIB0011 // 类型或成员已过时
     }
 
-    public static T Clone<T>(T list)
+    public static T Clone<T>(this T list)
     {
 #pragma warning disable SYSLIB0011 // 类型或成员已过时 
         BinaryFormatter bf = new BinaryFormatter();

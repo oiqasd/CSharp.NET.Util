@@ -529,7 +529,7 @@ namespace CSharp.Net.Util
             foreach (var sourceProperty in sourceProperties)
             {
                 PropertyInfo targetProperty = targetType.GetProperty(sourceProperty.Name);
-                if (targetProperty.CanWrite)
+                if (targetProperty != null && targetProperty.CanWrite)
                 {
                     targetProperty.SetValue(target, sourceProperty.GetValue(source));
                 }
@@ -553,7 +553,7 @@ namespace CSharp.Net.Util
             foreach (var sourceProperty in sourceProperties)
             {
                 PropertyInfo targetProperty = targetType.GetProperty(sourceProperty.Name);
-                if (targetProperty.CanWrite)
+                if (targetProperty != null && targetProperty.CanWrite)
                 {
                     targetProperty.SetValue(target, sourceProperty.GetValue(source));
                 }
@@ -628,7 +628,7 @@ namespace CSharp.Net.Util
                 foreach (var property in sourceProperties)
                 {
                     PropertyInfo targetProperty = targetType.GetProperty(property.Name);
-                    if (targetProperty.CanWrite)
+                    if (targetProperty != null && targetProperty.CanWrite)
                     {
                         targetProperty.SetValue(targetItem, property.GetValue(sourceItem, null), null);
                     }
@@ -721,8 +721,8 @@ namespace CSharp.Net.Util
                     {
                         sbRow.Append(columnValue.ToString());
                     }
-                    sbRow.Append('|'); 
-                } 
+                    sbRow.Append('|');
+                }
             }
             return sbTitle.Append(sps).Append(sbRow).ToString();
         }
