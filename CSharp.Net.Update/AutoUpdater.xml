@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<apps>
+	<app id="AES(程序名)">
+		<version>版本</version>
+		<start-app>AES(App.exe)</start-app>
+		<min-version>最低兼容版本，低于则强更</min-version>
+		<package-url>AES(https://update-server/updates.zip)</package-url>
+		<package-type>zip</package-type>
+		<update-time></update-time>
+	</app>
+</apps>
