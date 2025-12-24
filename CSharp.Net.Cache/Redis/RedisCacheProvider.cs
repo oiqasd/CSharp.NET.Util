@@ -952,7 +952,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.SetAdd(key, ConvertRedisValue(value));
+                var data = db.SetAdd(key, ConvertRedisValue(value.ToArray()));
                 if (timeSpan.HasValue)
                     db.KeyExpire(key, timeSpan);
                 return data > 0;
@@ -981,6 +981,7 @@ namespace CSharp.Net.Cache
             return Do(redis =>
             {
                 var values = redis.SetMembers(key);
+                //return JsonHelper.DeserializeList<T>(values.ToString());
                 return ConvetList<T>(values);
             });
         }
@@ -1851,7 +1852,11 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T"></typeparam>
         /// <param name="redisValues"></param> 
         /// <returns></returns>  
-        RedisValue[] ConvertRedisValue<T>(params T[] redisValues) => redisValues.Select(o => (RedisValue)Serialize(o)).ToArray();
+        RedisValue[] ConvertRedisValue<T>(params T[] redisValues)
+        {
+            var l = redisValues.Select(o => (RedisValue)Serialize(o)).ToArray();
+            return l;
+        }
 
         /// <summary>
         /// key集合转RedisKey集合
