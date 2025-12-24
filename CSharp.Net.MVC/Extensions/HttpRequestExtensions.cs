@@ -135,7 +135,7 @@ public static class HttpRequestExtensions
     {
         if (request != null && request.Headers != null)
         {
-            request.Headers["DateTimeF"] = DateTimeHelper.GetTimeStamp(DateTime.Now).ToString();
+            request.Headers["DateTimeF"] = DateTimeHelper.GetTimestamp(DateTime.Now).ToString();
             request.Headers["GUID"] = Guid.NewGuid().ToString("N");
         }
     }

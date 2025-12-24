@@ -48,7 +48,7 @@ public static class SwaggerMiddleware
     /// <param name="virPath"></param>
     static void InjectDocServer(SwaggerOptions option, string title, string virPath)
     {
-        option.SerializeAsV2 = false;
+        //option.SerializeAsV2 = false;
         option.PreSerializeFilters.Add((s, r) =>
         {
             var servers = new List<OpenApiServer> {

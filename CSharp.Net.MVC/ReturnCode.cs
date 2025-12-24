@@ -5,6 +5,7 @@ namespace CSharp.Net.Mvc
     public enum ReturnCode
     {
         OK = 0,
+
         #region http code
         /// <summary>
         /// Get成功，无错误

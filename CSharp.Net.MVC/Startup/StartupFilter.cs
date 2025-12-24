@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 namespace CSharp.Net.Mvc
@@ -146,6 +147,22 @@ namespace CSharp.Net.Mvc
 
                 //app.UseMiddleware<AuthHelper>();
 
+                //处理System.Text.Json无法接收换行符的非标Json
+                app.Use(async (context, next) =>
+                {
+                    context.Request.EnableBuffering();
+                    using var reader = new StreamReader(context.Request.Body, leaveOpen: true);
+                    var raw = await reader.ReadToEndAsync();
+                    context.Request.Body.Position = 0;
+
+                    if (raw.Contains('\n'))
+                    {
+                        var fixedJson = raw.Replace("\r", "\\r").Replace("\n", "\\n");
+                        var bytes = Encoding.UTF8.GetBytes(fixedJson);
+                        context.Request.Body = new MemoryStream(bytes);
+                    }
+                    await next();
+                });
                 // 配置全局路由
                 app.UseMvc(route =>
                 {
