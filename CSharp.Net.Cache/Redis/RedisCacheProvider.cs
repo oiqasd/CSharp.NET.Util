@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -42,7 +41,7 @@ namespace CSharp.Net.Cache
         /// <param name="func">async()=>{}</param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) //where T : new()
+        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan expiry) //where T : new()
         {
             var value = StringGet<T>(key);
             if (value != null)
@@ -53,13 +52,12 @@ namespace CSharp.Net.Cache
             {
                 value = StringGet<T>(key);
                 if (value != null)
-                {
                     return value;
-                }
+
                 value = func().Result;
                 if (value != null)
                 {
-                    StringSet(key, value, expiry.HasValue ? (int)expiry.Value.TotalSeconds : 0);
+                    StringSet(key, value, (int)expiry.TotalSeconds);
                 }
             }
             return value;
@@ -72,17 +70,38 @@ namespace CSharp.Net.Cache
         /// <param name="func"></param>
         /// <param name="seconds"></param>
         /// <returns></returns>
+        public T GetOrSet<T>(string key, Func<Task<T>> func, int seconds = 0)
+        {
+            if (_db.KeyExists(PrefixKey(key)))
+                return StringGet<T>(key);
+
+            lock (_lockObj)
+            {
+                var data = func().Result;
+                StringSet(key, data, seconds);
+                return data;
+            }
+        }
+
+        /// <summary>
+        /// 获取或添加key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="func"></param>
+        /// <param name="seconds"></param>
+        /// <returns></returns>
         public T GetOrSet<T>(string key, Func<T> func, int seconds = 0)
         {
-            if (_db.KeyExists(key))
+            if (_db.KeyExists(PrefixKey(key)))
                 return StringGet<T>(key);
 
             //if (LockTake("lck_" + key))
             lock (_lockObj)
             {
-                StringSet(key, func.Invoke(), seconds);
+                var data = func.Invoke();
+                StringSet(key, data, seconds);
+                return data;
             }
-            return func.Invoke();
         }
 
         /// <summary>
@@ -114,7 +133,7 @@ namespace CSharp.Net.Cache
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return Do(db => db.StringSetAsync(key, value, expiry).Result);
+            return Do(db => db.StringSet(key, value, expiry));
         }
 
         /// <summary>
@@ -149,9 +168,6 @@ namespace CSharp.Net.Cache
             if (keyValues == null || keyValues.Count <= 0)
                 throw new ArgumentNullException(nameof(keyValues));
 
-            if (cacheSeconds <= 0)
-                return StringSet(keyValues);
-
             /*
             List<KeyValuePair<RedisKey, RedisValue>> newkeyValues =
             keyValues.Select(p => new KeyValuePair<RedisKey, RedisValue>(PrefixKey(p.Key), p.Value)).ToList();
@@ -162,7 +178,7 @@ namespace CSharp.Net.Cache
             Parallel.ForEach(keyValues, str =>
             {
                 if (str.Value == null) return;
-                batch.StringSetAsync(str.Key, str.Value, cacheSeconds > 0 ? TimeSpan.FromSeconds(cacheSeconds) : TimeSpan.FromSeconds(-1));
+                batch.StringSetAsync(str.Key, str.Value, cacheSeconds > 0 ? TimeSpan.FromSeconds(cacheSeconds) : (TimeSpan?)null);
             });
             batch.Execute();
 
@@ -216,7 +232,7 @@ namespace CSharp.Net.Cache
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return Do(db => db.StringGetAsync(key).Result);
+            return Do(db => db.StringGet(key));
         }
 
         /// <summary>
@@ -232,9 +248,9 @@ namespace CSharp.Net.Cache
             var pkey = PrefixKey(key);
             var ret = Do(db =>
             {
-                double data = db.StringIncrementAsync(pkey, val).Result;
+                double data = db.StringIncrement(pkey, val);
                 if (expireTimeSpan != null && (updateExpire || data <= val))
-                    db.KeyExpireAsync(pkey, expireTimeSpan);
+                    db.KeyExpire(pkey, expireTimeSpan);
 
                 return data;
             });
@@ -256,9 +272,9 @@ namespace CSharp.Net.Cache
             var pkey = PrefixKey(key);
             var ret = Do(db =>
             {
-                var data = db.StringIncrementAsync(pkey, val).Result;
+                var data = db.StringIncrement(pkey, val);
                 if (expireTime.HasValue)
-                    db.KeyExpireAsync(pkey, expireTime.Value);
+                    db.KeyExpire(pkey, expireTime.Value);
                 return data;
             });
 
@@ -274,14 +290,114 @@ namespace CSharp.Net.Cache
         public double StringDecrement(string key, double val = 1)
         {
             key = PrefixKey(key);
-            return Do(db => db.StringDecrementAsync(key, val).Result);
+            return Do(db => db.StringDecrement(key, val));
         }
 
         #endregion 同步方法
 
         #region 异步方法
+        /// <summary>
+        /// 获取一个key的对象
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public async Task<T> StringGetAsync<T>(string key)
+        {
+            var data = await StringGetAsync(key);
+            return Deserialize<T>(data);
+        }
+
+        /// <summary>
+        /// 获取单个key的值
+        /// </summary>
+        /// <param name="key">Redis Key</param>
+        /// <returns></returns>
+        public async Task<string> StringGetAsync(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(nameof(key));
+
+            key = PrefixKey(key);
+            return await Do(db => db.StringGetAsync(key));
+        }
+
+        /// <summary>
+        /// 保存单个key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="cacheSeconds"></param>
+        public Task StringSetAsync(string key, string value, int cacheSeconds = 0)
+        {
+            TimeSpan? timeSpan = null;
+            if (cacheSeconds > 0)
+                timeSpan = TimeSpan.FromSeconds(cacheSeconds);
+
+            return StringSetAsync(key, value, timeSpan);
+        }
+
+        /// <summary>
+        /// 保存单个key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public Task StringSetAsync(string key, string value, TimeSpan? expiry)
+        {
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentNullException(nameof(key));
+
+            key = PrefixKey(key);
+            return Do(db => db.StringSetAsync(key, value, expiry));
+        }
+
+        /// <summary>
+        /// 保存一个对象
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="obj"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        public Task StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new()
+        => StringSetAsync(key, Serialize(obj), expiry);
 
 
+        /// <summary>
+        /// 递增
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <param name="val">value</param>
+        /// <param name="expireTimeSpan">过期时间</param>
+        /// <param name="updateExpire">是否更新过期时间,滑动过期</param>
+        /// <returns></returns>
+        public Task<double> StringIncrementAsync(string key, double val = 1, TimeSpan? expireTimeSpan = null, bool updateExpire = false)
+        {
+            var pkey = PrefixKey(key);
+            var ret = Do(db =>
+            {
+                var data = db.StringIncrementAsync(pkey, val);
+                if (expireTimeSpan != null && updateExpire)
+                    db.KeyExpireAsync(pkey, expireTimeSpan);
+                return data;
+            });
+            return ret;
+        }
+
+        /// <summary>
+        /// 递减
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="val"></param>
+        /// <returns></returns>
+        public Task<double> StringDecrementAsync(string key, double val = 1)
+        {
+            key = PrefixKey(key);
+            return Do(db => db.StringDecrementAsync(key, val));
+        }
         #endregion 异步方法
 
         #endregion String
@@ -298,7 +414,7 @@ namespace CSharp.Net.Cache
         public void ListRemove<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListRemoveAsync(key, Serialize(value)).Result);
+            Do(db => db.ListRemove(key, Serialize(value)));
         }
 
         /// <summary>
@@ -311,7 +427,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var values = redis.ListRangeAsync(key).Result;
+                var values = redis.ListRange(key);
                 return ConvetList<T>(values);
             });
         }
@@ -324,7 +440,7 @@ namespace CSharp.Net.Cache
         public void ListRightPush<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListRightPushAsync(key, Serialize(value)).Result);
+            Do(db => db.ListRightPush(key, Serialize(value)));
         }
 
         /// <summary>
@@ -338,7 +454,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListRightPopAsync(key).Result;
+                var value = db.ListRightPop(key);
                 return Deserialize<T>(value);
             });
         }
@@ -347,7 +463,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListRightPopAsync(key, count).Result;
+                var value = db.ListRightPop(key, count);
                 return ConvetList<T>(value);
             });
         }
@@ -360,7 +476,7 @@ namespace CSharp.Net.Cache
         public void ListLeftPush<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListLeftPushAsync(key, Serialize(value)).Result);
+            Do(db => db.ListLeftPush(key, Serialize(value)));
         }
 
         /// <summary>
@@ -374,7 +490,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListLeftPopAsync(key).Result;
+                var value = db.ListLeftPop(key);
                 return Deserialize<T>(value);
             });
         }
@@ -390,7 +506,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var value = db.ListLeftPopAsync(key, count).Result;
+                var value = db.ListLeftPop(key, count);
                 return ConvetList<T>(value);
             });
         }
@@ -402,7 +518,7 @@ namespace CSharp.Net.Cache
         public long ListLength(string key)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.ListLengthAsync(key).Result);
+            return Do(redis => redis.ListLength(key));
         }
 
         #endregion 同步方法
@@ -509,7 +625,7 @@ namespace CSharp.Net.Cache
         public bool HashExists(string key, string dataKey)
         {
             key = PrefixKey(key);
-            return Do(db => db.HashExistsAsync(key, dataKey).Result);
+            return Do(db => db.HashExists(key, dataKey));
         }
 
         /// <summary>
@@ -526,13 +642,13 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashSetAsync(key, dataKey, Serialize(t)).Result;
+                var data = db.HashSet(key, dataKey, Serialize(t));
                 if (expireTime != null)
                 {
                     if (expireTime.Value <= DateTime.Now)
                         throw new ArgumentException("Expire time can't less now");
 
-                    db.KeyExpireAsync(key, expireTime.Value);
+                    db.KeyExpire(key, expireTime.Value);
                 }
                 return data;
             });
@@ -551,8 +667,8 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashSetAsync(key, dataKey, Serialize(t)).Result;
-                db.KeyExpireAsync(key, expireTimeSpan);
+                var data = db.HashSet(key, dataKey, Serialize(t));
+                db.KeyExpire(key, expireTimeSpan);
                 return data;
             });
         }
@@ -565,7 +681,7 @@ namespace CSharp.Net.Cache
         public bool HashDelete(string key, string dataKey)
         {
             key = PrefixKey(key);
-            return Do(db => db.HashDeleteAsync(key, dataKey).Result);
+            return Do(db => db.HashDelete(key, dataKey));
         }
 
         /// <summary>
@@ -578,7 +694,7 @@ namespace CSharp.Net.Cache
         {
             key = PrefixKey(key);
             //List<RedisValue> dataKeys = new List<RedisValue>() {"1","2"};
-            return Do(db => db.HashDeleteAsync(key, ConvertRedisValue(dataKeys)).Result);
+            return Do(db => db.HashDelete(key, ConvertRedisValue(dataKeys)));
         }
 
         /// <summary>
@@ -593,7 +709,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                string value = db.HashGetAsync(key, dataKey).Result;
+                string value = db.HashGet(key, dataKey);
                 return Deserialize<T>(value);
             });
         }
@@ -611,7 +727,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashIncrementAsync(key, dataKey, val).Result;
+                var data = db.HashIncrement(key, dataKey, val);
                 if (expireTime.HasValue)
                     db.KeyExpireAsync(key, expireTime.Value);
                 return data;
@@ -623,7 +739,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.HashIncrementAsync(key, dataKey, val).Result;
+                var data = db.HashIncrement(key, dataKey, val);
                 db.KeyExpireAsync(key, expireTime);
                 return data;
             });
@@ -639,7 +755,7 @@ namespace CSharp.Net.Cache
         public double HashDecrement(string key, string dataKey, double val = 1)
         {
             key = PrefixKey(key);
-            return Do(db => db.HashDecrementAsync(key, dataKey, val)).Result;
+            return Do(db => db.HashDecrement(key, dataKey, val));
         }
 
         /// <summary>
@@ -653,7 +769,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                RedisValue[] values = db.HashKeysAsync(key).Result;
+                RedisValue[] values = db.HashKeys(key);
                 return ConvetList<T>(values);
             });
         }
@@ -669,7 +785,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                HashEntry[] values = db.HashGetAllAsync(key).Result;
+                HashEntry[] values = db.HashGetAll(key);
                 return ConvetDic<T>(values);
             });
         }
@@ -825,20 +941,20 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.SetAddAsync(key, Serialize(value)).Result;
+                var data = db.SetAdd(key, Serialize(value));
                 if (timeSpan.HasValue)
-                    db.KeyExpireAsync(key, timeSpan);
+                    db.KeyExpire(key, timeSpan);
                 return data;
             });
         }
-        public bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan = null)
+        public bool SetAdd<T>(string key, List<T> value, TimeSpan? timeSpan = null)
         {
             key = PrefixKey(key);
             return Do(db =>
             {
-                var data = db.SetAddAsync(key, ConvertRedisValue(value)).Result;
+                var data = db.SetAdd(key, ConvertRedisValue(value));
                 if (timeSpan.HasValue)
-                    db.KeyExpireAsync(key, timeSpan);
+                    db.KeyExpire(key, timeSpan);
                 return data > 0;
             });
         }
@@ -851,7 +967,7 @@ namespace CSharp.Net.Cache
         {
             key = PrefixKey(key);
             RedisValue[] valueList = value.Select(v => (RedisValue)Serialize(v)).ToArray();
-            return Do(redis => redis.SetRemoveAsync(key, valueList).Result);
+            return Do(redis => redis.SetRemove(key, valueList));
         }
 
         /// <summary>
@@ -864,7 +980,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var values = redis.SetMembersAsync(key).Result;
+                var values = redis.SetMembers(key);
                 return ConvetList<T>(values);
             });
         }
@@ -880,7 +996,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var value = redis.SetRandomMemberAsync(key).Result;
+                var value = redis.SetRandomMember(key);
                 return Deserialize<T>(value);
             });
         }
@@ -898,7 +1014,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var value = redis.SetRandomMembersAsync(key, count).Result.Select(x => Deserialize<T>(x)).ToList();
+                var value = redis.SetRandomMembers(key, count).Select(x => Deserialize<T>(x)).ToList();
                 return value;
             });
         }
@@ -915,7 +1031,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                return redis.SetContainsAsync(key, Serialize(value)).Result;
+                return redis.SetContains(key, Serialize(value));
 
             });
         }
@@ -931,7 +1047,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var v = redis.SetPopAsync(key).Result;
+                var v = redis.SetPop(key);
                 return Deserialize<T>(v);
             });
         }
@@ -949,7 +1065,7 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis =>
             {
-                var list = redis.SetPopAsync(key, count).Result.Select(x => Deserialize<T>(x)).ToList();
+                var list = redis.SetPop(key, count).Select(x => Deserialize<T>(x)).ToList();
                 return list;
             });
         }
@@ -962,7 +1078,7 @@ namespace CSharp.Net.Cache
         public long SetLength(string key)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SetLengthAsync(key)).Result;
+            return Do(redis => redis.SetLength(key));
         }
 
 
@@ -977,7 +1093,7 @@ namespace CSharp.Net.Cache
             return Do(redis =>
             {
                 key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombineAsync(SetOperation.Union, ConvertRedisKeys(key)).Result;
+                var values = redis.SetCombine(SetOperation.Union, ConvertRedisKeys(key));
                 return ConvetList<T>(values);
             });
         }
@@ -993,7 +1109,7 @@ namespace CSharp.Net.Cache
             return Do(redis =>
             {
                 key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombineAsync(SetOperation.Intersect, ConvertRedisKeys(key)).Result;
+                var values = redis.SetCombine(SetOperation.Intersect, ConvertRedisKeys(key));
                 return ConvetList<T>(values);
             });
         }
@@ -1009,7 +1125,7 @@ namespace CSharp.Net.Cache
             return Do(redis =>
             {
                 key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombineAsync(SetOperation.Difference, ConvertRedisKeys(key)).Result;
+                var values = redis.SetCombine(SetOperation.Difference, ConvertRedisKeys(key));
                 return ConvetList<T>(values);
             });
         }
@@ -1287,7 +1403,7 @@ namespace CSharp.Net.Cache
         {
             if (string.IsNullOrWhiteSpace(key))
                 return true;
-            return Do(db => db.KeyDeleteAsync(PrefixKey(key))).Result;
+            return Do(db => db.KeyDelete(PrefixKey(key)));
         }
 
         /// <summary>
@@ -1298,7 +1414,7 @@ namespace CSharp.Net.Cache
         public long KeyDelete(List<string> keys)
         {
             string[] newKeys = keys.Select(x => PrefixKey(x)).ToArray();
-            return Do(db => db.KeyDeleteAsync(ConvertRedisKeys(newKeys))).Result;
+            return Do(db => db.KeyDelete(ConvertRedisKeys(newKeys)));
         }
 
         /// <summary>
@@ -1379,7 +1495,7 @@ namespace CSharp.Net.Cache
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExistsAsync(key)).Result;
+            return Do(db => db.KeyExists(key));
         }
 
         /// <summary>
@@ -1393,7 +1509,7 @@ namespace CSharp.Net.Cache
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyRenameAsync(key, newKey)).Result;
+            return Do(db => db.KeyRename(key, newKey));
         }
 
         /// <summary>
@@ -1402,12 +1518,12 @@ namespace CSharp.Net.Cache
         /// <param name="key">redis key</param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public bool KeyExpire(string key, TimeSpan? expiry = default(TimeSpan?))
+        public bool KeyExpire(string key, TimeSpan? expiry = null)
         {
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExpireAsync(key, expiry)).Result;
+            return Do(db => db.KeyExpire(key, expiry));
         }
 
         public bool KeyExpire(string key, DateTime dateTime)
@@ -1415,7 +1531,7 @@ namespace CSharp.Net.Cache
             if (string.IsNullOrWhiteSpace(key))
                 return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExpireAsync(key, dateTime)).Result;
+            return Do(db => db.KeyExpire(key, dateTime));
         }
 
         /// <summary>
@@ -1435,7 +1551,7 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         public bool LockTake(string key, string value = "", int cacheSeconds = 10)
         {
-            return _db.LockTakeAsync(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds)).Result;
+            return _db.LockTake(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
         }
 
         /// <summary>
@@ -1446,7 +1562,18 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         public bool LockTake(string key, int cacheSeconds)
         {
-            return _db.LockTakeAsync(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds)).Result;
+            return _db.LockTake(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds));
+        }
+
+        /// <summary>
+        /// 分布式锁
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="cacheSeconds"></param>
+        /// <returns></returns>
+        public Task<bool> LockTakeAsync(string key, int cacheSeconds)
+        {
+            return _db.LockTakeAsync(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds));
         }
 
         /// <summary>
@@ -1484,7 +1611,18 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         public bool LockRelease(string key, string value = "")
         {
-            return _db.LockReleaseAsync(PrefixKey(key), value).Result;
+            return _db.LockRelease(PrefixKey(key), value);
+        }
+
+        /// <summary>
+        /// 释放锁
+        /// </summary>
+        /// <param name="key">锁名称</param>
+        /// <param name="value">标记，必须与锁的时候一直</param>
+        /// <returns></returns>
+        public Task<bool> LockReleaseAsync(string key, string value = "")
+        {
+            return _db.LockReleaseAsync(PrefixKey(key), value);
         }
 
         /// <summary>
@@ -1504,7 +1642,7 @@ namespace CSharp.Net.Cache
             var allKeys = GetAllKeys();
             foreach (var key in allKeys)
             {
-                string objValue = _db.StringGetAsync(key).Result;
+                string objValue = _db.StringGet(key);
 
                 if (tmp == objValue)
                 {
@@ -1624,7 +1762,7 @@ namespace CSharp.Net.Cache
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
-            return sub.PublishAsync(chl, Serialize(msg)).Result;
+            return sub.Publish(chl, Serialize(msg));
         }
 
         /// <summary>
@@ -1635,7 +1773,7 @@ namespace CSharp.Net.Cache
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
-            sub.UnsubscribeAsync(chl).GetAwaiter();
+            sub.Unsubscribe(chl);
         }
 
         /// <summary>
@@ -1644,7 +1782,7 @@ namespace CSharp.Net.Cache
         public void UnsubscribeAll()
         {
             ISubscriber sub = _connection.GetSubscriber();
-            sub.UnsubscribeAllAsync().GetAwaiter();
+            sub.UnsubscribeAll();
         }
 
         #endregion 发布订阅
@@ -1683,7 +1821,7 @@ namespace CSharp.Net.Cache
         {
             if (tValue.IsNullOrEmpty()) return default(T);
             if (typeof(T) == typeof(string) || CheckIConvertible(default(T)))
-                return ConvertHelper.ConvertTo<T>(tValue, default(T), false);
+                return ConvertHelper.ConvertTo<T>(tValue, default(T));
 
             if (JsonHelper.IsJson(tValue))
                 return JsonHelper.Deserialize<T>(tValue);
@@ -1700,7 +1838,7 @@ namespace CSharp.Net.Cache
         List<T> ConvetList<T>(RedisValue[] values)
         {
             List<T> list = new List<T>();
-            if (values == null || values.Length <= 0)
+            if (values == null || values.Length <= 0 || values[0].ToString() == "[]")
                 return list;
 
             list = values.Select(o => Deserialize<T>(o)).ToList();

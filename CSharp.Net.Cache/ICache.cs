@@ -76,7 +76,7 @@ namespace CSharp.Net.Cache
         /// <param name="func"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null);// where T : new();
+        T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan expiry );// where T : new();
         /// <summary>
         /// 获取或创建一个key
         /// </summary>
@@ -85,6 +85,14 @@ namespace CSharp.Net.Cache
         /// <param name="seconds">绝对过期时间 默认0秒不过期</param>
         /// <returns></returns>
         T GetOrSet<T>(string key, Func<T> func, int seconds = 0);
+        /// <summary>
+        /// 获取或创建一个key
+        /// </summary>
+        /// <param name="key">key</param>
+        /// <param name="func">不存在则使用该值创建</param>
+        /// <param name="seconds">绝对过期时间 默认0秒不过期</param>
+        /// <returns></returns>
+        T GetOrSet<T>(string key, Func<Task<T>> func, int seconds = 0);
         /// <summary>
         /// 删除以<paramref name="pattern"/>开头的key
         /// </summary>
@@ -134,7 +142,7 @@ namespace CSharp.Net.Cache
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan = null);
+        bool SetAdd<T>(string key, List<T> value, TimeSpan? timeSpan = null);
         /// <summary>
         /// 移除集合对象
         /// </summary>

@@ -105,6 +105,14 @@ namespace CSharp.Net.Cache
         /// <param name="val">可以为负</param>
         /// <returns>减少后的值</returns>
         double StringDecrement(string key, double val = 1);
+
+        Task<T> StringGetAsync<T>(string key);
+        Task<string> StringGetAsync(string key);
+        Task StringSetAsync(string key, string value, int cacheSeconds = 0);
+        Task StringSetAsync(string key, string value, TimeSpan? expiry);
+        Task StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new();
+        Task<double> StringIncrementAsync(string key, double val = 1, TimeSpan? expireTimeSpan = null, bool updateExpire = false);
+        Task<double> StringDecrementAsync(string key, double val = 1);
         #endregion
 
         #region List
@@ -369,7 +377,7 @@ namespace CSharp.Net.Cache
         /// <param name="key">redis key</param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        bool KeyExpire(string key, TimeSpan? expiry = default(TimeSpan?));
+        bool KeyExpire(string key, TimeSpan? expiry = null);
         /// <summary>
         /// 设置过期
         /// </summary>
@@ -393,6 +401,7 @@ namespace CSharp.Net.Cache
         /// <param name="cacheSeconds"></param>
         /// <returns></returns>
         bool LockTake(string key, int cacheSeconds);
+        Task<bool> LockTakeAsync(string key, int cacheSeconds);
         /// <summary>
         /// 
         /// </summary>
@@ -407,7 +416,7 @@ namespace CSharp.Net.Cache
         /// <param name="value">标记，必须与锁的时候一直</param>
         /// <returns></returns>
         bool LockRelease(string key, string value = "");
-
+        Task<bool> LockReleaseAsync(string key, string value = "");
         /*
         /// <summary>
         /// 根据值获取key

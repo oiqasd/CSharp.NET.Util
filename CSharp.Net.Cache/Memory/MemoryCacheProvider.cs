@@ -51,7 +51,7 @@ namespace CSharp.Net.Cache.Memory
         /// <param name="func"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null) //where T : new()
+        public T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan expiry) //where T : new()
         {
             return _cache.GetOrCreate<T>(key, c =>
             {
@@ -83,6 +83,18 @@ namespace CSharp.Net.Cache.Memory
                 if (seconds > 0) c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
                 c.SetValue(func.Invoke());
                 return func.Invoke();
+            });
+        }
+
+        public T GetOrSet<T>(string key, Func<Task<T>> func, int seconds = 0)
+        {
+            return _cache.GetOrCreate<T>(key, c =>
+            {
+                //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
+                if (seconds > 0) c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
+                var data= func().Result;
+                c.SetValue(data);
+                return data;
             });
         }
 
@@ -251,7 +263,7 @@ namespace CSharp.Net.Cache.Memory
             _cache.Set(key, data, options);
             return true;
         }
-        public bool SetAdd<T>(string key, T[] value, TimeSpan? timeSpan)
+        public bool SetAdd<T>(string key, List<T> value, TimeSpan? timeSpan)
         {
             if (value.IsNullOrEmpty()) return false;
             var data = _cache.Get<List<T>>(key) ?? new List<T>();

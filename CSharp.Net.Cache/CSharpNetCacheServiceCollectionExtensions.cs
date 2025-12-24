@@ -17,8 +17,9 @@ public static class CSharpNetCacheServiceCollectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="setupAction"></param>
+    /// <param name="sync">是否使用同步线程，全部使用异步方法不用开启，否则建议开启</param>
     /// <returns></returns>
-    public static IServiceCollection AddRedisCache(this IServiceCollection services, Action<RedisCacheOptions> setupAction)
+    public static IServiceCollection AddRedisCache(this IServiceCollection services, Action<RedisCacheOptions> setupAction, bool sync = false)
     {
         if (services == null)
             throw new ArgumentNullException(nameof(services));
@@ -30,7 +31,8 @@ public static class CSharpNetCacheServiceCollectionExtensions
         services.Configure(setupAction);
         services.TryAdd(ServiceDescriptor.Singleton<IRedisCache, RedisCacheProvider>());
         services.TryAdd(ServiceDescriptor.Singleton<ICache, RedisCacheProvider>());
-        services.AddSingleton<IHostedService, RedisPreHoldService>();
+        if (sync)
+            services.AddSingleton<IHostedService, RedisPreHoldService>();
         return services;
     }
 
@@ -68,12 +70,11 @@ class RedisPreHoldService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            //timer = new Timer(call =>{
             try
             {
                 if (cacheOptions.Environment == "dev")
                 {
-                    Console.WriteLine($"{DateTime.Now.ToString(1)} CurrentThread ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
+                    Console.WriteLine($"{DateTime.Now.ToString("G")} CurrentThread ManagedThreadId:{Thread.CurrentThread.ManagedThreadId}");
                 }
 
                 AppDomainHelper.GetThreadPoolStats(cacheOptions.MinWorkThread, cacheOptions.MinIOThread, cacheOptions.Environment);
@@ -86,8 +87,6 @@ class RedisPreHoldService : BackgroundService
             {
                 await Task.Delay(cacheOptions.RunThreadIntervalMilliseconds);
             }
-
-            // }, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(cacheOptions.RunThreadIntervalMilliseconds));
         }
 
         await Task.CompletedTask;
