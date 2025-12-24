@@ -1,18 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+		<!--<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>-->
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>Util</Authors>
 		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
-		<Version>7.2.7</Version>
+		<Version>7.3.0</Version>
+		<LangVersion>12.0</LangVersion>
 		<Copyright>©</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
-		<!--<FileVersion>2.2.1.0</FileVersion>-->
-		<AssemblyVersion>7.2.7.1</AssemblyVersion>
-		<Deterministic>False</Deterministic>
+		<!--<FileVersion>2.2.1.0</FileVersion>--> 
+		<!--<AssemblyVersion>1.0.*</AssemblyVersion>
+		<Deterministic>false</Deterministic>-->
+		<AssemblyVersion>7.3.0</AssemblyVersion>
+		
 		<!--<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>-->
 		<PackageTags>.NET;Util;Utility,Tools</PackageTags>
@@ -50,14 +54,27 @@
 
 	<ItemGroup>
 		<Compile Remove="Json.NET\**" />
+		<Compile Remove="LiteSockets\**" />
+		<Compile Remove="NewtJson\**" />
+		<Compile Remove="Sockets\SocketEvent\**" />
 		<EmbeddedResource Remove="Json.NET\**" />
+		<EmbeddedResource Remove="LiteSockets\**" />
+		<EmbeddedResource Remove="NewtJson\**" />
+		<EmbeddedResource Remove="Sockets\SocketEvent\**" />
 		<None Remove="Json.NET\**" />
+		<None Remove="LiteSockets\**" />
+		<None Remove="NewtJson\**" />
+		<None Remove="Sockets\SocketEvent\**" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
 		<Compile Remove="LogHelper\ZeroCopyLogSystem.cs" />
+		<Compile Remove="Sockets\ClientConnection.cs" />
+		<Compile Remove="Sockets\SockerHelper.cs" />
+		<Compile Remove="Sockets\SocketPacketException.cs" />
+		<Compile Remove="Sockets\SocketServerHandler.cs" />
 	</ItemGroup>
 
 	<!-- 在 .NET Framework 4.0 目标框架下需要引用的项目 -->
@@ -85,5 +102,10 @@
 	-->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net7.0' Or '$(TargetFramework)' == 'net8.0'">
 		<Using Include="System" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Include="Sockets\SocketEvent\SocketEventArgs.cs" />
+	  <Compile Include="Sockets\SocketEvent\SocketHandle.cs" />
+	  <Compile Include="Sockets\SocketEvent\SocketHandleHub.cs" />
 	</ItemGroup>
 </Project>

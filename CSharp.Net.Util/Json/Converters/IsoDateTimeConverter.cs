@@ -1,10 +1,9 @@
-﻿using CSharp.Net.Util.Json.Converters;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CSharp.Net.Util.Json
+namespace CSharp.Net.Util.Json.Converters
 {
     internal sealed class IsoDateTimeConverter : JsonConverter<DateTime>
     {

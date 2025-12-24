@@ -701,14 +701,14 @@ namespace CSharp.Net.Util
         public static string ToMarkdown(DataTable dt)
         {
             if (!dt.IsNotEmpty() || dt.Columns.Count < 1) return default;
-            StringBuilder sbTitle = new StringBuilder("\n|");
+            StringBuilder sbTitle = new StringBuilder("\n\n|");
             StringBuilder sbRow = new StringBuilder();
-            string sps = " \n |";
+            string sps = "\n|";
 
             foreach (DataColumn col in dt.Columns)
             {
                 sbTitle.Append(col.ColumnName).Append("|");
-                sps += "-|";
+                sps += "------|";
             }
 
             foreach (DataRow dr in dt.Rows)

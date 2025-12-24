@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -131,14 +132,22 @@ public static class ObjectExtension
     public static int ToInt(this object obj, int defaultValue = 0)
     {
         if (obj == null) return defaultValue;
-        if (int.TryParse(obj.ToString(), out int r))
+        if (obj is int v)
+            return v;
+        if (obj is decimal decV)
+            return (int)decV;
+        if (obj is double douV)
+            return (int)douV;
+        if (int.TryParse(obj.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out int r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
     }
     public static decimal ToDecimal(this object obj, decimal defaultValue = 0M)
     {
         if (obj == null) return defaultValue;
-        if (decimal.TryParse(obj.ToString(), out decimal r))
+        if (obj is decimal v)
+            return v;
+        if (decimal.TryParse(obj.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
     }
@@ -166,7 +175,16 @@ public static class ObjectExtension
     public static long ToLong(this object obj, long defaultValue = 0)
     {
         if (obj == null) return defaultValue;
-        if (long.TryParse(obj.ToString(), out long r))
+
+        if (obj is long lngV)
+            return lngV;
+        if (obj is int intV)
+            return intV;
+        if (obj is decimal decV)
+            return (long)decV;
+        if (obj is double douV)
+            return (long)douV;
+        if (obj is string strValue && long.TryParse(strValue, NumberStyles.Any, CultureInfo.InvariantCulture, out long r))
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
     }
@@ -189,10 +207,12 @@ public static class ObjectExtension
     /// 转成DateTime
     /// </summary>
     /// <param name="obj"></param>
-    /// <param name="defaultValue">false</param>
+    /// <param name="defaultValue">default</param>
+    /// <param name="throwExIfNull">false</param>
     /// <returns></returns>
-    public static DateTime ToDateTime(this object obj, DateTime defaultValue = default)
+    public static DateTime ToDateTime(this object obj, bool throwExIfNull = false, DateTime defaultValue = default)
     {
+        if (obj == null && throwExIfNull) throw new ArgsException("Date value is null");
         if (obj == null) return defaultValue;
         if (DateTime.TryParse(obj.ToString(), out DateTime r))
             return r;

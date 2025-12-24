@@ -441,6 +441,9 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static DateTime GetDateTimeFromTimeStamp(string timeStamp)
         {
+            if (timeStamp.IsNotNullOrEmpty())
+                return DateTime.MinValue;
+
             //if (timeStamp.Length != 10 && timeStamp.Length != 13)
             if (!long.TryParse(timeStamp, out long val))
                 throw new ArgumentException($"Could not parse String '{timeStamp}' to DateTime.");
@@ -486,7 +489,7 @@ namespace CSharp.Net.Util
         /// <param name="time">默认当前时间</param>
         /// <param name="milliseconds">默认true:毫秒，fasle:秒</param>
         /// <returns>时间戳</returns>
-        public static long GetTimeStamp(DateTime? time = null, bool milliseconds = true)
+        public static long GetTimestamp(DateTime? time , bool milliseconds = true)
         {
             DateTimeOffset localtime;
             if (time.HasValue)
@@ -500,10 +503,14 @@ namespace CSharp.Net.Util
             return localtime.ToUnixTimeSeconds();
         }
 
-        public static long GetTodayTimeStamp()
-        {
-            return GetTimeStamp(DateTime.Today);
-        }
+        /// <summary>
+        /// DateTime时间格式转换为Unix时间戳格式
+        /// </summary>
+        /// <param name="milliseconds">默认true:毫秒，fasle:秒</param>
+        /// <returns>时间戳</returns>
+        public static long GetTimestamp(bool milliseconds = true)
+            => GetTimestamp(null, milliseconds);
+
 
         /// <summary>
         /// 是否默认时间或者最小时间
@@ -534,13 +541,33 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="date">默认当前月</param>
         /// <returns></returns>
-        public static DateTime GetMonthFirstDay(DateTime? date = null)
+        public static DateTime GetMonthFirstDay(DateTime date = default)
         {
-            if (!date.HasValue) date = DateTime.Now;
-            //var dt = DateTime.Parse(date.ToString("yyyy-MM-dd") + " 00:00:00");
-            //return dt.AddDays(1 - dt.Day);
-            var dt = DateTime.Parse($"{date.Value.Year}/{date.Value.Month}/01 00:00:00");
+            if (date == default) date = DateTime.Now;
+            // DateTime.Parse($"{date.Value.Year}/{date.Value.Month}/01 00:00:00");
+            // dt.AddDays(1 - dt.Day);
+            var dt = new DateTime(date.Year, date.Month, 1);
             return dt;
+        }
+
+        /// <summary>
+        /// 当前周第一天
+        /// </summary>
+        /// <param name="date">指定日期所在周的第一天 默认当前周</param>
+        /// <param name="dayOfWeek">null:获取当前系统区域的默认周起始日（如中国默认周一，美国默认周日）</param>
+        /// <returns></returns>
+        public static DateTime GetWeekFirstDay(DateTime date = default, DayOfWeek? dayOfWeek = null)
+        {
+            if (date == default) date = DateTime.Now;
+            if (dayOfWeek == null) dayOfWeek = CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+
+            int offset = date.DayOfWeek - dayOfWeek.Value;
+            // 若偏移量为负数，说明当前日期在起始日之前，需加7天补全一周
+            if (offset < 0)
+            {
+                offset += 7;
+            }
+            return date.AddDays(-offset);
         }
 
         /// <summary>
@@ -548,7 +575,7 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="date">默认当前月</param>
         /// <returns></returns>
-        public static DateTime GetMonthLastDay(DateTime? date = null)
+        public static DateTime GetMonthLastDay(DateTime date = default)
         {
             return GetMonthFirstDay(date).AddMonths(1).AddSeconds(-1);
         }
@@ -641,11 +668,11 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static bool CheckTimeStamp(long timeStamp, int intervalSeconds = 30)
         {
-            long nowTimeStamp = GetTimeStamp();
+            long nowTimeStamp = GetTimestamp();
             if (Math.Abs(nowTimeStamp - timeStamp) > intervalSeconds * 1000)
                 return false;
             return true;
-        } 
+        }
 
         public static long DaysToHours(long timePeriodDays) =>
                 timePeriodDays * 0x18L;

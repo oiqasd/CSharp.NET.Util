@@ -21,6 +21,10 @@ public static class DateTimeExtension
     /// 10.HH:mm:ss
     /// 11.HH:mm
     /// 12.HHmmss
+    /// 13.yyyy-MM
+    /// 14.yyyyMM
+    /// 15.yyyy/MM/dd HH:mm:ss
+    /// 16.yyyy/MM/dd
     /// other return 1.
     /// </param>
     /// <param name="defaultvalue"></param>
@@ -33,6 +37,27 @@ public static class DateTimeExtension
             return dateStr;
         if (time == DateTimeHelper.BaseDateTime)
             return dateStr;
+        return formatType switch
+        {
+            1 => time.ToString("yyyy-MM-dd HH:mm:ss"),
+            2 => time.ToString("yyyy-MM-dd"),
+            3 => time.ToString("yyyy-MM-dd HH:mm:ss.ffff"),
+            4 => time.ToString("yyyyMMddHHmmss"),
+            5 => time.ToString("yyyyMMddHHmmssffff"),
+            6 => time.ToString("yyyy年MM月dd日"),
+            7 => time.ToString("yyyy年MM月dd日HH时mm分ss秒"),
+            8 => time.ToString("yyyyMMdd"),
+            9 => time.ToString("yyyy-MM-dd HH:mm"),
+            10 => time.ToString("HH:mm:ss"),
+            11 => time.ToString("HH:mm"),
+            12 => time.ToString("HHmmss"),
+            13 => time.ToString("yyyy-MM"),
+            14 => time.ToString("yyyyMM"),
+            15 => time.ToString("yyyy/MM/dd HH:mm:ss"),
+            16 => time.ToString("yyyy/MM/dd"),
+            _ => time.ToString("yyyy-MM-dd HH:mm:ss"),
+        };
+        /*
         switch (formatType)
         {
             case 1:
@@ -76,6 +101,7 @@ public static class DateTimeExtension
                 break;
         }
         return dateStr;
+        */
     }
 
     /// <summary>
@@ -105,17 +131,27 @@ public static class DateTimeExtension
     /// <summary>
     /// 日期部分转化为数字
     /// </summary>
-    /// <returns></returns>
-    public static int DateToInt(this DateTime date)
+    /// <returns>yyyyMMdd</returns>
+    public static int ToyyyyMMdd(this DateTime date)
     {
-        return date.ToString(8).ToInt();
+        return date.Year * 10000 + date.Month * 100 + date.Day;
     }
+
+    /// <summary>
+    /// 月部分转化为数字
+    /// </summary>
+    /// <returns>yyyyMM</returns>
+    public static int ToyyyyMM(this DateTime date)
+    {
+        return date.Year * 100 + date.Month;
+    }
+
     /// <summary>
     /// 时间部分转化为数字
     /// </summary>
     /// <param name="dateTime"></param>
-    /// <returns></returns>
-    public static int TimeToInt(this DateTime dateTime)
+    /// <returns>HHmmss</returns>
+    public static int ToHHmmss(this DateTime dateTime)
     {
         return dateTime.ToString(12).ToInt();
     }

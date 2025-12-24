@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,8 +28,6 @@ namespace CSharp.Net.Util
         /// Debug:将打印请求/响应日志
         /// </summary>
         public LogLevel LogLevel { get; set; } = LogLevel.None;
-
-        // internal HttpClientSetting()
     }
 
     /// <summary>
@@ -156,9 +155,9 @@ namespace CSharp.Net.Util
             string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
         {
             string result = string.Empty;
+            HttpContent httpContent = null;
             try
             {
-                HttpContent httpContent = null;
                 if ((httpContentType == HttpContentType.FormData) && dataDic != null)
                 {
                     httpContent = new FormUrlEncodedContent(dataDic);
@@ -228,8 +227,33 @@ namespace CSharp.Net.Util
                 if (IfThrow(throwEx))
                     throw;
             }
+            finally
+            {
+                if (httpContent != null)
+                {
+                    httpContent.Dispose();
+                    httpContent = null;
+                }
+            }
             return result;
         }
+
+        /// <summary>
+        /// 上传文件
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="file"></param>
+        /// <param name="dataDic"></param>
+        /// <param name="headers"></param>
+        /// <param name="encoding"></param>
+        /// <param name="timeOutSecond"></param>
+        /// <param name="throwEx">是否抛出异常</param>
+        /// <param name="connectionClose">是否标记短链接</param>
+        /// <returns></returns>
+        public static async Task<string> PostFileAsync(string url, PostFileDto file, Dictionary<string, object> dataDic = null,
+                                                       Dictionary<string, string> headers = null, string encoding = "utf-8",
+                                                       int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
+                 => await PostFileAsync(url, dataDic, headers, encoding, timeOutSecond, throwEx, connectionClose, file);
 
         /// <summary>
         /// 上传文件
@@ -243,34 +267,52 @@ namespace CSharp.Net.Util
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> PostFileAsync(string url, List<PostFileDto> files, Dictionary<string, object> dataDic = null, Dictionary<string, string> headers = null,
-            string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
+        public static async Task<string> PostFileAsync(string url, Dictionary<string, object> dataDic = null,
+                                                       Dictionary<string, string> headers = null,
+                                                       string encoding = "utf-8",
+                                                       int timeOutSecond = -1,
+                                                       bool throwEx = true,
+                                                       bool connectionClose = false,
+                                                       params PostFileDto[] files)
         {
-            string result = string.Empty;
+            ByteArrayContent fileContent = null;
             try
             {
                 using (var fromData = new MultipartFormDataContent())
                 {
                     foreach (var f in files)
                     {
-                        int len = (int)f.Stream.Length;
-                        byte[] bt = new byte[len];
-                        //byte[] bt = ArrayPool<byte>.Shared.Rent(len);
-                        f.Stream.Read(bt, 0, len);
+                        //int len = (int)f.Stream.Length;
+                        //byte[] bt = new byte[len];
+                        ////byte[] bt = ArrayPool<byte>.Shared.Rent(len);
+                        //f.Stream.Read(bt, 0, len);
+                        //var fileContent = new ByteArrayContent(bt);
+                        if (f.Data.IsNullOrEmpty() && f.Stream != null)
+                        {
+                            using (var stream = new MemoryStream())
+                            {
+                                f.Stream.Position = 0;
+                                await f.Stream.CopyToAsync(stream);
 
-                        var fileContent = new ByteArrayContent(bt);
+                                fileContent = new ByteArrayContent(stream.ToArray());
+                            }
+                        }
+                        else
+                        {
+                            fileContent = new ByteArrayContent(f.Data);
+                        }
+
                         fileContent.Headers.ContentType = new MediaTypeHeaderValue(f.ContentType);
 
                         //解决中文乱码
-                        var hv = $"form-data; name=\"{f.Key ?? f.FileName}\"; filename=\"{f.FileName}\"";
+                        var hv = $"form-data;name=\"file\";filename=\"{f.FileName}\"";
                         byte[] bdis = Encoding.GetEncoding(encoding).GetBytes(hv);
-                        hv = "";
+                        hv = string.Empty;
                         foreach (byte b in bdis)
                             hv += (char)b;
 
                         fileContent.Headers.Add("Content-Disposition", hv);
                         fromData.Add(fileContent, f.Key ?? f.FileName, f.FileName);
-
                         //ArrayPool<byte>.Shared.Return(bt, true);
                     }
 
@@ -282,24 +324,8 @@ namespace CSharp.Net.Util
                         }
                     }
                     PrintRequestLog("post file", url, out string trackId, "file");
-                    HttpContent httpContent = fromData;
+                    using HttpContent httpContent = fromData;
                     return await PostAsync(url, httpContent, trackId, headers, timeOutSecond, connectionClose);
-                    /*
-                     *
-                    //CancellationTokenSource cts = new CancellationTokenSource();
-                    //if (timeOutSecond > 0)
-                    //    cts.CancelAfter(timeOutSecond * 1000);
-                    var _httpClient = _csHttpFactory.CreateClient(connectionClose);
-                    if (timeOutSecond > 0)
-                        _httpClient.Timeout = TimeSpan.FromSeconds(timeOutSecond);
-                    SetHeader(_httpClient, headers);
-                    using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))//, cts.Token
-                    {
-                        response.EnsureSuccessStatusCode();
-                        result = await response.Content.ReadAsStringAsync();
-                    }
-                    PrintResponseLog(trackId, result);
-                    */
                 }
             }
             catch (Exception ex)
@@ -307,9 +333,16 @@ namespace CSharp.Net.Util
                 OutputErrorLog(ex, url);
                 if (IfThrow(throwEx))
                     throw;
+                return string.Empty;
             }
-
-            return result;
+            finally
+            {
+                if (fileContent != null)
+                {
+                    fileContent.Dispose();
+                    fileContent = null;
+                }
+            }
         }
 
         //public static async Task Download(string url)
@@ -337,9 +370,9 @@ namespace CSharp.Net.Util
             Dictionary<string, string> headers = null, string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
         {
             string result = string.Empty;
+            HttpContent httpContent = null;
             try
             {
-                HttpContent httpContent = null;
                 if (dataStr.IsHasValue() && httpContentType != HttpContentType.QueryString)
                 {
                     Encoding _encoding = Encoding.GetEncoding(encoding);
@@ -376,6 +409,14 @@ namespace CSharp.Net.Util
                 if (IfThrow(throwEx))
                     throw;
                 //ExceptionDispatchInfo.Capture(ex).Throw();
+            }
+            finally
+            {
+                if (httpContent != null)
+                {
+                    httpContent.Dispose();
+                    httpContent = null;
+                }
             }
 
             return result;
@@ -451,7 +492,7 @@ namespace CSharp.Net.Util
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeoutSeconds = 5, bool throwEx = true, bool connectionClose = false)
+        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeoutSeconds = 5, bool throwEx = true, bool connectionClose = false, string encoding = "UTF-8")
         {
             string result = string.Empty;
 
@@ -479,7 +520,8 @@ namespace CSharp.Net.Util
                             LogHelper.Debug("[HttpGet]", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url, eventId: trackId);
 
                         response.EnsureSuccessStatusCode();
-                        result = await response.Content.ReadAsStringAsync();
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
+                        result = Encoding.GetEncoding(encoding).GetString(bytes);
                     }
                 }
                 PrintResponseLog(trackId, result);
@@ -603,6 +645,78 @@ namespace CSharp.Net.Util
             if (LogLevel == LogLevel.Debug)
                 LogHelper.Debug($"[{nameof(HttpClientUtil)}]", $" {trackId},Response Data:{data}");
         }
+
+        /// <summary>
+        /// 文件下载
+        /// </summary>
+        /// <param name="downUrl"></param>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public async Task DownloadFileSimple(string downUrl, string filePath)
+        {
+            try
+            {
+                var httpClient = _csHttpFactory.CreateClient();
+                using var response = await httpClient.GetAsync(downUrl);
+                using (var downloadedFileStream = File.Create(filePath))
+                    await response.Content.CopyToAsync(downloadedFileStream);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"下载文件失败: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 文件下载
+        /// </summary>
+        /// <param name="downUrl"></param>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        public async Task DownloadFileAsync(string downUrl, string filePath)
+        {
+            try
+            {
+                var _httpClient = _csHttpFactory.CreateClient();
+                using (var response = await _httpClient.GetAsync(downUrl, HttpCompletionOption.ResponseHeadersRead))
+                {
+                    using (var stream = await response.Content.ReadAsStreamAsync())
+                    {
+                        using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
+                        {
+                            var contentLength = response.Content.Headers.ContentLength;
+
+                            if (contentLength.HasValue)
+                            {
+                                var totalBytes = contentLength.Value;
+                                var buffer = new byte[8192];
+                                long bytesRead = 0;
+                                int bytes;
+
+                                while ((bytes = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                                {
+                                    await fileStream.WriteAsync(buffer, 0, bytes);
+                                    bytesRead += bytes;
+
+                                    var progress = (int)((bytesRead * 100) / totalBytes);
+                                    Console.Write($"\r下载进度: {progress}%");
+                                }
+                            }
+                            else
+                            {
+                                await stream.CopyToAsync(fileStream);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"下载文件失败: {ex.Message}");
+                throw;
+            }
+        }
     }
 
     /// <summary>
@@ -628,6 +742,8 @@ namespace CSharp.Net.Util
         /// 文件流
         /// </summary>
         public Stream Stream { get; set; }
+
+        public byte[] Data { get; set; }
     }
 
     public class HttpResponseDto

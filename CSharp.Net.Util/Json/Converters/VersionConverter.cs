@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 #if NET
 #nullable enable
 #endif
-namespace CSharp.Net.Util.Json
+namespace CSharp.Net.Util.Json.Converters
 {
     /// <summary>
     /// .NET 7 允许使用空格的 Version 类型添加自定义转换器

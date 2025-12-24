@@ -1,5 +1,6 @@
 ﻿using CSharp.Net.Util;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -67,29 +68,11 @@ public static class StringExtension
     /// </summary>
     public static int ToInt(this string s)
     {
+        if (s.IsNullOrEmpty()) return 0;
         if (s.Contains("."))
             return Convert.ToInt32(Math.Round(decimal.Parse(s), 0));
-        return int.Parse(s);
-    }
 
-    /// <summary>
-    /// 转int
-    /// <param name="s"></param>
-    /// <returns></returns>
-    /// </summary>
-    public static int TryInt(this string s)
-    {
         int.TryParse(s, out int result);
-        return result;
-    }
-    /// <summary>
-    /// 转decimal
-    /// <param name="s"></param>
-    /// <returns></returns>
-    /// </summary>
-    public static decimal TryDecimal(string s)
-    {
-        decimal.TryParse(s, out decimal result);
         return result;
     }
 
@@ -100,6 +83,7 @@ public static class StringExtension
     /// </summary>
     public static long ToLong(this string s)
     {
+        if (IsNullOrEmpty(s)) return 0;
         if (s.Contains("."))
             return Convert.ToInt64(Math.Round(decimal.Parse(s), 0));
         long.TryParse(s, out long ret);
@@ -111,20 +95,22 @@ public static class StringExtension
     /// <param name="s"></param>
     /// <returns></returns>
     /// </summary>
-    public static decimal ToDecimal(this string s)
-    {
-        if (s.IsNullOrEmpty())
-            return 0;
-        return decimal.Parse(s);
-    }
+    //public static decimal ToDecimal(this string s)
+    //{
+    //    if (IsNullOrEmpty(s))
+    //        return 0;
+    //    decimal.TryParse(s, out decimal result);
+    //    return result;
+    //}
     /// <summary>
     /// 扩展，转换为DateTime
     /// <param name="val"></param>
     /// <returns></returns>
     /// </summary>
-    public static DateTime ToDateTime(this string val)
+    public static DateTime? ToDateTime(this string val)
     {
-        return DateTime.Parse(val);
+        return ConvertToDateTime(val);
+        //return DateTime.Parse(val);
     }
 
     /// <summary>
@@ -133,12 +119,11 @@ public static class StringExtension
     /// yyyy-MM-dd HH:mm:ss、yyyyMMdd HH:mm:ss、yyyyMMddHHmmssffff</param>
     /// <returns><para>return DateTime</para></returns>
     /// </summary>
-    public static DateTime? ConvertToDateTime(this string val)
+    static DateTime? ConvertToDateTime(this string val)
     {
-        if (val.IsNotNullOrEmpty())
-        {
+        if (IsNullOrEmpty(val))
             return null;
-        }
+
         bool ck = DateTime.TryParse(val, out DateTime dt);
         if (!ck)
         {
@@ -329,5 +314,5 @@ public static class StringExtension
         if (paddingLength <= 0) return value;
         return new string(paddingChar, paddingLength) + value;
         //value.PadRight(length);
-    }
+    } 
 }

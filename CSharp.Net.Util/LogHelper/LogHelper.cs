@@ -19,7 +19,7 @@ namespace CSharp.Net.Util
         //static Logger _logger;
         static LogHelper()
         {
-           // _logger = new Logger(Path.Combine(AppDomainHelper.GetRunRoot, "logs"));
+            // _logger = new Logger(Path.Combine(AppDomainHelper.GetRunRoot, "logs"));
         }
 
         /// <summary>
@@ -176,7 +176,7 @@ namespace CSharp.Net.Util
             await WriteLog(log);
         }
 
-        public static async Task Error(string title, string message, string loggerName = null, DateTime? dateTime = null)
+        public static async Task Error(string title, string message, string loggerName, DateTime? dateTime = null)
         {
             ISystemLog log = new SystemLog(LogLevel.Error, title, message, dateTime, loggerName);
             await WriteLog(log);
@@ -251,7 +251,7 @@ namespace CSharp.Net.Util
                 return;
             try
             {
-                StringBuilder msg = new StringBuilder((log.LoggerTime ?? DateTime.Now).ToString(3))
+                StringBuilder msg = new StringBuilder($"[{(log.LoggerTime ?? DateTime.Now).ToString(3)}]")
                       .Append(log.EventId.IsNullOrEmpty() ? " " : "[EventId]:" + log.EventId + " ")
                       .Append(log.Title.IsNullOrEmpty() ? null : log.Title + " ")
                       .AppendLine(log.Message.IsNullOrEmpty() ? null : log.Message);
@@ -274,7 +274,6 @@ namespace CSharp.Net.Util
             catch (Exception ex)
             {
                 Trace.Fail(ex.Message, ex.GetExcetionMessage());
-                //Utils.WriteLog(log.ToString() + "\n " + exx.Message + exx.StackTrace, GetStrLogUrl());
             }
         }
 

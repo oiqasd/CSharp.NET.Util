@@ -18,17 +18,22 @@ namespace CSharp.Net.Util
         string Title { get; set; }
         string Message { get; set; }
         Exception Exception { get; set; }
+        /// <summary>
+        /// 日志时间，同时用做日志文件名，默认当前
+        /// </summary>
         DateTime? LoggerTime { get; set; }
         /// <summary>
-        /// 文件名,默认用level
+        /// 文件夹名,默认用level
         /// </summary>
         string LoggerName { get; set; }
+
         /// <summary>
         /// 从进程开始到现在的时长，毫秒数
         /// </summary>
         long ElapsedTime { get; set; }
+
         /// <summary>
-        /// 1 info 2Debug 3Error 4Final
+        /// 1 Debug 2 Info 3 Warn 4 Error 5 Fatal
         /// </summary>
         LogLevel Level { get; set; }
 

@@ -16,6 +16,12 @@ public static class ExceptionExtension
     /// <returns></returns>
     public static string GetExcetionMessage(this Exception ex, [CallerMemberName] string memberName = null)
     {
+        //// 使用System.Diagnostics.StackTrace类解析文件名和行号
+        //var stackTrace = new System.Diagnostics.StackTrace(ex, true);
+        //var frame = stackTrace.GetFrame(0); // 获取最顶层的堆栈帧
+        //string msg = ex.GetExcetionMessage() + (";FileName: " + frame.GetFileName());
+        //msg += (";Line Number: " + frame.GetFileLineNumber());
+
         if (ex == null) return "";
         string exceMsg = "";
         exceMsg += ex.Message + "\n" + ex.StackTrace;

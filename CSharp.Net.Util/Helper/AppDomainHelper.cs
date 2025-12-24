@@ -154,6 +154,7 @@ namespace CSharp.Net.Util
             StringBuilder sb = new StringBuilder();
             sb.Append(GetHostName)
               .AppendLine(IpUtil.GetLocalIP())
+              .AppendLine(AppName)
               .Append("程序集版本:").AppendLine(GetVersion.ToString())
               .AppendLine(dotnetInfo ? GetDotNetVersion : "")
               .AppendLine(iocp)
@@ -226,7 +227,7 @@ namespace CSharp.Net.Util
         {
             get
             {
-                Version version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+                Version version = Assembly.GetEntryAssembly()?.GetName().Version;
                 return version;
             }
         }
@@ -312,13 +313,16 @@ namespace CSharp.Net.Util
                 info.Arguments = escapedArgs;
             }
 
-            var process = Process.Start(info);
-            process.WaitForExit();
-            if (process != null)
+            using (var process = Process.Start(info))
             {
-                var output = process.StandardOutput.ReadToEnd();
-                //output += process.StandardOutput.ReadToEnd();
-                return output;
+                process.WaitForExit();
+                if (process != null)
+                {
+                    var output = process.StandardOutput.ReadToEnd();
+                    //output += process.StandardOutput.ReadToEnd();
+                    //var error = process.StandardError.ReadToEnd();
+                    return output;
+                }
             }
             return null;
         }
@@ -372,5 +376,47 @@ namespace CSharp.Net.Util
             });
             return list;
         }
+        /*
+#if NET
+        private readonly Dictionary<string, double> _metrics = new();
+        /// <summary>
+        /// GC监控
+        /// </summary>
+        public void GCPerformanceMonitor()
+        {
+            var gcInfo = GC.GetTotalMemory(false);
+            var gen0 = GC.CollectionCount(0);
+            var gen1 = GC.CollectionCount(1);
+            var gen2 = GC.CollectionCount(2);
+
+            var previousGen0 = _metrics.GetValueOrDefault("gen0_collections");
+            var previousGen1 = _metrics.GetValueOrDefault("gen1_collections");
+            var previousGen2 = _metrics.GetValueOrDefault("gen2_collections");
+
+            var gen0Rate = gen0 - previousGen0;
+            var gen1Rate = gen1 - previousGen1;
+            var gen2Rate = gen2 - previousGen2;
+
+            _metrics["gen0_collections"] = gen0;
+            _metrics["gen1_collections"] = gen1;
+            _metrics["gen2_collections"] = gen2;
+            _metrics["total_memory"] = gcInfo;
+            _metrics["gen0_rate"] = gen0Rate;
+            _metrics["gen1_rate"] = gen1Rate;
+            _metrics["gen2_rate"] = gen2Rate;
+
+            // 在 Gen1/Gen2 收集过多时告警
+            if (gen1Rate > 100 || gen2Rate > 100)
+            {
+                Console.WriteLine("High GC activity detected. Gen1: {Gen1Rate}/min, Gen2: {Gen2Rate}/min, Memory: {Memory:N0} bytes",
+                    gen1Rate, gen2Rate, gcInfo);
+            }
+
+            // 为外部监控系统记录指标
+            Console.WriteLine("GC Metrics: Gen0={Gen0Rate} Gen1={Gen1Rate} Gen2={Gen2Rate} Memory={Memory:N0}",
+                gen0Rate, gen1Rate, gen2Rate, gcInfo);
+        }
+#endif
+        */
     }
 }

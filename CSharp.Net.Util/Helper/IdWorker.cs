@@ -112,7 +112,7 @@ namespace CSharp.Net.Util
         {
             machineId = options.MachineId;
             workerType = options.WorkerType;
-            twepoch = DateTimeHelper.GetTimeStamp(options.BaseUtcTime, options.WorkerType == WorkerType.Millisecond);
+            twepoch = DateTimeHelper.GetTimestamp(options.BaseUtcTime, options.WorkerType == WorkerType.Millisecond);
             workerIdBits = options.WorkerIdBits;
             sequenceBits = options.SequenceBits;
             if (options.SequenceMax <= 0)
@@ -137,7 +137,7 @@ namespace CSharp.Net.Util
         {
             lock (this)
             {
-                long timestamp = DateTimeHelper.GetTimeStamp(null, workerType == WorkerType.Millisecond);
+                long timestamp = DateTimeHelper.GetTimestamp(null, workerType == WorkerType.Millisecond);
                 int r = 0;
                 while (timestamp < lastTimestamp)
                 {
@@ -170,7 +170,7 @@ namespace CSharp.Net.Util
                     sequence = 0; //计数清0
                 }
                 lastTimestamp = timestamp;
-                long t = (timestamp - (baseTime.HasValue ? DateTimeHelper.GetTimeStamp(baseTime, workerType == WorkerType.Millisecond) : twepoch));
+                long t = (timestamp - (baseTime.HasValue ? DateTimeHelper.GetTimestamp(baseTime, workerType == WorkerType.Millisecond) : twepoch));
                 long nextId = (t << timestampShift) | (machineId << workerIdShift) | sequence;//|(s.datacenterId << datacenterIdShift)
 
                 return nextId;
@@ -184,10 +184,10 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         private long TillNextMillis(long lastTimestamp)
         {
-            long timestamp = DateTimeHelper.GetTimeStamp(null, workerType == WorkerType.Millisecond);
+            long timestamp = DateTimeHelper.GetTimestamp(null, workerType == WorkerType.Millisecond);
             while (timestamp <= lastTimestamp)
             {
-                timestamp = DateTimeHelper.GetTimeStamp(null, workerType == WorkerType.Millisecond);
+                timestamp = DateTimeHelper.GetTimestamp(null, workerType == WorkerType.Millisecond);
             }
             return timestamp;
         }

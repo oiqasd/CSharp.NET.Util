@@ -2,6 +2,15 @@ namespace CSharp.Net.Util.Validate
 {
     public class Validate
     {
+        public static void Vaild<T>(T t)where T:class
+        {
+            var result= ValidataData(t);
+            if (!result.Flag)
+            {
+                throw new ArgsException(result.ErrorMessage);
+            }
+        }
+
         /// <summary>
         /// 封装统一数据验证方法
         /// </summary>

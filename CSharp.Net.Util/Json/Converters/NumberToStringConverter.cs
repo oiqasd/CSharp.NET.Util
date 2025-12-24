@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CSharp.Net.Util.Json
+namespace CSharp.Net.Util.Json.Converters
 {
     /// <summary>
     /// 支持将数字转换成字符串
@@ -11,10 +11,18 @@ namespace CSharp.Net.Util.Json
     {
         public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            if (reader.TokenType == JsonTokenType.Number)
-                return reader.GetInt64().ToString();
-
-            return reader.GetString();
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.Null:
+                    return null;
+                case JsonTokenType.Number:
+                    return reader.GetInt64().ToString();
+                case JsonTokenType.True:
+                case JsonTokenType.False:
+                    return reader.GetBoolean().ToString();
+                default:
+                    return reader.GetString();
+            }
         }
         public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
         {

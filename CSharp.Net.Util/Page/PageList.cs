@@ -8,6 +8,8 @@ using System.Linq;
 /// <typeparam name="T"></typeparam>
 public class PageList<T>
 {
+    public PageList() { }
+    
     /// <summary>
     /// 实例化PageList
     /// </summary>

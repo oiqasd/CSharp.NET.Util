@@ -1,5 +1,6 @@
 ﻿using CSharp.Net.Util.Cryptography;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
@@ -2570,10 +2571,39 @@ namespace CSharp.Net.Util
             return strs[0];
         }
 
-        public static byte[] String2Bytes(string input)
+        /// <summary>
+        /// 整数字符串列表转换成int数组
+        /// </summary>
+        /// <param name="numbers">["1","2"]</param>
+        /// <returns></returns>
+        public static IEnumerable<int> StringToIntList(IEnumerable<string> numbers)
         {
-            return Encoding.ASCII.GetBytes(input);
+            return numbers.Select(int.Parse);
         }
-         
+
+        /// <summary>
+        /// 整数字符串数组转换成long数组
+        /// </summary>
+        /// <param name="numbers">["1","2"]</param>
+        /// <returns></returns>
+        public static IEnumerable<long> StringToLongList(IEnumerable<string> numbers)
+        {
+            return numbers.Select(long.Parse);
+        }
+
+        /// <summary>
+        /// 字典转查询字符串(按key排序)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns>key1=value1&key2=value2</returns>
+        public static string DictionaryToSortedQueryString(Dictionary<string, string> data)
+        {
+            if (data == null || data.Count == 0)
+                return string.Empty;
+            var sortedItems = data.OrderBy(item => item.Key);
+            var keyValuePairs = sortedItems.Select(item => $"{item.Key}={item.Value}");
+            return string.Join("&", keyValuePairs);
+        }
+
     }
 }

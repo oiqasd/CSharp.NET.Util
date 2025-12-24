@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -184,42 +187,21 @@ namespace CSharp.Net.Util
         //[MethodImpl(MethodImplOptions.Synchronized)]
         public static async Task AppendWrittenFile(string file, string contents, string encoding = null)
         {
-            /* await Task.Run(() =>{
-                 var key = fileLocks.GetOrAdd(file, _ => new LockInfo());
-                 if (fileLocks.Count > 1){
-                     Console.WriteLine("fileLocks,", fileLocks.Count());
-                 }
-                 if (key != null){
-                     lock (key.Lock){
-                         try{
-                             key.LastAccessTime = DateTime.UtcNow;
-                             FileStream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
-                             using (StreamWriter sw = new StreamWriter(stream))//, true, Encoding.GetEncoding(encoding)))
-                             {
-                                 sw.BaseStream.Seek(0, SeekOrigin.End);
-                                 sw.WriteLine(contents);
-                             }
-                         }
-                         catch (Exception ex){
-                             Console.WriteLine("[WriteLog]."+ ex.GetExcetionMessage());
-                            //Trace.Fail("[WriteLog]:", contents);
-                         }
-                     }
-                 }
-             });*/
-
-            bool l = false; var obj = LockObject.GetForLock(file);
+            var semaphore = LockObject.GetLockObj(file);
             try
             {
-                Monitor.Enter(obj, ref l);
-                using (FileStream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
+                //Monitor.Enter(obj, ref l);
+                await semaphore.WaitAsync();
+                using (FileStream fs = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true))
                 {
-                    //using (StreamWriter sw = new StreamWriter(file, true, Encoding.GetEncoding(encoding)))
-                    using (StreamWriter sw = new StreamWriter(stream, encoding == null ? Encoding.Default : Encoding.GetEncoding(encoding)))
-                    {
-                        sw.BaseStream.Seek(0, SeekOrigin.End);
-                        await sw.WriteLineAsync(contents);
-                    }
+                    var encodingObj = encoding == null ? Encoding.Default : Encoding.GetEncoding(encoding);
+                    var buffer = encodingObj.GetBytes(contents);//+ Environment.NewLine;
+                    await fs.WriteAsync(buffer, 0, buffer.Length);
+                    await fs.FlushAsync();
+
+                    //using StreamWriter sw = new StreamWriter(fs, encoding == null ? Encoding.Default : Encoding.GetEncoding(encoding));
+                    //sw.BaseStream.Seek(0, SeekOrigin.End);
+                    //await sw.WriteLineAsync(contents);
                 }
             }
             catch (Exception ex)
@@ -228,17 +210,9 @@ namespace CSharp.Net.Util
             }
             finally
             {
-                try
-                {
-                    if (l)
-                        Monitor.Exit(obj);
-                    else
-                        Console.WriteLine("[WriteLog] lock failed.");
-                }
-                catch (Exception sex)
-                {
-                    Console.WriteLine("[WriteLog] unlock error:" + sex.GetExcetionMessage());
-                }
+                semaphore.Release();
+
+                // if (l) Monitor.Exit(obj);
             }
         }
 
@@ -262,16 +236,10 @@ namespace CSharp.Net.Util
             }
             catch (NotSupportedException) { }
             fileName = Path.Combine(filePath, fileName);
-            var key = LockObject.GetForLock(fileName);
-            lock (key)
-            {
-                key.LastAccessTime = DateTime.UtcNow;
-#if NET
-                File.WriteAllText(fileName, contents: text);
-#else
-                File.WriteAllText(fileName, contents: text);
-#endif
-            }
+            var semaphore = LockObject.GetLockObj(fileName);
+            semaphore.Wait();
+            File.WriteAllText(fileName, contents: text);
+            semaphore.Release();
         }
 
         /// <summary>
@@ -339,6 +307,20 @@ namespace CSharp.Net.Util
             return file1.SequenceEqual(file2);
         }
 
+#if NET5_0_OR_GREATER
+        /// <summary>
+        /// 打开文件所在目录
+        /// </summary>
+        /// <param name="sourceFile"></param>
+        [SupportedOSPlatform("windows")]
+        public static void OpenFileExplorer(string sourceFile)
+        {
+            //if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!OperatingSystem.IsWindows())
+                throw new PlatformNotSupportedException("此方法仅支持 Windows 操作系统");
+            Process.Start("explorer.exe", $"/select, \"{sourceFile}\"");
+        }
+#endif
         /// <summary>
         /// 设置文件只读属性
         /// </summary>

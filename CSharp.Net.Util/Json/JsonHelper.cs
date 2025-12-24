@@ -2,6 +2,7 @@
 using CSharp.Net.Util.Json.Converters;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -28,8 +29,8 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 配置JsonSerializerOptions
         /// </summary>
-        /// <param name="jsonSerializerOptions"></param>
-        /// <returns><paramref name="jsonSerializerOptions"/>
+        /// <param name="options"></param>
+        /// <returns><paramref name="options"/>
         /// <para>.PropertyNameCaseInsensitive : true</para>
         /// <para>.PropertyNamingPolicy : CamelCase</para>
         /// <para>.ReferenceHandler : IgnoreCycles</para>
@@ -42,41 +43,43 @@ namespace CSharp.Net.Util
         /// <para>.StringToLongConverter</para>
         /// <para>.NumberToStringConverter</para>
         /// </returns>
-        public static JsonSerializerOptions SetJsonSerializerOptions(JsonSerializerOptions jsonSerializerOptions)
+        public static JsonSerializerOptions SetJsonSerializerOptions(JsonSerializerOptions options)
         {
-            if (jsonSerializerOptions == null) jsonSerializerOptions = new JsonSerializerOptions();
+            if (options == null) options = new JsonSerializerOptions();
+            //options.IncludeFields = true;//包含公共字段
             //反序列化时不区分属性大小写
-            jsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            options.PropertyNameCaseInsensitive = true;
             //使用 camel 大小写 
-            jsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
             //字典key驼峰
-            jsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-            jsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
+            options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+            options.NumberHandling = JsonNumberHandling.AllowReadingFromString;
             // | JsonNumberHandling.WriteAsString,//允许或写入带引号的数字,例如:"23"
             //保留引用并处理循环引用
-            jsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            options.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             //格式化输出
-            jsonSerializerOptions.WriteIndented = false;
+            options.WriteIndented = false;
             //是否允许末尾多余逗号
-            jsonSerializerOptions.AllowTrailingCommas = false;
+            options.AllowTrailingCommas = false;
             //忽略只读属性
-            jsonSerializerOptions.IgnoreReadOnlyProperties = false;
+            options.IgnoreReadOnlyProperties = false;
             //忽略值为Null的属性,等同NullValueHandling.Ignore    
-            jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+            options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             //是否允许有注释，Skip:允许
-            jsonSerializerOptions.ReadCommentHandling = JsonCommentHandling.Disallow;
-            jsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+            options.ReadCommentHandling = JsonCommentHandling.Disallow;
+            options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
             //Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);//不unicode转换,解决乱码问题
-            jsonSerializerOptions.Converters.Add(new IsoDateTimeConverter());
-            jsonSerializerOptions.Converters.Add(new IsoDateTimeOffsetConverter());
-            jsonSerializerOptions.Converters.Add(new VersionConverter());
-            jsonSerializerOptions.Converters.Add(new StringToIntegerConverter());
-            jsonSerializerOptions.Converters.Add(new StringToLongConverter());
-            jsonSerializerOptions.Converters.Add(new NumberToStringConverter());
+            options.Converters.Add(new IsoDateTimeConverter());
+            options.Converters.Add(new IsoDateTimeOffsetConverter());
+            options.Converters.Add(new EmptyToNullDateTimeConverter());
+            options.Converters.Add(new VersionConverter());
+            options.Converters.Add(new StringToIntegerConverter());
+            options.Converters.Add(new StringToLongConverter());
+            options.Converters.Add(new NumberToStringConverter());
 #if !NET6_0
-            //jsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
+            //options.TypeInfoResolver = new DefaultJsonTypeInfoResolver();
 #endif
-            return jsonSerializerOptions;
+            return options;
         }
 
         static JsonHelper()
@@ -93,11 +96,7 @@ namespace CSharp.Net.Util
         public static string Serialize(object obj, JsonSerializerOptions options = null)
         {
             if (null == obj) return null;
-#if NET6_0_OR_GREATER
-            return JsonSerializer.Serialize(obj, options ?? _options)!;
-#else
             return JsonSerializer.Serialize(obj, options ?? _options);
-#endif
         }
 
         /// <summary>
@@ -133,11 +132,34 @@ namespace CSharp.Net.Util
         /// <typeparam name="T">对象集合</typeparam>
         /// <param name="json">JSON 数据</param>
         /// <returns></returns>
-        public static List<T> DeserializeList<T>(string json)
+        public static List<T> DeserializeList<T>(string json, JsonSerializerOptions options = null)
         {
             if (string.IsNullOrEmpty(json))
                 return default;
-            return JsonSerializer.Deserialize<List<T>>(json, _options);
+            return JsonSerializer.Deserialize<List<T>>(json, options ?? _options);
+        }
+
+        /// <summary>
+        /// 将指定的 JSON 数据反序列化成指定对象
+        /// </summary>
+        /// <typeparam name="T">对象集合</typeparam>
+        /// <param name="json">JSON 数据</param>
+        /// <param name="key">key</param>
+        /// <returns></returns>
+        public static List<T> DeserializeList<T>(string json, string key, JsonSerializerOptions options = null)
+        {
+            if (string.IsNullOrEmpty(json) || key.IsNullOrEmpty())
+                throw new ArgsException("参数不能为空");
+
+            var node = GetJsonNode(json);
+            if (node is JsonObject)
+            {
+                foreach (var item in node.AsObject())
+                    if (item.Value is JsonArray && key == item.Key)
+                        return JsonSerializer.Deserialize<List<T>>(item.Value.ToString(), options ?? _options);
+            }
+
+            throw new ArgsException("暂不支持");
         }
 
         /// <summary>
@@ -302,7 +324,7 @@ namespace CSharp.Net.Util
         /// 获取json中指定的字段
         /// </summary>
         /// <param name="input">json data</param>
-        /// <param name="field">指定字段 xxx:xx</param>
+        /// <param name="field">可指定多字段 xxx:xx</param>
         /// <returns></returns>
         public static string GetFieldValue(string input, string field)
         {
@@ -316,6 +338,7 @@ namespace CSharp.Net.Util
                 foreach (var item in jobj)
                 {
                     if (item.Key != fileds[i]) continue;
+
                     if (i == fileds.Length - 1)
                         return item.Value.ToString();
 

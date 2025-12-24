@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace CSharp.Net.Util.Cryptography
@@ -14,40 +12,40 @@ namespace CSharp.Net.Util.Cryptography
         /// 将字符串经过md5加密，返回加密后的字符串
         /// E10ADC3949BA59ABBE56E057F20F883E
         /// </summary>
-        public static string Md5Encrypt(string strToBeEncrypt, string encoding = "utf-8")
+        public static string Md5Encrypt(string data, string encoding = "utf-8")
         {
             Encoding encode = Encoding.GetEncoding(encoding);
-            return Md5Encrypt(strToBeEncrypt, encode);
+            return Md5Encrypt(data, encode);
         }
 
         /// <summary>
         /// 获取16位长度
         /// </summary>
-        /// <param name="strToBeEncrypt"></param>
+        /// <param name="data"></param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static string Md5Encrypt16X(string strToBeEncrypt, string encoding = "utf-8")
+        public static string Md5Encrypt16X(string data, string encoding = "utf-8")
         {
             Encoding encode = Encoding.GetEncoding(encoding);
-            var e = Md5Encrypt(strToBeEncrypt, encode);
+            var e = Md5Encrypt(data, encode);
             return e.Substring(8, 16);
         }
 
         /// <summary>
         /// 将字符串经过md5hash加密，返回加密后的字符串
         /// </summary>
-        public static string Md5Encrypt(string strToBeEncrypt, Encoding encoding)
-        {
-            // MD5 md5 = new MD5CryptoServiceProvider();
+        public static string Md5Encrypt(string data, Encoding encoding)
+        {           
+            //byte[] hashBytes = System.Security.Cryptography.MD5.HashData(Encoding.UTF8.GetBytes(data));
+            //string sign = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+
             using (var md5 = System.Security.Cryptography.MD5.Create())
             {
-                byte[] fromData = encoding.GetBytes(strToBeEncrypt);
+                byte[] fromData = encoding.GetBytes(data);
                 byte[] targetData = md5.ComputeHash(fromData);
                 //StringBuilder Byte2Builder = new StringBuilder();
                 //for (int i = 0; i < TargetData.Length; i++)
-                //{
                 //    Byte2Builder.Append(TargetData[i].ToString("x2"));
-                //}
                 //return Byte2Builder.ToString().ToLower();
 
                 var strResult = BitConverter.ToString(targetData);

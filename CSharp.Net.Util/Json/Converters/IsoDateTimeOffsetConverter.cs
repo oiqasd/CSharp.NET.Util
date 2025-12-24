@@ -1,10 +1,9 @@
-﻿using CSharp.Net.Util.Json.Converters;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CSharp.Net.Util.Json
+namespace CSharp.Net.Util.Json.Converters
 {
     /// <summary>
     /// 内置支持的唯一格式是 ISO 8601-1:2019

@@ -54,7 +54,7 @@ namespace CSharp.Net.Util
         /// 默认4位，支持1-10位
         /// </summary>
         /// <returns></returns>
-        public static int GetRandom(int length = 4)
+        public static string GetRandom(int length = 4)
         {
             length = length <= 0 ? 1 : length;
             length = length >= 10 ? 10 : length;
@@ -62,10 +62,10 @@ namespace CSharp.Net.Util
             //for (int i = 0; i < length; i++) 
             //    sbMax.Append("9"); 
 #if NET6_0_OR_GREATER
-            return Random.Shared.Next(0, (int)Math.Pow(10, length));
+            return Random.Shared.Next(0, (int)Math.Pow(10, length)).ToString($"D{length}");
 #else
             Random rand = new Random(Guid.NewGuid().GetHashCode());
-            return rand.Next(0, (int)Math.Pow(10, length));
+            return rand.Next(0, (int)Math.Pow(10, length)).ToString("D6");
 #endif
         }
 
@@ -350,7 +350,7 @@ namespace CSharp.Net.Util
             finally
             {
 #if NET8_0_OR_GREATER
-            tcpListener?.Dispose();
+                tcpListener?.Dispose();
 #endif
                 if (tcpListener != null)
                     tcpListener = null;
