@@ -441,12 +441,13 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static DateTime GetDateTimeFromTimeStamp(string timeStamp)
         {
-            if (timeStamp.IsNotNullOrEmpty())
+            if (timeStamp.IsNullOrEmpty())
                 return DateTime.MinValue;
 
             //if (timeStamp.Length != 10 && timeStamp.Length != 13)
             if (!long.TryParse(timeStamp, out long val))
-                throw new ArgumentException($"Could not parse String '{timeStamp}' to DateTime.");
+                //throw new ArgumentException($"Could not parse String '{timeStamp}' to DateTime.");
+                return DateTime.MinValue;
 
             var dto = val > MaxUnixSeconds ? DateTimeOffset.FromUnixTimeMilliseconds(val) : DateTimeOffset.FromUnixTimeSeconds(val);
             return dto.ToLocalTime().DateTime;
@@ -489,7 +490,7 @@ namespace CSharp.Net.Util
         /// <param name="time">默认当前时间</param>
         /// <param name="milliseconds">默认true:毫秒，fasle:秒</param>
         /// <returns>时间戳</returns>
-        public static long GetTimestamp(DateTime? time , bool milliseconds = true)
+        public static long GetTimestamp(DateTime? time, bool milliseconds = true)
         {
             DateTimeOffset localtime;
             if (time.HasValue)
