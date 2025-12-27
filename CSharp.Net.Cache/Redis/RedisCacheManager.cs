@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using CSharp.Net.Util;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -12,14 +13,11 @@ namespace CSharp.Net.Cache.Redis
 {
     public class RedisCacheManager : IDisposable
     {
-
-        protected volatile IConnectionMultiplexer _connection;
         protected IDatabase _db;
-        private bool _disposed;
-
         protected readonly RedisCacheOptions _options;
-        private readonly string _instance;
+        protected volatile IConnectionMultiplexer _connection;
 
+        private bool _disposed;
         private readonly SemaphoreSlim _connectionLock = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
         //多库配置
@@ -32,13 +30,9 @@ namespace CSharp.Net.Cache.Redis
                 Monitor.Enter(this);
 
                 if (options == null)
-                {
                     throw new ArgumentNullException(nameof(options));
-                }
 
                 _options = options.Value;
-                _instance = _options.InstanceName ?? string.Empty;
-
                 Connect().Wait();
             }
             finally
@@ -93,6 +87,7 @@ namespace CSharp.Net.Cache.Redis
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                await LogHelper.Fatal(ex);
             }
             finally
             {
@@ -103,9 +98,8 @@ namespace CSharp.Net.Cache.Redis
         public void Dispose()
         {
             if (_disposed)
-            {
                 return;
-            }
+
             _connection?.Dispose();
             _connection?.Close();
             _disposed = true;
@@ -114,17 +108,13 @@ namespace CSharp.Net.Cache.Redis
         private void CheckDisposed()
         {
             if (_disposed)
-            {
                 throw new ObjectDisposedException(this.GetType().FullName);
-            }
         }
 
         private void TryRegisterProfiler()
         {
             if (_connection != null && _options.ProfilingSession != null)
-            {
                 _connection.RegisterProfiler(_options.ProfilingSession);
-            }
         }
 
         /// <summary>
@@ -176,7 +166,8 @@ namespace CSharp.Net.Cache.Redis
                 //获取指定服务器
                 var server = GetServer(point);
                 //在指定服务器使用keys或scan命令遍历key
-                foreach (var key in server.Keys(_options.DefaultDB, "*"))
+                var ls = server.Keys(_options.DefaultDB, "*");
+                foreach (var key in ls)
                 {
                     if (!keys.Contains(key))
                         keys.Add(key);
@@ -189,17 +180,14 @@ namespace CSharp.Net.Cache.Redis
         /// 删除当前数据库所有key
         /// </summary>
         /// <returns></returns>
-        public List<string> FlushCurrentDatabase()
+        public void FlushCurrentDatabase()
         {
-            List<string> keys = new List<string>();
             foreach (var point in GetEndPoints())
             {
                 //获取指定服务器
                 var server = _connection.GetServer(point);
-
                 server.FlushDatabase(_options.DefaultDB);
             }
-            return keys;
         }
 
         #region 事件
@@ -277,6 +265,5 @@ namespace CSharp.Net.Cache.Redis
         }
 
         #endregion 事件
-
     }
 }

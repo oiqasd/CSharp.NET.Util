@@ -69,17 +69,17 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <returns></returns>
-        //T StringGet<T>(string key);
+        //T StringGetAsync<T>(string key);
         /// <summary>
         /// 获取key值
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        //string StringGet(string key);
+        //string StringGetAsync(string key);
         /// <summary>
         /// 批量读
         /// </summary>
-        Dictionary<string, string> StringGet(List<string> keys);
+        Task<Dictionary<string, string>> StringGetAsync(string[] keys); 
 
         /// <summary>
         /// 为数字增长val
@@ -108,9 +108,9 @@ namespace CSharp.Net.Cache
 
         Task<T> StringGetAsync<T>(string key);
         Task<string> StringGetAsync(string key);
-        Task StringSetAsync(string key, string value, int cacheSeconds = 0);
-        Task StringSetAsync(string key, string value, TimeSpan? expiry);
-        Task StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new();
+        Task<bool> StringSetAsync(string key, string value, int cacheSeconds = 0);
+        Task<bool> StringSetAsync(string key, string value, TimeSpan? expiry);
+        Task<bool> StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new();
         Task<double> StringIncrementAsync(string key, double val = 1, TimeSpan? expireTimeSpan = null, bool updateExpire = false);
         Task<double> StringDecrementAsync(string key, double val = 1);
         #endregion
@@ -143,12 +143,13 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         T ListRightPop<T>(string key);
         /// <summary>
-        /// 右出  version 6.2.0
+        /// Removes and returns the specified number of elements from the end of a list stored at the given key.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
+        /// <typeparam name="T">The type of elements stored in the list.</typeparam>
+        /// <param name="key">The key identifying the list from which elements will be removed. Cannot be null or empty.</param>
+        /// <param name="count">The number of elements to remove from the end of the list. Must be greater than or equal to 0.</param>
+        /// <returns>A list of elements removed from the end of the list. If the key does not exist or the list is empty, returns an
+        /// empty list.</returns>
         List<T> ListRightPop<T>(string key, int count);
         /// <summary>
         /// 左入
@@ -165,7 +166,7 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         T ListLeftPop<T>(string key);
         /// <summary>
-        /// 左出  version 6.2.0
+        /// 左出
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -178,7 +179,97 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <returns></returns>
         long ListLength(string key);
+        /// <summary>
+        /// Removes all occurrences of the specified value from the list stored at the given key.
+        /// </summary>
+        /// <typeparam name="T">The type of the value to remove from the list.</typeparam>
+        /// <param name="key">The key identifying the list from which the value will be removed. Cannot be null or empty.</param>
+        /// <param name="value">The value to remove from the list. The comparison is based on the default equality comparer for the type
+        /// <typeparamref name="T"/>.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of removed
+        /// occurrences of the specified value. Returns 0 if the value was not found in the list.</returns>
+        Task<long> ListRemoveAsync<T>(string key, T value);
 
+        /// <summary>
+        /// 获取指定key的List
+        /// </summary>
+        /// <remarks>The range is inclusive, meaning both the <paramref name="start"/> and <paramref name="stop"/> indices
+        /// are included in the result. Negative indices can be used to specify offsets from the end of the list. For example,
+        /// -1 represents the last element, -2 represents the second-to-last element, and so on.</remarks>
+        /// <typeparam name="T">The type of elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
+        /// <param name="start">The zero-based index of the first element to retrieve. Defaults to 0.</param>
+        /// <param name="stop">The zero-based index of the last element to retrieve. A value of -1 indicates the end of the list. Defaults to -1.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of elements of type <typeparamref
+        /// name="T"/> within the specified range. If the key does not exist, an empty list is returned.</returns>
+        Task<List<T>> ListRangeAsync<T>(string key, int start = 0, int stop = -1);
+        /// <summary>
+        /// Adds the specified value to the end of the list stored at the given key.
+        /// </summary>
+        /// <remarks>If the key does not exist, a new list will be created and the value will be added to
+        /// it.</remarks>
+        /// <typeparam name="T">The type of the value to be added to the list.</typeparam>
+        /// <param name="key">The key identifying the list. Cannot be null or empty.</param>
+        /// <param name="value">The value to add to the end of the list.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the length of the list after the
+        /// push operation.</returns>
+        Task<long> ListRightPushAsync<T>(string key, T value);
+        /// <summary>
+        /// Removes and returns the last element of the list stored at the specified key.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the last element of the list, or
+        /// <see langword="default"/> if the list is empty or the key does not exist.</returns>
+        Task<T> ListRightPopAsync<T>(string key);
+        /// <summary>
+        /// Removes and returns the specified number of elements from the end of a list stored at the given key.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
+        /// <param name="count">The number of elements to remove and return. Must be greater than zero.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of elements  removed from
+        /// the end of the list. If the key does not exist or the list is empty, an empty list is returned.</returns>
+        Task<List<T>> ListRightPopAsync<T>(string key, int count);
+        /// <summary>
+        /// Inserts the specified value at the head of the list stored at the given key.
+        /// </summary>
+        /// <remarks>If the key does not exist, a new list will be created and the value will be added as
+        /// its first element.</remarks>
+        /// <typeparam name="T">The type of the value to be inserted into the list.</typeparam>
+        /// <param name="key">The key identifying the list. Must not be null or empty.</param>
+        /// <param name="value">The value to insert at the head of the list. Must not be null.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the length of the list after the
+        /// push operation.</returns>
+        Task<long> ListLeftPushAsync<T>(string key, T value);
+        /// <summary>
+        /// Removes and returns the first element from the list stored at the specified key.
+        /// </summary>
+        /// <remarks>This method interacts with a data store to retrieve and remove the first element of
+        /// the list. The key is automatically prefixed before accessing the data store.</remarks>
+        /// <typeparam name="T">The type of the element to be returned.</typeparam>
+        /// <param name="key">The key identifying the list. The key cannot be null or empty.</param>
+        /// <returns>The first element of the list, deserialized to the specified type <typeparamref name="T"/>. Returns the
+        /// default value of <typeparamref name="T"/> if the list is empty or the key does not exist.</returns>
+        Task<T> ListLeftPopAsync<T>(string key);
+        /// <summary>
+        /// Removes and returns the leftmost element(s) from a list stored at the specified key.
+        /// </summary>
+        /// <remarks>This method interacts with the underlying data store to retrieve and deserialize the
+        /// elements. The operation is asynchronous and may involve network or I/O latency.</remarks>
+        /// <typeparam name="T">The type of the elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
+        /// <param name="count">The maximum number of elements to remove and return. Defaults to 10,000.</param>
+        /// <returns>The leftmost element(s) from the list, deserialized to the specified type <typeparamref name="T"/>. If the
+        /// list is empty or the key does not exist, returns the default value of <typeparamref name="T"/>.</returns>
+        Task<List<T>> ListLeftPopAsync<T>(string key, int count);
+        /// <summary>
+        /// Asynchronously retrieves the length of the list stored at the specified key.
+        /// </summary>
+        /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of elements in the
+        /// list. Returns 0 if the list does not exist.</returns>
+        Task<long> ListLengthAsync(string key);
         #endregion
 
         #region Hash
@@ -266,24 +357,48 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         double HashIncrement(string key, string dataKey, double val, TimeSpan timeSpan);
 
+
+        /// <summary>
+        /// 判断某个数据是否已经被缓存
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="dataKey"></param>
+        /// <returns></returns>
+        Task<bool> HashExistsAsync(string key, string dataKey);
+        /// <summary>
+        /// 存储数据到hash表
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="dataKey"></param>
+        /// <param name="t"></param>
+        /// <param name="expired"></param>
+        /// <returns></returns>
+        Task<bool> HashSetAsync<T>(string key, string dataKey, T t, TimeSpan? expired = null);
+        /// <summary>
+        /// 移除hash中值
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="dataKey"></param>
+        /// <returns></returns>
+        Task<bool> HashDeleteAsync(string key, string dataKey);
+        /// <summary>
+        /// 从hash表获取数据
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="dataKey"></param>
+        /// <returns></returns>
+        Task<T> HashGetAsync<T>(string key, string dataKey);
         /// <summary>
         /// 异步自增
         /// </summary>
         /// <param name="key"></param>
         /// <param name="dataKey"></param>
         /// <param name="val"></param>
-        /// <param name="expireTime"></param>
+        /// <param name="expired"></param>
         /// <returns></returns>
-        Task<double> HashIncrementAsync(string key, string dataKey, double val = 1, DateTime? expireTime = null);
-        /// <summary>
-        /// 异步自增
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="dataKey"></param>
-        /// <param name="val"></param>
-        /// <param name="timeSpan"></param>
-        /// <returns></returns>
-        Task<double> HashIncrementAsync(string key, string dataKey, double val, TimeSpan? timeSpan);
+        Task<double> HashIncrementAsync(string key, string dataKey, double val = 1, TimeSpan? expired = null);
         /// <summary>
         /// 异步自减
         /// </summary>
@@ -292,6 +407,13 @@ namespace CSharp.Net.Cache
         /// <param name="val"></param>
         /// <returns></returns>
         Task<double> HashDecrementAsync(string key, string dataKey, double val = 1);
+        /// <summary>
+        /// 获取hashkey所有Redis key
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<List<T>> HashKeysAsync<T>(string key);
         /// <summary>
         /// 获取hashkey所有Redis key value
         /// </summary>
@@ -340,7 +462,19 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="keys">rediskey</param>
         /// <returns>成功删除的个数</returns>
-        long KeyDelete(List<string> keys);
+        Task<long> KeyDeleteAsync(List<string> keys);
+        /// <summary>
+        /// 删除单个key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<bool> KeyDeleteAsync(string key);
+        /// <summary>
+        /// 判断key是否存储
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<bool> KeyExistsAsync(string key);
         /*
           /// <summary>
           /// 删除单个key
@@ -370,7 +504,7 @@ namespace CSharp.Net.Cache
         /// <param name="key">就的redis key</param>
         /// <param name="newKey">新的redis key</param>
         /// <returns></returns>
-        bool KeyRename(string key, string newKey);
+        Task<bool> KeyRenameAsync(string key, string newKey);
         /// <summary>
         /// 设置Key的时间
         /// </summary>
@@ -379,13 +513,18 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         bool KeyExpire(string key, TimeSpan? expiry = null);
         /// <summary>
-        /// 设置过期
+        /// 设置Key的时间
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="dateTime"></param>
+        /// <param name="expiry"></param>
         /// <returns></returns>
-        bool KeyExpire(string key, DateTime dateTime);
-
+        Task<bool> KeyExpireAsync(string key, TimeSpan? expiry = null);
+        /// <summary>
+        /// 获取Key的过期时间
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<DateTime?> KeyExpireTimeAsync(string key);
         /// <summary>
         /// 分布式锁
         /// </summary>
@@ -393,15 +532,15 @@ namespace CSharp.Net.Cache
         /// <param name="value">用于释放锁的标记</param>
         /// <param name="cacheSeconds">锁有效期,秒</param>
         /// <returns></returns>
-        bool LockTake(string key, string value = "", int cacheSeconds = 10);
+        bool LockTake(string key, int cacheSeconds = 10, string value = "");
         /// <summary>
-        /// 分布式锁
+        /// 
         /// </summary>
         /// <param name="key"></param>
         /// <param name="cacheSeconds"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        bool LockTake(string key, int cacheSeconds);
-        Task<bool> LockTakeAsync(string key, int cacheSeconds);
+        Task<bool> LockTakeAsync(string key, int cacheSeconds = 10, string value = "");
         /// <summary>
         /// 
         /// </summary>
@@ -512,27 +651,7 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <returns></returns>
         long SetLength(string key);
-        /// <summary>
-        /// 并集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        List<T> SetUnion<T>(params string[] key);
-        /// <summary>
-        /// 交集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        List<T> SetIntersect<T>(params string[] key);
-        /// <summary>
-        /// 差集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        List<T> SetDifference<T>(params string[] key);
+
         #endregion 同步方法
 
         #region 异步方法
@@ -552,7 +671,7 @@ namespace CSharp.Net.Cache
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null);
+        Task<long> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null);
         /// <summary>
         /// 删除
         /// </summary>
@@ -617,6 +736,27 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         Task<long> SetLengthAsync(string key);
 
+        /// <summary>
+        /// 并集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<List<T>> SetUnionAsync<T>(params string[] key);
+        /// <summary>
+        /// 交集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<List<T>> SetIntersectAsync<T>(params string[] key);
+        /// <summary>
+        /// 差集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        Task<List<T>> SetDifferenceAsync<T>(params string[] key);
         #endregion 异步方法
 
         #endregion Set 无序集合
@@ -628,16 +768,41 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="subChannel"></param>
         void Subscribe(string subChannel);
-
         /// <summary>
-        /// 发布订阅 
+        /// 消息订阅 
         /// </summary>
         /// <param name="subChannel"></param>
         /// <param name="handler"></param>
         void Subscribe(string subChannel, Action<string> handler);
+        /// <summary>
+        /// 消息订阅
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
         void Subscribe<T>(string subChannel, Action<T> handler);
+        /// <summary>
+        /// 消息订阅
+        /// </summary>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
         Task SubscribeAsync(string subChannel, Func<string, Task> handler);
+        /// <summary>
+        /// 消息订阅
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
         Task SubscribeAsync<T>(string subChannel, Func<T, Task> handler);
+        /// <summary>
+        /// 消息订阅
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="subChannel"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
         Task SubscribeAsync<T>(string subChannel, Action<T> handler);
 
         /// <summary>
@@ -648,17 +813,24 @@ namespace CSharp.Net.Cache
         /// <param name="msg"></param>
         /// <returns></returns>
         long Publish<T>(string channel, T msg);
-
+        /// <summary>
+        /// 发布订阅
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="channel"></param>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        Task<long> PublishAsync<T>(string channel, T msg);
         /// <summary>
         /// Redis发布订阅  取消订阅
         /// </summary>
         /// <param name="channel"></param>
-        void Unsubscribe(string channel);
+        Task Unsubscribe(string channel);
 
         /// <summary>
         /// [慎重调用]Redis发布订阅  取消全部订阅
         /// </summary>
-        void UnsubscribeAll();
+        Task UnsubscribeAll();
         #endregion
     }
 }

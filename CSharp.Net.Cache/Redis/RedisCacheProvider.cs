@@ -3,6 +3,7 @@ using CSharp.Net.Util;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -133,7 +134,7 @@ namespace CSharp.Net.Cache
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return Do(db => db.StringSet(key, value, expiry));
+            return _db.StringSet(key, value, expiry);
         }
 
         /// <summary>
@@ -186,33 +187,6 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
-        /// 批量读
-        /// </summary>
-        public Dictionary<string, string> StringGet(List<string> keys)
-        {
-            Dictionary<string, string> data = new Dictionary<string, string>();
-
-            if (keys == null || keys.Count() <= 0)
-                throw new ArgumentNullException(nameof(keys));
-
-            var batch = _db.CreateBatch();
-
-            Dictionary<string, Task<RedisValue>> redisValueList = new Dictionary<string, Task<RedisValue>>();
-            Parallel.ForEach(keys.Distinct(), str =>
-            {
-                redisValueList.Add(str, batch.StringGetAsync(PrefixKey(str)));
-            });
-
-            batch.Execute();
-
-            Parallel.ForEach(redisValueList, str =>
-            {
-                data.Add(str.Key, str.Value.Result);
-            });
-            return data;
-        }
-
-        /// <summary>
         /// 获取一个key的对象
         /// </summary>
         /// <typeparam name="T"></typeparam>
@@ -232,7 +206,7 @@ namespace CSharp.Net.Cache
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return Do(db => db.StringGet(key));
+            return _db.StringGet(key);
         }
 
         /// <summary>
@@ -290,12 +264,44 @@ namespace CSharp.Net.Cache
         public double StringDecrement(string key, double val = 1)
         {
             key = PrefixKey(key);
-            return Do(db => db.StringDecrement(key, val));
+            return _db.StringDecrement(key, val);
         }
 
         #endregion 同步方法
 
         #region 异步方法
+
+        /// <summary>
+        /// 批量读
+        /// </summary>
+        public async Task<Dictionary<string, string>> StringGetAsync(string[] keys)
+        {
+            Dictionary<string, string> data = new Dictionary<string, string>();
+
+            if (keys == null || keys.Count() <= 0)
+                throw new ArgumentNullException(nameof(keys));
+
+            ConcurrentDictionary<string, string> redisValueList = new ConcurrentDictionary<string, string>();
+            var batch = _db.CreateBatch();
+#if NET
+            await Parallel.ForEachAsync(keys.Distinct(), async (str, t) =>
+             {
+                 var v = await batch.StringGetAsync(PrefixKey(str));
+                 redisValueList.TryAdd(str, v);
+             });
+#else
+            Parallel.ForEach(keys.Distinct(), str =>
+            {
+                var v = batch.StringGetAsync(PrefixKey(str));
+                redisValueList.TryAdd(str, v.Result);
+            });
+#endif
+            batch.Execute();
+            foreach (var k in redisValueList) data.Add(k.Key, k.Value);
+            return data;
+        }
+
+
         /// <summary>
         /// 获取一个key的对象
         /// </summary>
@@ -319,7 +325,7 @@ namespace CSharp.Net.Cache
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return await Do(db => db.StringGetAsync(key));
+            return await _db.StringGetAsync(key);
         }
 
         /// <summary>
@@ -328,7 +334,7 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="cacheSeconds"></param>
-        public Task StringSetAsync(string key, string value, int cacheSeconds = 0)
+        public Task<bool> StringSetAsync(string key, string value, int cacheSeconds = 0)
         {
             TimeSpan? timeSpan = null;
             if (cacheSeconds > 0)
@@ -345,13 +351,11 @@ namespace CSharp.Net.Cache
         /// <param name="expiry"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public Task StringSetAsync(string key, string value, TimeSpan? expiry)
+        public Task<bool> StringSetAsync(string key, string value, TimeSpan? expiry)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                throw new ArgumentNullException(nameof(key));
-
+            Args.Verify(key.IsNotNullOrEmpty());
             key = PrefixKey(key);
-            return Do(db => db.StringSetAsync(key, value, expiry));
+            return _db.StringSetAsync(key, value, expiry);
         }
 
         /// <summary>
@@ -362,7 +366,7 @@ namespace CSharp.Net.Cache
         /// <param name="obj"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public Task StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new()
+        public Task<bool> StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new()
         => StringSetAsync(key, Serialize(obj), expiry);
 
 
@@ -381,7 +385,7 @@ namespace CSharp.Net.Cache
             {
                 var data = db.StringIncrementAsync(pkey, val);
                 if (expireTimeSpan != null && updateExpire)
-                    db.KeyExpireAsync(pkey, expireTimeSpan);
+                    data.ContinueWith(_ => db.KeyExpireAsync(pkey, expireTimeSpan));
                 return data;
             });
             return ret;
@@ -398,9 +402,9 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db => db.StringDecrementAsync(key, val));
         }
-        #endregion 异步方法
+#endregion 异步方法
 
-        #endregion String
+#endregion String
 
         #region List
 
@@ -452,20 +456,14 @@ namespace CSharp.Net.Cache
         public T ListRightPop<T>(string key)
         {
             key = PrefixKey(key);
-            return Do(db =>
-            {
-                var value = db.ListRightPop(key);
-                return Deserialize<T>(value);
-            });
+            var value = _db.ListRightPop(key);
+            return Deserialize<T>(value);
         }
         public List<T> ListRightPop<T>(string key, int count)
         {
             key = PrefixKey(key);
-            return Do(db =>
-            {
-                var value = db.ListRightPop(key, count);
-                return ConvetList<T>(value);
-            });
+            var value = _db.ListRightPop(key, count);
+            return ConvetList<T>(value);
         }
         /// <summary>
         /// 左入
@@ -476,7 +474,7 @@ namespace CSharp.Net.Cache
         public void ListLeftPush<T>(string key, T value)
         {
             key = PrefixKey(key);
-            Do(db => db.ListLeftPush(key, Serialize(value)));
+            _db.ListLeftPush(key, Serialize(value));
         }
 
         /// <summary>
@@ -488,14 +486,11 @@ namespace CSharp.Net.Cache
         public T ListLeftPop<T>(string key)
         {
             key = PrefixKey(key);
-            return Do(db =>
-            {
-                var value = db.ListLeftPop(key);
-                return Deserialize<T>(value);
-            });
+            var value = _db.ListLeftPop(key);
+            return Deserialize<T>(value);
         }
         /// <summary>
-        ///  version 6.2.0+
+        ///  version
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -504,11 +499,8 @@ namespace CSharp.Net.Cache
         public List<T> ListLeftPop<T>(string key, int count)
         {
             key = PrefixKey(key);
-            return Do(db =>
-            {
-                var value = db.ListLeftPop(key, count);
-                return ConvetList<T>(value);
-            });
+            var value = _db.ListLeftPop(key, count);
+            return ConvetList<T>(value);
         }
         /// <summary>
         /// 获取集合中的数量
@@ -530,37 +522,46 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<long> ListRemoveAsync<T>(string key, T value)
+        public Task<long> ListRemoveAsync<T>(string key, T value)
         {
             key = PrefixKey(key);
-            return await Do(db => db.ListRemoveAsync(key, Serialize(value)));
+            return Do(db => db.ListRemoveAsync(key, Serialize(value)));
         }
 
         /// <summary>
         /// 获取指定key的List
         /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public async Task<List<T>> ListRangeAsync<T>(string key)
+        /// <remarks>This method retrieves elements from a Redis list within the specified range. The
+        /// range is inclusive,  meaning both the start and stop indices are included. If the specified range exceeds
+        /// the bounds of  the list, only the elements within the valid range are returned.</remarks>
+        /// <typeparam name="T">The type of the elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in Redis. Cannot be null or empty.</param>
+        /// <param name="start">The zero-based index of the first element to retrieve. Defaults to 0.</param>
+        /// <param name="stop">The zero-based index of the last element to retrieve. A value of -1 retrieves all elements  from the start
+        /// index to the end of the list. Defaults to -1.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a list of elements  of type
+        /// <typeparamref name="T"/> retrieved from the specified range of the list. If the range  is empty, an empty
+        /// list is returned.</returns>
+        public async Task<List<T>> ListRangeAsync<T>(string key, int start = 0, int stop = -1)
         {
             key = PrefixKey(key);
-            var values = await Do(redis => redis.ListRangeAsync(key));
+            var values = await Do(redis => redis.ListRangeAsync(key, start, stop));
             return ConvetList<T>(values);
         }
 
         /// <summary>
-        /// 入队
+        /// 入栈
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<long> ListRightPushAsync<T>(string key, T value)
+        public Task<long> ListRightPushAsync<T>(string key, T value)
         {
             key = PrefixKey(key);
-            return await Do(db => db.ListRightPushAsync(key, Serialize(value)));
+            return Do(db => db.ListRightPushAsync(key, Serialize(value)));
         }
 
         /// <summary>
-        /// 出队
+        /// 出栈
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -571,6 +572,24 @@ namespace CSharp.Net.Cache
             var value = await Do(db => db.ListRightPopAsync(key));
             return Deserialize<T>(value);
         }
+        /// <summary>
+        /// Removes and returns a specified number of elements from the end of a list stored in the database.
+        /// </summary>
+        /// <remarks>This method interacts with the database to retrieve and remove elements from the
+        /// specified list. If the list contains fewer elements than the specified <paramref name="count"/>, all
+        /// available elements will be returned.</remarks>
+        /// <typeparam name="T">The type of the elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in the database. Cannot be null or empty.</param>
+        /// <param name="count">The number of elements to remove and return from the end of the list. Must be greater than zero.</param>
+        /// <returns>A list of elements of type <typeparamref name="T"/> removed from the end of the list. The list will be empty
+        /// if the key does not exist or the list is empty.</returns>
+        public async Task<List<T>> ListRightPopAsync<T>(string key, int count)
+        {
+            key = PrefixKey(key);
+            var ts = await Do(db => db.ListRightPopAsync(key, count));
+
+            return ConvetList<T>(ts);
+        }
 
         /// <summary>
         /// 入栈
@@ -578,18 +597,21 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<long> ListLeftPushAsync<T>(string key, T value)
+        public Task<long> ListLeftPushAsync<T>(string key, T value)
         {
             key = PrefixKey(key);
-            return await Do(db => db.ListLeftPushAsync(key, Serialize(value)));
+            return Do(db => db.ListLeftPushAsync(key, Serialize(value)));
         }
 
         /// <summary>
-        /// 出栈
+        /// Removes and returns the first element from the list stored at the specified key.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
+        /// <remarks>This method interacts with a data store to retrieve and remove the first element of
+        /// the list. The key is automatically prefixed before accessing the data store.</remarks>
+        /// <typeparam name="T">The type of the element to be returned.</typeparam>
+        /// <param name="key">The key identifying the list. The key cannot be null or empty.</param>
+        /// <returns>The first element of the list, deserialized to the specified type <typeparamref name="T"/>. Returns the
+        /// default value of <typeparamref name="T"/> if the list is empty or the key does not exist.</returns>
         public async Task<T> ListLeftPopAsync<T>(string key)
         {
             key = PrefixKey(key);
@@ -598,14 +620,31 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
+        /// Removes and returns the leftmost element(s) from a list stored at the specified key.
+        /// </summary>
+        /// <remarks>This method interacts with the underlying data store to retrieve and deserialize the
+        /// elements. The operation is asynchronous and may involve network or I/O latency.</remarks>
+        /// <typeparam name="T">The type of the elements in the list.</typeparam>
+        /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
+        /// <param name="count">The maximum number of elements to remove and return. Defaults to 10,000.</param>
+        /// <returns>The leftmost element(s) from the list, deserialized to the specified type <typeparamref name="T"/>. If the
+        /// list is empty or the key does not exist, returns the default value of <typeparamref name="T"/>.</returns>
+        public async Task<List<T>> ListLeftPopAsync<T>(string key, int count)
+        {
+            key = PrefixKey(key);
+            var value = await Do(db => db.ListLeftPopAsync(key, count));
+            return ConvetList<T>(value);
+        }
+
+        /// <summary>
         /// 获取集合中的数量
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<long> ListLengthAsync(string key)
+        public Task<long> ListLengthAsync(string key)
         {
             key = PrefixKey(key);
-            return await Do(redis => redis.ListLengthAsync(key));
+            return Do(redis => redis.ListLengthAsync(key));
         }
 
         #endregion 异步方法
@@ -800,10 +839,10 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="dataKey"></param>
         /// <returns></returns>
-        public async Task<bool> HashExistsAsync(string key, string dataKey)
+        public Task<bool> HashExistsAsync(string key, string dataKey)
         {
             key = PrefixKey(key);
-            return await Do(db => db.HashExistsAsync(key, dataKey));
+            return Do(db => db.HashExistsAsync(key, dataKey));
         }
 
         /// <summary>
@@ -813,9 +852,17 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="dataKey"></param>
         /// <param name="t"></param>
+        /// <param name="expired"></param>
         /// <returns> 返回true表示是新加，返回false表示是修改 </returns>
-        public async Task<bool> HashSetAsync<T>(string key, string dataKey, T t)
-             => await Do(db => { return db.HashSetAsync(PrefixKey(key), dataKey, Serialize(t)); });
+        public Task<bool> HashSetAsync<T>(string key, string dataKey, T t, TimeSpan? expired = null)
+        {
+            return Do(db =>
+            {
+                var k = db.HashSetAsync(PrefixKey(key), dataKey, Serialize(t));
+                k.ContinueWith(_ => { if (expired.HasValue) db.KeyExpireAsync(key, expired); });
+                return k;
+            });
+        }
 
         /// <summary>
         /// 移除hash中的某值
@@ -823,8 +870,8 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="dataKey"></param>
         /// <returns></returns>
-        public async Task<bool> HashDeleteAsync(string key, string dataKey)
-            => await Do(db => db.HashDeleteAsync(PrefixKey(key), dataKey));
+        public Task<bool> HashDeleteAsync(string key, string dataKey)
+            => Do(db => db.HashDeleteAsync(PrefixKey(key), dataKey));
 
         /// <summary>
         /// 移除hash中的多个值
@@ -832,11 +879,8 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="dataKey"></param>
         /// <returns></returns>
-        public async Task<long> HashDeleteAsync(string key, params object[] dataKey)
-        {
-            key = PrefixKey(key);
-            return await Do(db => db.HashDeleteAsync(key, ConvertRedisValue(dataKey)));
-        }
+        public Task<long> HashDeleteAsync(string key, params object[] dataKey)
+            => Do(db => db.HashDeleteAsync(PrefixKey(key), ConvertRedisValue(dataKey)));
 
         /// <summary>
         /// 从hash表获取数据
@@ -853,33 +897,25 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
-        /// 为数字增长val
+        /// Increments the value of a specified field in a hash stored in Redis by a given amount.
         /// </summary>
-        /// <param name="key"></param>
-        /// <param name="dataKey"></param>
-        /// <param name="val">可以为负</param>
-        /// <param name="expireTime">过期时间</param>
-        /// <returns>增长后的值</returns>
-        public async Task<double> HashIncrementAsync(string key, string dataKey, double val = 1, DateTime? expireTime = null)
+        /// <remarks>If the specified field does not exist, it will be created and initialized to the
+        /// value of <paramref name="val"/>. If the hash does not exist, it will be created.</remarks>
+        /// <param name="key">The key of the hash in Redis. Cannot be null or empty.</param>
+        /// <param name="dataKey">The field within the hash to increment. Cannot be null or empty.</param>
+        /// <param name="val">The amount by which to increment the field's value. Can be positive or negative.</param>
+        /// <param name="expired">An optional expiration time for the hash. If specified, the hash's time-to-live will be updated after the
+        /// increment operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the new value of the field after
+        /// the increment operation.</returns>
+        public Task<double> HashIncrementAsync(string key, string dataKey, double val = 1, TimeSpan? expired = null)
         {
             key = PrefixKey(key);
-            return await Do(db =>
+            return Do(db =>
             {
-                var data = db.HashIncrementAsync(key, dataKey, val);
-                if (expireTime.HasValue)
-                    db.KeyExpireAsync(key, expireTime);
-                return data;
-            });
-        }
-
-        public async Task<double> HashIncrementAsync(string key, string dataKey, double val, TimeSpan? timeSpan)
-        {
-            key = PrefixKey(key);
-            return await Do(db =>
-            {
-                var data = db.HashIncrementAsync(key, dataKey, val);
-                db.KeyExpireAsync(key, timeSpan);
-                return data;
+                var tk = db.HashIncrementAsync(key, dataKey, val);
+                tk.ContinueWith(_ => db.KeyExpireAsync(key, expired));
+                return tk;
             });
         }
 
@@ -890,10 +926,10 @@ namespace CSharp.Net.Cache
         /// <param name="dataKey"></param>
         /// <param name="val">可以为负</param>
         /// <returns>减少后的值</returns>
-        public async Task<double> HashDecrementAsync(string key, string dataKey, double val = 1)
+        public Task<double> HashDecrementAsync(string key, string dataKey, double val = 1)
         {
             key = PrefixKey(key);
-            return await Do(db => db.HashDecrementAsync(key, dataKey, val));
+            return Do(db => db.HashDecrementAsync(key, dataKey, val));
         }
 
         /// <summary>
@@ -981,7 +1017,6 @@ namespace CSharp.Net.Cache
             return Do(redis =>
             {
                 var values = redis.SetMembers(key);
-                //return JsonHelper.DeserializeList<T>(values.ToString());
                 return ConvetList<T>(values);
             });
         }
@@ -1083,53 +1118,7 @@ namespace CSharp.Net.Cache
         }
 
 
-        /// <summary>
-        /// 并集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public List<T> SetUnion<T>(params string[] key)
-        {
-            return Do(redis =>
-            {
-                key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombine(SetOperation.Union, ConvertRedisKeys(key));
-                return ConvetList<T>(values);
-            });
-        }
 
-        /// <summary>
-        /// 交集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public List<T> SetIntersect<T>(params string[] key)
-        {
-            return Do(redis =>
-            {
-                key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombine(SetOperation.Intersect, ConvertRedisKeys(key));
-                return ConvetList<T>(values);
-            });
-        }
-
-        /// <summary>
-        /// 差集
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public List<T> SetDifference<T>(params string[] key)
-        {
-            return Do(redis =>
-            {
-                key = key.Select(k => PrefixKey(k)).ToArray();
-                var values = redis.SetCombine(SetOperation.Difference, ConvertRedisKeys(key));
-                return ConvetList<T>(values);
-            });
-        }
         #endregion 同步方法
 
         #region 异步方法
@@ -1139,15 +1128,15 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null)
+        /// <param name="timeSpan"></param>
+        public Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null)
         {
             key = PrefixKey(key);
             //return await Do(redis => redis.SetAddAsync(key, Serialize(value)));
-            return await Do(async db =>
+            return Do(db =>
             {
-                var data = await db.SetAddAsync(key, Serialize(value));
-                if (timeSpan.HasValue)
-                    await db.KeyExpireAsync(key, timeSpan);
+                var data = db.SetAddAsync(key, Serialize(value));
+                data.ContinueWith(x => db.KeyExpireAsync(key, timeSpan));
                 return data;
             });
         }
@@ -1159,15 +1148,14 @@ namespace CSharp.Net.Cache
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
         /// <returns></returns>
-        public async Task<bool> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
+        public Task<long> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
         {
             key = PrefixKey(key);
-            return await Do(async db =>
+            return Do(db =>
            {
-               var data = await db.SetAddAsync(key, ConvertRedisValue(value));
-               if (timeSpan.HasValue)
-                   await db.KeyExpireAsync(key, timeSpan);
-               return data > 0;
+               var data = db.SetAddAsync(key, ConvertRedisValue(value));
+               data.ContinueWith(x => db.KeyExpireAsync(key, timeSpan));
+               return data;
            });
         }
 
@@ -1176,11 +1164,11 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<long> SetRemoveAsync<T>(string key, params T[] value)
+        public Task<long> SetRemoveAsync<T>(string key, params T[] value)
         {
             key = PrefixKey(key);
             RedisValue[] valueList = value.Select(v => (RedisValue)Serialize(v)).ToArray();
-            return await Do(redis => redis.SetRemoveAsync(key, valueList));
+            return Do(redis => redis.SetRemoveAsync(key, valueList));
         }
 
         /// <summary>
@@ -1191,10 +1179,7 @@ namespace CSharp.Net.Cache
         public async Task<List<T>> SetMembersAsync<T>(string key)
         {
             key = PrefixKey(key);
-            var ret = await Do(redis =>
-             {
-                 return redis.SetMembersAsync(key);
-             });
+            var ret = await Do(redis => { return redis.SetMembersAsync(key); });
             return ConvetList<T>(ret);
         }
 
@@ -1207,10 +1192,7 @@ namespace CSharp.Net.Cache
         public async Task<T> SetRandomMemberAsync<T>(string key)
         {
             key = PrefixKey(key);
-            var ret = await Do(redis =>
-             {
-                 return redis.SetRandomMemberAsync(key);
-             });
+            var ret = await Do(redis => { return redis.SetRandomMemberAsync(key); });
             return Deserialize<T>(ret);
         }
 
@@ -1223,12 +1205,9 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         public async Task<List<T>> SetRandomMembersAsync<T>(string key, long count = 1)
         {
-            count = count < 1 ? 1 : count;
+            Args.Verify(count >= 1);
             key = PrefixKey(key);
-            var ret = await Do(redis =>
-             {
-                 return redis.SetRandomMembersAsync(key, count);
-             });
+            var ret = await Do(redis => { return redis.SetRandomMembersAsync(key, count); });
             return ret.Select(x => Deserialize<T>(x)).ToList();
         }
 
@@ -1239,13 +1218,10 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public async Task<bool> SetContainsAsync<T>(string key, T value)
+        public Task<bool> SetContainsAsync<T>(string key, T value)
         {
             key = PrefixKey(key);
-            return await Do(redis =>
-            {
-                return redis.SetContainsAsync(key, Serialize(value));
-            });
+            return Do(redis => { return redis.SetContainsAsync(key, Serialize(value)); });
         }
 
         /// <summary>
@@ -1257,10 +1233,7 @@ namespace CSharp.Net.Cache
         public async Task<T> SetPopAsync<T>(string key)
         {
             key = PrefixKey(key);
-            var ret = await Do(redis =>
-             {
-                 return redis.SetPopAsync(key);
-             });
+            var ret = await Do(redis => { return redis.SetPopAsync(key); });
             return Deserialize<T>(ret);
         }
 
@@ -1275,10 +1248,7 @@ namespace CSharp.Net.Cache
         {
             count = count < 1 ? 1 : count;
             key = PrefixKey(key);
-            var ret = await Do(redis =>
-            {
-                return redis.SetPopAsync(key, count);
-            });
+            var ret = await Do(redis => { return redis.SetPopAsync(key, count); });
             return ret.Select(x => Deserialize<T>(x)).ToList();
         }
 
@@ -1287,12 +1257,59 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<long> SetLengthAsync(string key)
+        public Task<long> SetLengthAsync(string key)
         {
             key = PrefixKey(key);
-            return await Do(redis => redis.SetLengthAsync(key));
+            return Do(redis => redis.SetLengthAsync(key));
         }
 
+        /// <summary>
+        /// 并集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public async Task<List<T>> SetUnionAsync<T>(params string[] key)
+        {
+            var values = await Do(redis =>
+            {
+                key = key.Select(k => PrefixKey(k)).ToArray();
+                return redis.SetCombineAsync(SetOperation.Union, ConvertRedisKeys(key));
+            });
+            return ConvetList<T>(values);
+        }
+
+        /// <summary>
+        /// 交集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public async Task<List<T>> SetIntersectAsync<T>(params string[] key)
+        {
+            var values = await Do(redis =>
+            {
+                key = key.Select(k => PrefixKey(k)).ToArray();
+                return redis.SetCombineAsync(SetOperation.Intersect, ConvertRedisKeys(key));
+            });
+            return ConvetList<T>(values);
+        }
+
+        /// <summary>
+        /// 差集
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public async Task<List<T>> SetDifferenceAsync<T>(params string[] key)
+        {
+            var values = await Do(redis =>
+            {
+                key = key.Select(k => PrefixKey(k)).ToArray();
+                return redis.SetCombineAsync(SetOperation.Difference, ConvertRedisKeys(key));
+            });
+            return ConvetList<T>(values);
+        }
         #endregion 异步方法
 
         #endregion Set 无序集合
@@ -1345,10 +1362,10 @@ namespace CSharp.Net.Cache
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="score"></param>
-        public async Task<bool> SortedSetAdd<T>(string key, T value, double score)
+        public Task<bool> SortedSetAdd<T>(string key, T value, double score)
         {
             key = PrefixKey(key);
-            return await Do(redis => redis.SortedSetAddAsync(key, Serialize(value), score));
+            return Do(redis => redis.SortedSetAddAsync(key, Serialize(value), score));
         }
 
         /// <summary>
@@ -1356,10 +1373,10 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public async Task<bool> SortedSetRemove<T>(string key, T value)
+        public Task<bool> SortedSetRemove<T>(string key, T value)
         {
             key = PrefixKey(key);
-            return await Do(redis => redis.SortedSetRemoveAsync(key, Serialize(value)));
+            return Do(redis => redis.SortedSetRemoveAsync(key, Serialize(value)));
         }
 
         /// <summary>
@@ -1383,10 +1400,10 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public async Task<long> SortedSetLength(string key)
+        public Task<long> SortedSetLength(string key)
         {
             key = PrefixKey(key);
-            return await Do(redis => redis.SortedSetLengthAsync(key));
+            return Do(redis => redis.SortedSetLengthAsync(key));
         }
 
         #endregion 异步方法
@@ -1402,20 +1419,28 @@ namespace CSharp.Net.Cache
         /// <returns>是否删除成功</returns>
         public bool KeyDelete(string key)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                return true;
+            Args.Verify(key.IsNotNullOrEmpty());
             return Do(db => db.KeyDelete(PrefixKey(key)));
         }
-
+        /// <summary>
+        /// 删除单个key
+        /// </summary>
+        /// <param name="key">redis key</param>
+        /// <returns>是否删除成功</returns>
+        public Task<bool> KeyDeleteAsync(string key)
+        {
+            Args.Verify(key.IsNotNullOrEmpty());
+            return Do(db => db.KeyDeleteAsync(PrefixKey(key)));
+        }
         /// <summary>
         /// 删除多个key
         /// </summary>
         /// <param name="keys">rediskey</param>
         /// <returns>成功删除的个数</returns>
-        public long KeyDelete(List<string> keys)
+        public Task<long> KeyDeleteAsync(List<string> keys)
         {
             string[] newKeys = keys.Select(x => PrefixKey(x)).ToArray();
-            return Do(db => db.KeyDelete(ConvertRedisKeys(newKeys)));
+            return Do(db => db.KeyDeleteAsync(ConvertRedisKeys(newKeys)));
         }
 
         /// <summary>
@@ -1498,6 +1523,16 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db => db.KeyExists(key));
         }
+        /// <summary>
+        /// 判断key是否存储
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public Task<bool> KeyExistsAsync(string key)
+        {
+            key = PrefixKey(key);
+            return Do(db => db.KeyExistsAsync(key));
+        }
 
         /// <summary>
         /// 重新命名key
@@ -1505,12 +1540,10 @@ namespace CSharp.Net.Cache
         /// <param name="key">就的redis key</param>
         /// <param name="newKey">新的redis key</param>
         /// <returns></returns>
-        public bool KeyRename(string key, string newKey)
+        public Task<bool> KeyRenameAsync(string key, string newKey)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyRename(key, newKey));
+            return Do(db => db.KeyRenameAsync(key, newKey));
         }
 
         /// <summary>
@@ -1526,14 +1559,29 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db => db.KeyExpire(key, expiry));
         }
-
-        public bool KeyExpire(string key, DateTime dateTime)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        public Task<bool> KeyExpireAsync(string key, TimeSpan? expiry = null)
         {
-            if (string.IsNullOrWhiteSpace(key))
-                return false;
             key = PrefixKey(key);
-            return Do(db => db.KeyExpire(key, dateTime));
+            return Do(db => db.KeyExpireAsync(key, expiry));
         }
+
+        /// <summary>
+        /// 获取key的过期时间
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public Task<DateTime?> KeyExpireTimeAsync(string key)
+        {
+            key = PrefixKey(key);
+            return Do(db => db.KeyExpireTimeAsync(key));
+        }
+
 
         /// <summary>
         /// 清空缓存
@@ -1546,22 +1594,11 @@ namespace CSharp.Net.Cache
         /// <summary>
         /// 分布式锁
         /// </summary>
-        /// <param name="key">锁名称，不可重复</param>
-        /// <param name="value">用于释放锁的标记</param>
-        /// <param name="cacheSeconds">锁有效期,秒</param>
-        /// <returns></returns>
-        public bool LockTake(string key, string value = "", int cacheSeconds = 10)
-        {
-            return _db.LockTake(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
-        }
-
-        /// <summary>
-        /// 分布式锁
-        /// </summary>
         /// <param name="key"></param>
         /// <param name="cacheSeconds"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public bool LockTake(string key, int cacheSeconds)
+        public bool LockTake(string key, int cacheSeconds = 10, string value = "")
         {
             return _db.LockTake(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds));
         }
@@ -1571,10 +1608,11 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="key"></param>
         /// <param name="cacheSeconds"></param>
+        /// <param name="value"></param>
         /// <returns></returns>
-        public Task<bool> LockTakeAsync(string key, int cacheSeconds)
+        public Task<bool> LockTakeAsync(string key, int cacheSeconds = 10, string value = "")
         {
-            return _db.LockTakeAsync(PrefixKey(key), "", TimeSpan.FromSeconds(cacheSeconds));
+            return _db.LockTakeAsync(PrefixKey(key), value, TimeSpan.FromSeconds(cacheSeconds));
         }
 
         /// <summary>
@@ -1697,11 +1735,11 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="subChannel"></param>
         /// <param name="handler"></param>
-        public async Task SubscribeAsync(string subChannel, Func<string, Task> handler)
+        public Task SubscribeAsync(string subChannel, Func<string, Task> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
-            await sub.SubscribeAsync(chl, async (channel, message) => await handler?.Invoke(message));
+            return sub.SubscribeAsync(chl, (channel, message) => handler?.Invoke(message));
         }
 
         /// <summary>
@@ -1709,12 +1747,12 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="subChannel"></param>
         /// <param name="handler"></param>
-        public async Task SubscribeAsync<T>(string subChannel, Func<T, Task> handler)
+        public Task SubscribeAsync<T>(string subChannel, Func<T, Task> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
-            await sub.SubscribeAsync(chl, async (channel, message)
-                => await handler?.Invoke(Deserialize<T>(message)));
+            return sub.SubscribeAsync(chl, (channel, message)
+               => handler?.Invoke(Deserialize<T>(message)));
         }
 
         /// <summary>
@@ -1722,11 +1760,11 @@ namespace CSharp.Net.Cache
         /// </summary>
         /// <param name="subChannel"></param>
         /// <param name="handler"></param>
-        public async Task SubscribeAsync<T>(string subChannel, Action<T> handler)
+        public Task SubscribeAsync<T>(string subChannel, Action<T> handler)
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
-            await sub.SubscribeAsync(chl, (_, message)
+            return sub.SubscribeAsync(chl, (channel, message)
                 => handler(Deserialize<T>(message)));
         }
 
@@ -1739,7 +1777,7 @@ namespace CSharp.Net.Cache
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(subChannel), RedisChannel.PatternMode.Auto);
-            sub.SubscribeAsync(chl, (channel, message) =>
+            sub.Subscribe(chl, (channel, message) =>
             {
                 if (handler == null)
                 {
@@ -1749,7 +1787,7 @@ namespace CSharp.Net.Cache
                 {
                     handler(channel, message);
                 }
-            }).GetAwaiter();
+            });
         }
 
         /// <summary>
@@ -1765,25 +1803,38 @@ namespace CSharp.Net.Cache
             var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
             return sub.Publish(chl, Serialize(msg));
         }
+        /// <summary>
+        /// 发布订阅
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="channel"></param>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public Task<long> PublishAsync<T>(string channel, T msg)
+        {
+            ISubscriber sub = _connection.GetSubscriber();
+            var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
+            return sub.PublishAsync(chl, Serialize(msg));
+        }
 
         /// <summary>
         /// Redis发布订阅  取消订阅
         /// </summary>
         /// <param name="channel"></param>
-        public void Unsubscribe(string channel)
+        public Task Unsubscribe(string channel)
         {
             ISubscriber sub = _connection.GetSubscriber();
             var chl = new RedisChannel(PrefixKey(channel), RedisChannel.PatternMode.Auto);
-            sub.Unsubscribe(chl);
+            return sub.UnsubscribeAsync(chl);
         }
 
         /// <summary>
         /// [慎重调用]Redis发布订阅  取消全部订阅
         /// </summary>
-        public void UnsubscribeAll()
+        public Task UnsubscribeAll()
         {
             ISubscriber sub = _connection.GetSubscriber();
-            sub.UnsubscribeAll();
+            return sub.UnsubscribeAllAsync();
         }
 
         #endregion 发布订阅
