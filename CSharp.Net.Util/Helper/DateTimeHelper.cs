@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace CSharp.Net.Util
@@ -673,6 +674,75 @@ namespace CSharp.Net.Util
             if (Math.Abs(nowTimeStamp - timeStamp) > intervalSeconds * 1000)
                 return false;
             return true;
+        }
+
+        /// <summary>
+        /// 返回开始时间 yyyy/mm/dd 00:00:00
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static DateTime GetDayStartTime(DateTime date)
+        {
+            return date.Date;
+        }
+        /// <summary>
+        /// 返回结束时间 yyyy/mm/dd 23:59:59
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public static DateTime GetDayEndTime(DateTime date)
+        {
+            return date.Date.AddDays(1).AddMilliseconds(-1);
+        }
+
+        /// <summary>
+        /// 将时间写入到字节数组中，格式为yyyy-MM-dd HH:mm:ss.fff
+        /// </summary>
+        /// <param name="time"></param>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <returns>offset</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int WriteDateTime(DateTime time, byte[] buffer, int offset)
+        {
+            int year = time.Year;
+            buffer[offset++] = (byte)('0' + (year / 1000) % 10);
+            buffer[offset++] = (byte)('0' + (year / 100) % 10);
+            buffer[offset++] = (byte)('0' + (year / 10) % 10);
+            buffer[offset++] = (byte)('0' + year % 10);
+            buffer[offset++] = (byte)'-';
+
+            int month = time.Month;
+            buffer[offset++] = (byte)('0' + month / 10);
+            buffer[offset++] = (byte)('0' + month % 10);
+            buffer[offset++] = (byte)'-';
+
+            int day = time.Day;
+            buffer[offset++] = (byte)('0' + day / 10);
+            buffer[offset++] = (byte)('0' + day % 10);
+            buffer[offset++] = (byte)' ';
+
+            int hour = time.Hour;
+            buffer[offset++] = (byte)('0' + hour / 10);
+            buffer[offset++] = (byte)('0' + hour % 10);
+            buffer[offset++] = (byte)':';
+
+            int minute = time.Minute;
+            buffer[offset++] = (byte)('0' + minute / 10);
+            buffer[offset++] = (byte)('0' + minute % 10);
+            buffer[offset++] = (byte)':';
+
+            int second = time.Second;
+            buffer[offset++] = (byte)('0' + second / 10);
+            buffer[offset++] = (byte)('0' + second % 10);
+            buffer[offset++] = (byte)'.';
+
+            int ms = time.Millisecond;
+            buffer[offset++] = (byte)('0' + (ms / 100));
+            buffer[offset++] = (byte)('0' + (ms / 10) % 10);
+            buffer[offset++] = (byte)('0' + (ms % 10));
+
+            return offset;
         }
 
         public static long DaysToHours(long timePeriodDays) =>

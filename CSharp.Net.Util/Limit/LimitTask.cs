@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public sealed class LimitTask : TokenBucket
     {
         internal DateTime lastReadTime { get; set; } = DateTime.UtcNow;
@@ -36,12 +39,22 @@ namespace CSharp.Net.Util
             while (bucket == null || bucket.Count == 0)
                 throw new AppException("network is busy");
         }
-
-        public LimitTask SetCapacity(int value)
+        /// <summary>
+        /// 设置容量，默认50
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public LimitTask SetCapacity(int value = 50)
         {
             setCapacity(value);
             return this;
         }
+
+        /// <summary>
+        /// 长期保持容量
+        /// </summary>
+        /// <param name="lts">true:不会被回收，false:闲置10分钟将被自动回收，回收后需重新设置大小</param>
+        /// <returns></returns>
         public LimitTask SetLts(bool lts = true)
         {
             Lts = lts;

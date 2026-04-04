@@ -306,7 +306,7 @@ namespace CSharp.Net.Cache.Memory
 
             if ((data.Count / count) <= 10)
             {
-                data = Utils.GetRandomList(data).Take((int)count).ToList();
+                data = Utils.GetRandomList(data,(int)count);
                 return data;
             }
 

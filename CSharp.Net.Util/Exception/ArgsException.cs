@@ -6,6 +6,6 @@ namespace CSharp.Net.Util
 {
     public class ArgsException : AppException
     {
-        public ArgsException(string message) : base(400, message) { }
+        public ArgsException(string message) : base(AExceptionCode.ArgsError, message) { }
     }
 }

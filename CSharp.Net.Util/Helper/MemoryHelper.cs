@@ -45,7 +45,7 @@ namespace CSharp.Net.Util
         {
             int length = 1024;//定义需要申请的内存块大小(1KB)
             IntPtr address = Marshal.AllocHGlobal(length); //从非托管内存中申请内存空间，并返会该内存块的地址 (单位：字节)
-            
+
             Marshal.WriteByte(address, 111);  //修改第一个byte中的数据
             Marshal.WriteByte(address, 0, 111); //修改第一个byte中的数据
             byte buffer0 = Marshal.ReadByte(address); //读取第一个byte中的数据
@@ -87,7 +87,7 @@ namespace CSharp.Net.Util
                 int n2 = Marshal.SizeOf(typeof(Int32));//返回某个类型在非托管内存中占用的字节数量
                 IntPtr ma = Marshal.AllocHGlobal(n1);
                 Marshal.StructureToPtr(a, ma, false);//将数据从托管对象封送到非托管内存
-                string a1 =(string) Marshal.PtrToStructure(ma, typeof(string));//将数据从非托管内存封送到托管对象
+                string a1 = (string)Marshal.PtrToStructure(ma, typeof(string));//将数据从非托管内存封送到托管对象
                 //Marshal.Copy(a.ToCharArray(), 0, ma, a.ToCharArray().Length); // 将托管数组复制到非托管内存
                 //byte[] newArray = new byte[4];
                 //Marshal.Copy(ma, newArray, 0, newArray.Length);// 将非托管内存指针的数据复制到托管数组  
@@ -109,8 +109,6 @@ namespace CSharp.Net.Util
             int* ptr = (int*)&obj;
             return $"0x{*(ptr):X}";
         }
-
-
 #if NET
         /// <summary>
         /// 操作共享内存

@@ -1,5 +1,6 @@
 ﻿using CSharp.Net.Util.Cryptography;
 using System;
+using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -1289,6 +1290,24 @@ namespace CSharp.Net.Util
             if (IsEmpty(value)) return "";
             return EncodeBase64(value, Encoding.GetEncoding(encoding));
         }
+        /// <summary>
+        /// URL安全Base64
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="encoding"></param>
+        /// <returns>// + 替换为 -
+        ///             / 替换为 _ 
+        ///               去掉填充 =
+        /// </returns>
+        public static string EncodeBase64Url(string value, string encoding = "UTF-8")
+        {
+            if (IsEmpty(value)) return "";
+            var base64 = EncodeBase64(value, Encoding.GetEncoding(encoding));
+            return base64
+                   .Replace('+', '-')  // + 替换为 -
+                   .Replace('/', '_')  // / 替换为 _
+                   .TrimEnd('=');      // 去掉填充
+        }
 
         /// <summary>
         /// 	Decodes a Base 64 encoded value to a string using the default encoding.
@@ -1299,25 +1318,40 @@ namespace CSharp.Net.Util
         public static string DecodeBase64(string encodedValue, string encoding = "UTF-8")
         {
             if (IsEmpty(encodedValue)) return "";
-            encodedValue = encodedValue.Replace("\n", "").Replace(" ", "+");
-            encodedValue = Regex.Unescape(encodedValue);
+            
             return DecodeBase64(encodedValue, Encoding.GetEncoding(encoding));
         }
 
         /// <summary>
         /// 	Decodes a Base 64 encoded value to a string using the supplied encoding.
         /// </summary>
-        /// <param name = "encodedValue">The Base 64 encoded value.</param>
+        /// <param name = "base64">The Base 64 encoded value.</param>
         /// <param name = "encoding">The encoding.</param>
         /// <returns>The decoded string</returns>
-        public static string DecodeBase64(string encodedValue, Encoding encoding)
+        public static string DecodeBase64(string base64, Encoding encoding)
         {
-            if (IsEmpty(encodedValue)) return "";
+            if (IsEmpty(base64)) return "";
             encoding = (encoding ?? Encoding.UTF8);
-            var bytes = Convert.FromBase64String(encodedValue);
+
+            base64 = base64.Replace("\n", "").Replace(" ", "+").Replace('-', '+').Replace('_', '/');
+            var paddingLength = (4 - base64.Length % 4) % 4;
+            base64 += new string('=', paddingLength);
+            base64 = Regex.Unescape(base64);
+
+            var bytes = Convert.FromBase64String(base64);
             return encoding.GetString(bytes);
         }
 
+        /// <summary>
+        /// URL安全Base64,对应<see cref="EncodeBase64Url"/>
+        /// </summary>
+        /// <param name="base64"></param>
+        /// <param name="encoding"></param>
+        /// <returns></returns>
+        public static string DecodeBase64Url(string base64, string encoding = "UTF-8")
+        { 
+            return DecodeBase64(base64, encoding);
+        }
         #endregion
 
         #region String to Enum
@@ -2605,5 +2639,46 @@ namespace CSharp.Net.Util
             return string.Join("&", keyValuePairs);
         }
 
+        public static string DictionaryToSortedQueryString(Dictionary<string, object> data)
+        {
+            if (data == null || data.Count == 0)
+                return string.Empty;
+            var sortedItems = data.OrderBy(item => item.Key);
+            var keyValuePairs = sortedItems.Select(item => $"{item.Key}={item.Value}");
+            return string.Join("&", keyValuePairs);
+        }
+
+        /// <summary>
+        /// Object 转 string
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static string ObjectToString(object value)
+        {
+            if (value == null)
+                return string.Empty;
+
+            // 对于 DateTime，可以使用特定格式
+            if (value is DateTime dateTime)
+            {
+                // ISO 8601 格式
+                return dateTime.ToString("o");
+            }
+
+            // 对于 bool，可以使用小写 true/false
+            if (value is bool boolValue)
+            {
+                return boolValue.ToString().ToLower();
+            }
+
+            // 对于数字，使用不变文化格式
+            if (value is IFormattable formattable)
+            {
+                return formattable.ToString(null, System.Globalization.CultureInfo.InvariantCulture);
+            }
+
+            // 默认使用 ToString()
+            return value.ToString();
+        }
     }
 }

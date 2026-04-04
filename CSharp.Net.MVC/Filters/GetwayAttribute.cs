@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Mvc.Filters
 {
@@ -14,9 +15,10 @@ namespace CSharp.Net.Mvc.Filters
         {
             _logger = logger;
         }
-        public override void OnActionExecuting(ActionExecutingContext context)
-        {
 
+        public override Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+        {
+            return base.OnActionExecutionAsync(context, next);
         }
     }
 }

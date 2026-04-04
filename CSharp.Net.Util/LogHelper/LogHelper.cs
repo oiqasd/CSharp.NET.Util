@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using CSharp.Net.Util.Logger;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
@@ -14,67 +10,61 @@ namespace CSharp.Net.Util
     /// </summary>
     public sealed class LogHelper
     {
-        public static string Appid { get; set; }
-        public static string Log_Level { get; set; }
-        //static Logger _logger;
-        static LogHelper()
+        /// <summary>
+        /// Json格式输出
+        /// </summary>
+        /// <param name="level"><see cref="LogLevel"/></param>
+        /// <param name="jsonStr"></param>
+        /// <param name="ex"></param>
+        /// <returns></returns>
+        public static void Log2Json(LogLevel level, string jsonStr, Exception ex = null)
         {
-            // _logger = new Logger(Path.Combine(AppDomainHelper.GetRunRoot, "logs"));
+            var log = new LogEntry(level, null, jsonStr, ex, printType: PrintType.Json);
+            WriteLog(log);
         }
 
+        /// <summary>
+        /// 记录日志
+        /// </summary>
+        /// <param name="level"></param>
+        /// <param name="message"></param> 
+        public static void Log(LogLevel level, params string[] message)
+        {
+            var log = new LogEntry(level, null, string.Join(" ", message), null, null);
+            WriteLog(log);
+        }
+        /// <summary>
+        /// 记录日志
+        /// </summary>
+        /// <param name="level"></param>
+        /// <param name="ex"></param>
+        /// <param name="message"></param>
+        public static void Log(LogLevel level, Exception ex, params string[] message)
+        {
+            var log = new LogEntry(level, null, string.Join(" ", message), ex);
+            WriteLog(log);
+        }
+
+        /// <summary>
+        /// 记录调试日志
+        /// </summary>
+        /// <param name="message"></param> 
+        public static void Debug(string message)
+        {
+            var log = new LogEntry(LogLevel.Debug, null, message);
+            WriteLog(log);
+
+        }
         /// <summary>
         /// 记录调试日志
         /// </summary>
         /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
+        /// <param name="message"></param> 
         /// <param name="eventId"></param>
-        public static async Task Debug(string title, string message, Exception ex, string eventId = null, string loggerName = null, DateTime? dateTime = null)
+        public static void Debug(string title, string message, string eventId = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Debug, title, message, dateTime, loggerName, ex, eventId: eventId);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录调试日志
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        /// <param name="eventId"></param>
-        public static async Task Debug(string message, Exception ex = null, string eventId = null, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Debug, string.Empty, message, dateTime, loggerName, ex, eventId: eventId);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录调试日志
-        /// </summary>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="eventId"></param>
-        public static async Task Debug(Exception ex, string eventId = null, string loggerName = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Debug, null, null, null, loggerName, ex, eventId: eventId);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录调试日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        /// <param name="eventId"></param>
-        public static async Task Debug(string title, string message, string eventId = null, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Debug, title, message, dateTime, loggerName, eventId: eventId);
-            await WriteLog(log);
+            var log = new LogEntry(LogLevel.Debug, title, message, eventId: eventId);
+            WriteLog(log);
         }
 
         /// <summary>
@@ -82,48 +72,10 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
-        public static async Task Info(string message)
+        public static void Info(params string[] message)
         {
-            ISystemLog log = new SystemLog(LogLevel.Info, null, message, null, null);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录信息日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        public static async Task Info(string title, string message)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Info, title, message, null, null);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录信息日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        public static async Task Info(string title, string message, Exception ex, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Info, title, message, dateTime, loggerName, ex);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录信息日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        public static async Task Info(string title, string message, string loggerName, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Info, title, message, dateTime, loggerName);
-            await WriteLog(log);
+            var log = new LogEntry(LogLevel.Info, null, string.Join(" ", message));
+            WriteLog(log);
         }
 
         /// <summary>
@@ -131,97 +83,22 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="title"></param>
         /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        public static async Task Warn(string title, string message, Exception ex, string loggerName = null, DateTime? dateTime = null)
+        /// <param name="ex"></param> 
+        public static void Warn(string title, string message, Exception ex = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Warn, title, message, dateTime, loggerName, ex);
-            await WriteLog(log);
+            var log = new LogEntry(LogLevel.Warn, title, message, ex);
+            WriteLog(log);
         }
-        /// <summary>
-        /// 记录警告日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        public static async Task Warn(string title, string message, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Warn, title, message, dateTime, loggerName);
-            await WriteLog(log);
-        }
+
         /// <summary>
         /// 记录错误日志
-        /// </summary>
-        /// <param name="title"></param>
+        /// </summary> 
         /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">default:now</param>
-        public static async Task Error(string title, string message, Exception ex, string loggerName, DateTime? dateTime = null)
+        /// <param name="ex"></param>  
+        public static void Error(string message, Exception ex = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Error, title, message, dateTime, loggerName, ex);
-            await WriteLog(log);
-        }
-        public static async Task Error(string message, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Error, null, message, dateTime, loggerName);
-            await WriteLog(log);
-        }
-
-        public static async Task Error(Exception ex, string message = null, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Error, null, message, dateTime, loggerName, ex);
-            await WriteLog(log);
-        }
-
-        public static async Task Error(string title, string message, string loggerName, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Error, title, message, dateTime, loggerName);
-            await WriteLog(log);
-        }
-        /// <summary>
-        /// 记录崩溃日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime">默认当前</param>
-        /// <param name="eventId"></param>
-        public static async Task Fatal(string title, string message, Exception ex, string eventId = null, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, ex, eventId);
-            await WriteLog(log);
-        }
-        /// <summary>
-        /// 记录崩溃日志
-        /// </summary>
-        /// <param name="title"></param>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime"></param>
-        /// <param name="eventId"></param>
-        public static async Task Fatal(string title, Exception ex, string message = null, string eventId = null, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, ex, eventId);
-            await WriteLog(log);
-        }
-
-        /// <summary>
-        /// 记录崩溃日志
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="ex"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime"></param>
-        /// <param name="eventId"></param>
-        public static async Task Fatal(Exception ex, string message = null, string eventId = null, string loggerName = null, DateTime? dateTime = null)
-        {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, null, message, dateTime, loggerName, ex, eventId);
-            await WriteLog(log);
+            var log = new LogEntry(LogLevel.Error, null, message, ex);
+            WriteLog(log);
         }
 
         /// <summary>
@@ -229,29 +106,55 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="title"></param>
         /// <param name="message"></param>
-        /// <param name="loggerName">文件名,默认用level</param>
-        /// <param name="dateTime"></param>
+        /// <param name="ex"></param>  
         /// <param name="eventId"></param>
-        public static async Task Fatal(string title, string message, string eventId = null, string loggerName = null, DateTime? dateTime = null)
+        public static void Fatal(string title, Exception ex, string message = null, string eventId = null)
         {
-            ISystemLog log = new SystemLog(LogLevel.Fatal, title, message, dateTime, loggerName, eventId: eventId);
-            await WriteLog(log);
+            var log = new LogEntry(LogLevel.Fatal, title, message, ex, eventId);
+            WriteLog(log);
         }
+
+        /// <summary>
+        /// 记录崩溃日志
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="ex"></param> 
+        /// <param name="eventId"></param>
+        public static void Fatal(Exception ex, string message = null, string eventId = null)
+        {
+            var log = new LogEntry(LogLevel.Fatal, null, message, ex, eventId);
+            WriteLog(log);
+        }
+
+        /// <summary>
+        /// 记录崩溃日志
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="message"></param> 
+        /// <param name="eventId"></param>
+        public static void Fatal(string title, string message, string eventId = null)
+        {
+            var log = new LogEntry(LogLevel.Fatal, title, message, eventId: eventId);
+            WriteLog(log);
+        }
+
 
         /// <summary>
         /// 执行记录日志
         /// </summary>
-        /// <param name="log"></param>
-        private static async Task WriteLog(ISystemLog log)
+        /// <param name="logEntry"></param>
+        private static void WriteLog(LogEntry logEntry)
         {
+            ALogger.Instance.Enqueue(logEntry);
+
+            /*
             if (log.Level == LogLevel.None) return;
-            log.AppId = Appid;
             //如果当前日志不能记日志则不记录
             if (!IsAllowLog(log.Level))
                 return;
             try
             {
-                StringBuilder msg = new StringBuilder($"[{(log.LoggerTime ?? DateTime.Now).ToString(3)}]")
+                StringBuilder msg = new StringBuilder($"[{(log.LoggerTime ?? DateTime.GetTimestamp).ToString(3)}]")
                       .Append(log.EventId.IsNullOrEmpty() ? " " : "[EventId]:" + log.EventId + " ")
                       .Append(log.Title.IsNullOrEmpty() ? null : log.Title + " ")
                       .AppendLine(log.Message.IsNullOrEmpty() ? null : log.Message);
@@ -267,15 +170,16 @@ namespace CSharp.Net.Util
                 var path = FileHelper.GetFilePath(
                     Path.Combine(AppDomainHelper.GetRunRoot, "logs",
                          log.LoggerName.IsNullOrEmpty() ? log.Level.GetDescription().ToLower() : log.LoggerName),
-                         (log.LoggerTime ?? DateTime.Now).ToString(2) + ".log");
-                //await _logger.LogAsync(msg.ToString());
+                         (log.LoggerTime ?? DateTime.GetTimestamp).ToString(2) + ".log");
+                
                 await FileHelper.AppendWrittenFile(path, msg.ToString());
             }
             catch (Exception ex)
             {
                 Trace.Fail(ex.Message, ex.GetExcetionMessage());
-            }
+            }*/
         }
+
 
         /// <summary>
         /// 检查是否需要记录此等级的日志
@@ -288,6 +192,8 @@ namespace CSharp.Net.Util
         }
         public static IList<LogLevel> AllowLogLists = null;
         static readonly object _lockobj = new object();
+        public static string Log_Level { get; set; }
+
         /// <summary>
         /// 通过配置文件设置允许记录的日志等级
         /// </summary>
@@ -324,7 +230,7 @@ namespace CSharp.Net.Util
                                 }
                                 catch (Exception ex)
                                 {
-                                    LogHelper.Error("日志等级配置有误", logs, ex, nameof(LogHelper));
+                                    LogHelper.Fatal("日志等级配置有误", ex, logs, nameof(LogHelper));
                                 }
                             }
                         }
@@ -333,16 +239,16 @@ namespace CSharp.Net.Util
             }
             return AllowLogLists;
         }
-        public static void ClearTraceId()
+        static void ClearTraceId()
         {
             // LogClient.Instance.ClearTraceId();
         }
 
-        public static void LogCompleted()
+        static void LogCompleted()
         {
             //_logger.Dispose();
         }
-        public static LogLevel ConvertLogLevel(LogLevel level)
+        static LogLevel ConvertLogLevel(LogLevel level)
         {
             switch (level)
             {

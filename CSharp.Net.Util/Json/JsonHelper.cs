@@ -2,12 +2,12 @@
 using CSharp.Net.Util.Json.Converters;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace CSharp.Net.Util
 {
@@ -109,6 +109,10 @@ namespace CSharp.Net.Util
         public static string Serialize(object obj, Type type, JsonSerializerOptions options = null)
         {
             return JsonSerializer.Serialize(obj, type, options ?? _options);
+        }
+        public static string Serialize<TValue>(TValue value, JsonTypeInfo<TValue> jsonTypeInfo)
+        {
+            return JsonSerializer.Serialize(value, jsonTypeInfo);
         }
 
         /// <summary>
@@ -318,7 +322,11 @@ namespace CSharp.Net.Util
             => GetObject(jsonData) as Dictionary<string, object>;
 
         public static JsonObject GetJObject(string jsonData)
-           => JsonNode.Parse(jsonData).AsObject();
+        {
+            if (jsonData.IsNullOrEmpty())
+                return null;
+            return JsonNode.Parse(jsonData).AsObject();
+        }
 
         /// <summary>
         /// 获取json中指定的字段

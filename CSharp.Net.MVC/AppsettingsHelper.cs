@@ -33,7 +33,7 @@ public class AppsettingsHelper
     {
         IConfigurationBuilder builder = new ConfigurationBuilder()
                        .AddEnvironmentVariables()
-                       .SetBasePath(Directory.GetCurrentDirectory())
+                       .SetBasePath(AppContext.BaseDirectory)//避免使用Directory.GetCurrentDirectory()
                        .AddJsonFile("appsettings.json", true, true);
         if (args != null) builder = builder.AddCommandLine(args);
 

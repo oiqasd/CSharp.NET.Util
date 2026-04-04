@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Cache
@@ -79,7 +80,7 @@ namespace CSharp.Net.Cache
         /// <summary>
         /// 批量读
         /// </summary>
-        Task<Dictionary<string, string>> StringGetAsync(string[] keys); 
+        Task<Dictionary<string, string>> StringGetAsync(string[] keys);
 
         /// <summary>
         /// 为数字增长val
@@ -110,7 +111,7 @@ namespace CSharp.Net.Cache
         Task<string> StringGetAsync(string key);
         Task<bool> StringSetAsync(string key, string value, int cacheSeconds = 0);
         Task<bool> StringSetAsync(string key, string value, TimeSpan? expiry);
-        Task<bool> StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new();
+        Task<bool> StringSetAsync(string key, object obj, int cacheSeconds = 0);
         Task<double> StringIncrementAsync(string key, double val = 1, TimeSpan? expireTimeSpan = null, bool updateExpire = false);
         Task<double> StringDecrementAsync(string key, double val = 1);
         #endregion
@@ -428,17 +429,17 @@ namespace CSharp.Net.Cache
         /// 添加
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="member"></param>
         /// <param name="score"></param>
-        Task<bool> SortedSetAdd<T>(string key, T value, double score);
+        Task<bool> SortedSetAdd<T>(string key, T member, double score);
         /// <summary>
         /// 删除
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
-        Task<bool> SortedSetRemove<T>(string key, T value);
+        /// <param name="member"></param>
+        Task<bool> SortedSetRemove<T>(string key, T member);
         /// <summary>
-        /// Get SortedSet
+        /// 根据排名返回数据
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -446,8 +447,53 @@ namespace CSharp.Net.Cache
         /// <param name="stop"></param>
         /// <param name="sortAsc"></param>
         /// <returns></returns>
-        Task<List<T>> SortedSetRangeByRank<T>(string key, long start = 0, long stop = -1, bool sortAsc = true);
+        Task<List<T>> SortedSetRangeByRank<T>(string key, long start = 0, long stop = -1, bool sortAsc = false);
+        /// <summary>
+        /// 根据排名区间返回数据、积分和排名
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start">排名</param>
+        /// <param name="stop">排名</param>
+        /// <param name="sortAsc"></param>
+        /// <returns>T1:"member",T2:score,T3:rank</returns> 
+        Task<List<ValueTuple<string, double, long>>> SortedSetRangeByRankWithScoresAsync(string key, long start = 0, long stop = -1, bool sortAsc = false);
+        /// <summary>
+        /// 根据积分区间返回数据、积分和排名
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start">最小积分</param>
+        /// <param name="stop">最大积分</param>
+        /// <param name="sortAsc"></param>
+        /// <returns>T1:"member",T2:积分</returns> 
+        Task<List<ValueTuple<string, double>>> SortedSetRangeByScoreWithScoresAsync(string key, long start = 0, long stop = -1, bool sortAsc = false);
 
+
+        /// <returns></returns>
+        /// <summary>
+        /// 获取单个用户的积分和排名
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns>(bool, double, long)<code>(成功失败, 积分, 排名)</code>
+        /// 无数据放回(false,0,0)
+        /// </returns>
+        Task<ValueTuple<bool, double, long>> SortedSetMenberScoreAndRank(string key, string member);
+        /// <summary>
+        /// get score
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        Task<double?> SortedSetScoreAsync<T>(string key, T member);
+        /// <summary>
+        /// 获取排名
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        Task<long?> SortedSetRankAsync<T>(string key, T member);
         /// <summary>
         /// 获取集合中的数量
         /// </summary>
@@ -657,21 +703,23 @@ namespace CSharp.Net.Cache
         #region 异步方法
 
         /// <summary>
-        /// 添加
+        /// 添加单个
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
-        Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null);
+        Task<bool> SetAddAsync(string key, object value, TimeSpan? timeSpan = null);
+
         /// <summary>
-        /// 向set添加数组
+        /// 批量添加
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="list"></param>
         /// <param name="timeSpan"></param>
+        /// <param name="IsCover">是否覆盖</param>
         /// <returns></returns>
-        Task<long> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null);
+        Task<long> SetAddAsync<T>(string key, IEnumerable<T> list, TimeSpan? timeSpan = null, bool IsCover = false);
         /// <summary>
         /// 删除
         /// </summary>

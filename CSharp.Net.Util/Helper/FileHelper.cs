@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -183,19 +182,19 @@ namespace CSharp.Net.Util
         /// </summary>
         /// <param name="file"></param>
         /// <param name="contents"></param>
-        /// <param name="encoding">null:Encoding.Default</param>
+        /// <param name="encoding">null:Encoding.UTF8</param>
         //[MethodImpl(MethodImplOptions.Synchronized)]
-        public static async Task AppendWrittenFile(string file, string contents, string encoding = null)
+        public static async Task AppendWrittenFile(string file, string contents, Encoding encoding = null)
         {
             var semaphore = LockObject.GetLockObj(file);
             try
             {
                 //Monitor.Enter(obj, ref l);
                 await semaphore.WaitAsync();
-                using (FileStream fs = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true))
+                using (FileStream fs = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous))
                 {
-                    var encodingObj = encoding == null ? Encoding.Default : Encoding.GetEncoding(encoding);
-                    var buffer = encodingObj.GetBytes(contents);//+ Environment.NewLine;
+                    encoding = encoding ?? Encoding.UTF8;//: Encoding.GetEncoding(encoding);
+                    var buffer = encoding.GetBytes(contents);//+ Environment.NewLine;
                     await fs.WriteAsync(buffer, 0, buffer.Length);
                     await fs.FlushAsync();
 

@@ -142,6 +142,21 @@ public static class ObjectExtension
             return r;
         return ConvertHelper.ConvertTo(obj, defaultValue);
     }
+
+    public static double ToDouble(this object obj, double defaultValue = 0)
+    {
+        if (obj == null) return defaultValue;
+        if (obj is double v)
+            return v;
+        if (obj is decimal decV)
+            return (double)decV;
+        if (obj is double douV)
+            return (double)douV;
+        if (double.TryParse(obj.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out double r))
+            return r;
+        return ConvertHelper.ConvertTo(obj, defaultValue);
+    }
+
     public static decimal ToDecimal(this object obj, decimal defaultValue = 0M)
     {
         if (obj == null) return defaultValue;

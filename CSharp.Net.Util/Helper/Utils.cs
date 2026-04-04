@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
@@ -33,20 +34,14 @@ namespace CSharp.Net.Util
             if (length <= 0) return "";
 
             string[] s1 = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-                            //"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
-                            // "n", "o", "p", "q", "r","s", "t", "u", "v", "w", "x", "y", "z", 
+                            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+                            "n", "o", "p", "q", "r","s", "t", "u", "v", "w", "x", "y", "z", 
                             "A", "B", "C", "D", "E", "F", "G", "H", "I", "J","K", "L", "M",
                             "N","O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 
-            List<string> newList = GetRandomList(s1);
+            List<string> newList = GetRandomList(s1, length);
 
-            StringBuilder builder = new StringBuilder();
-
-            for (int i = 0; i < length; i++)
-            {
-                builder.Append(newList[new Random(Guid.NewGuid().GetHashCode()).Next(0, newList.Count)]);
-            }
-            return builder.ToString();
+            return string.Join("", newList);            
         }
 
         /// <summary>
@@ -242,16 +237,24 @@ namespace CSharp.Net.Util
         /// 随机排序列表
         /// </summary>
         /// <param name="list"></param>
+        /// <param name="count">返回随机个数，0：全部</param>
         /// <returns></returns>
-        public static List<T> GetRandomList<T>(IEnumerable<T> list)
+        public static List<T> GetRandomList<T>(IEnumerable<T> list, int count = 0)
         {
+#if NET8_0_OR_GREATER
+            return Random.Shared.GetItems(list.ToArray(), count > 0 ? count : list.Count()).ToList();
+#endif
             Random random = new Random();
             List<T> newList = new List<T>();
             foreach (T item in list)
             {
                 newList.Insert(random.Next(newList.Count + 1), item);
             }
+            if (count > 0)
+                return newList.Take(count).ToList();
             return newList;
+
+
         }
 
         /// <summary>
@@ -295,7 +298,6 @@ namespace CSharp.Net.Util
             }
         }
 
-
         #endregion
 
         /// <summary>
@@ -332,7 +334,11 @@ namespace CSharp.Net.Util
             return stopwatch.ElapsedMilliseconds;
         }
 
-
+        /// <summary>
+        /// 检查端口是否可用
+        /// </summary>
+        /// <param name="port"></param>
+        /// <returns></returns>
         public static bool IsPortAvailable(int port)
         {
             TcpListener tcpListener = null;
@@ -343,7 +349,7 @@ namespace CSharp.Net.Util
                 tcpListener.Stop();
                 return true;
             }
-            catch (SocketException)
+            catch // (SocketException)
             {
                 return false;
             }

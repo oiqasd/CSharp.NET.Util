@@ -24,7 +24,7 @@ namespace CSharp.Net.Util
         /// 获取锁
         /// </summary>
         /// <param name="key"></param>
-        /// <returns>sem.Wait();sem.Release()</returns>
+        /// <returns>sem.AcquireWait();sem.Release()</returns>
         public static SemaphoreSlim GetLockObj(string key)
         {
             int cdk = key.GetHashCode();

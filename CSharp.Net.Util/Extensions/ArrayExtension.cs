@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 /// <summary>
 /// Array 扩展方法
@@ -46,6 +45,17 @@ public static class ArrayExtension
         else
         {
             result = "-1";
+        }
+
+        return result;
+    }
+
+    public static string IdsToInSql(this IEnumerable<string> ids)
+    {
+        var result = @"''";
+        if (ids.IsHasValue())
+        {
+            result = "'" + string.Join("','", ids) + "'";
         }
 
         return result;

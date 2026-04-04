@@ -5,27 +5,31 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace CSharp.Net.Update
+namespace CSharp.Net.Updater
 {
     public class UpdateManager : IDisposable
     {
-        private readonly string _appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        private readonly string _updateTempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "temps$0");// Path.Combine(Path.GetTempPath(), "temps$0");
-        readonly string _updatePackageUrl = "https://your-update-server/api/updates";
+        private readonly string _appDir = AppDomain.CurrentDomain.BaseDirectory;
+        private readonly string _updateTempDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "temps$0");// Path.Combine(Path.GetTempPath(), "temps$0");
+        readonly string _updatePackageUrl = "https://your-update-server/api/updates.exe";
         readonly HttpClient _httpClient;
         string _updateInfo = string.Empty;
         string startApp = string.Empty;
+        readonly AppType _AppType = AppType.Console;//1=windows应用程序 2=windows服务 3=linux服务
 
         UpdateManager() { _httpClient = new HttpClient() { Timeout = TimeSpan.FromSeconds(60) }; }
+
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="updatePackageUrl"></param>
-        public UpdateManager(string updatePackageUrl) : this(updatePackageUrl, "") { }
+        /// <param name="updatePackageUrl">订阅更新地址</param>
+        /// <param name="AppType">1=windows应用程序 2=windows服务 3=linux服务</param>
+        public UpdateManager(string updatePackageUrl, AppType appType = AppType.Console) : this(updatePackageUrl, "") { _AppType = appType; }
 
         /// <summary>
         /// 
@@ -46,17 +50,17 @@ namespace CSharp.Net.Update
                 var hasUpdate = await CheckForUpdatesAsync();
                 if (hasUpdate)
                 {
-                    Console.WriteLine("发现新版本，正在准备更新...");
+                    Trace.WriteLine("发现新版本，正在准备更新...");
                     await ApplyUpdatesAsync();
                 }
                 else
                 {
-                    Console.WriteLine("当前已是最新版本。");
+                    Trace.WriteLine($"当前已是最新版本。{GetCurrentVersion()}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"检查更新失败: {ex.Message}");
+                Trace.WriteLine($"检查更新失败: {ex.Message}");
             }
         }
         /// <summary>
@@ -75,9 +79,35 @@ namespace CSharp.Net.Update
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新检查失败: {ex.Message}");
+                Trace.WriteLine($"更新检查失败: {ex.Message}");
                 return false;
             }
+        }
+
+        public string ComputeFileHash(string filePath)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    var hash = sha256.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
+            }
+        }
+        /// <summary>
+        /// 验证文件完整性
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="expectedHash"></param>
+        /// <returns></returns>
+        public bool VerifyFileIntegrity(string filePath, string expectedHash)
+        {
+            if (!File.Exists(filePath))
+                return false;
+
+            var actualHash = ComputeFileHash(filePath);
+            return string.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase);
         }
 
         // 执行更新
@@ -86,10 +116,10 @@ namespace CSharp.Net.Update
             try
             {
                 // 创建临时目录
-                EnsureDirectoryAccess(_updateTempPath);
+                EnsureDirectoryAccess(_updateTempDir);
 
                 // 下载更新包
-                var updatePackagePath = await DownloadFileAsync(_updateInfo, _updateTempPath);
+                var updatePackagePath = await DownloadFileAsync(_updateInfo, _updateTempDir);
 
                 // 解压更新文件
                 if (updatePackagePath.Contains(".zip"))
@@ -100,17 +130,21 @@ namespace CSharp.Net.Update
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"更新应用失败: {ex.Message}");
+                Trace.WriteLine($"更新应用失败: {ex.Message}");
                 Cleanup();
             }
         }
 
-        // 获取当前应用版本
+        // 获取当前类库程序集版本
         //private Version GetCurrentVersion()
         //{
         //    return Assembly.GetExecutingAssembly().GetName().Version;
         //}
 
+        /// <summary>
+        /// 获取启动程序集版本
+        /// </summary>
+        /// <returns></returns>
         private Version GetCurrentVersion()
         {
             return Assembly.GetEntryAssembly().GetName().Version;
@@ -124,7 +158,7 @@ namespace CSharp.Net.Update
                 // 检查URL是否有效
                 if (!Uri.IsWellFormedUriString(_updateInfo, UriKind.Absolute))
                 {
-                    Console.WriteLine($"更新检查失败：无效的URL - {_updateInfo}");
+                    Trace.WriteLine($"更新检查失败：无效的URL - {_updateInfo}");
                     throw new InvalidDataException();
                 }
 
@@ -197,12 +231,12 @@ namespace CSharp.Net.Update
             var app = from p in xml.Descendants("app")
                       select new
                       {
-                          app = p.Attribute("id").Value,
-                          version = p.Element("version").Value,
-                          packageUrl = p.Element("package-url").Value,
-                          startApp = p.Element("start-app").Value,
-                          earliestStartHour = p.Element("es-h").Value,
-                          whiteList = p.Element("white-list").Value,
+                          app = p.Attribute("id")?.Value??"",
+                          version = p.Element("version")?.Value ?? "",
+                          packageUrl = p.Element("package-url")?.Value ?? "",
+                          startApp = p.Element("start-app")?.Value ?? "",
+                          earliestStartHour = p.Element("es-h")?.Value,
+                          whiteList = p.Element("white-list")?.Value,
                       };
             var ap = app.Where(x => AES.Decrypt(x.app) == Process.GetCurrentProcess().ProcessName).FirstOrDefault();
             if (ap == null) return null;
@@ -288,7 +322,7 @@ namespace CSharp.Net.Update
                                     bytesRead += bytes;
 
                                     var progress = (int)((bytesRead * 100) / totalBytes);
-                                    Console.Write($"\r下载进度: {progress}%");
+                                    //Console.Write($"\r下载进度: {progress}%");
                                 }
                             }
                             else
@@ -302,7 +336,7 @@ namespace CSharp.Net.Update
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"下载文件失败: {ex.Message}");
+                Trace.WriteLine($"下载文件失败: {ex.Message}");
                 throw;
             }
         }
@@ -310,7 +344,7 @@ namespace CSharp.Net.Update
         // 下载更新包
         private async Task DownloadUpdatePackageAsyncSimple(string fileUrl)
         {
-            var updatePackagePath = Path.Combine(_updateTempPath, "update.zip");
+            var updatePackagePath = Path.Combine(_updateTempDir, "update.zip");
 
             using (var stream = await _httpClient.GetStreamAsync(fileUrl))
             using (var fileStream = new FileStream(updatePackagePath, FileMode.Create))
@@ -325,7 +359,7 @@ namespace CSharp.Net.Update
         // 解压更新包
         private void ExtractUpdatePackage(string packagePath)
         {
-            ZipFile.ExtractToDirectory(packagePath, _updateTempPath);//true
+            ZipFile.ExtractToDirectory(packagePath, _updateTempDir);//true
             File.Delete(packagePath);
         }
 
@@ -344,7 +378,7 @@ namespace CSharp.Net.Update
             }
             catch (UriFormatException ex)
             {
-                Console.WriteLine($"URL格式无效: {ex.Message}");
+                Trace.WriteLine($"URL格式无效: {ex.Message}");
                 return null;
             }
         }
@@ -352,34 +386,14 @@ namespace CSharp.Net.Update
         // 重启应用以应用更新
         private void RestartAppWithUpdates()
         {
-            // 创建批处理脚本执行更新和重启
-            var scriptPath = Path.Combine(_updateTempPath, "update_script.bat");
-
-            if (string.IsNullOrEmpty(startApp))
-            {
-                startApp = Process.GetCurrentProcess().MainModule?.FileName;
-                if (string.IsNullOrWhiteSpace(startApp))
-                {
-                    startApp = Assembly.GetEntryAssembly().Location;
-                }
-
-                startApp = Path.GetFileName(startApp);
-            }
             // if (OperatingSystem.IsWindows())
-            {
-                using (var writer = new StreamWriter(scriptPath))
-                {
-                    writer.WriteLine("@echo off");
-                    writer.WriteLine($"timeout /t 3 /nobreak > nul");
-                    //writer.WriteLine($"xcopy /y /s \"{_updateTempPath}\\*\" \"{_appDirectory}\" /EXCLUDE:\"{scriptPath}\"");
-                    writer.WriteLine($"robocopy {_updateTempPath} {_appDirectory} /E /XF update_script.bat");
-                    writer.WriteLine($"start {Path.Combine(_appDirectory, startApp)}");
-                    //延迟删除自身，确保批处理脚本执行完成
-                    writer.WriteLine("ping 127.0.0.1 -n 2 -w 1000 > nul");
-                    writer.WriteLine($"del /f /s /q \"%~dp0\\*\"");
-                }
-                File.SetAttributes(scriptPath, FileAttributes.Normal);
-            }
+            string scriptPath = string.Empty;
+
+            if (_AppType == AppType.Console)
+                scriptPath = CreateUpdateApplicationScript();
+            if (_AppType == AppType.WindowsService)
+                scriptPath = CreateUpdateWindowServiceScript();
+
             //  else if (OperatingSystem.IsLinux())
             {
                 //rsync -avz --exclude='*.txt' --exclude='/temp/' /源路径/ /目标路径/
@@ -391,10 +405,132 @@ namespace CSharp.Net.Update
                 Arguments = $"/c \"{scriptPath}\"",
                 CreateNoWindow = true,
                 UseShellExecute = true,
+                Verb = "runas",
                 WindowStyle = ProcessWindowStyle.Hidden
             });
+
+            Trace.WriteLine("更新成功，程序正在重启。");
+            // 延迟退出，确保批处理文件有机会执行
+            Task.Delay(1000).ContinueWith(_ =>
+            {
+                Environment.Exit(0);
+            });
             //Application.Exit();
-            Environment.Exit(0);
+            //Environment.Exit(0);
+        }
+        string CreateUpdateApplicationScript()
+        {
+            // 创建批处理脚本执行更新和重启
+            string scriptFileName = $"update_{Guid.NewGuid():N}.bat";
+            //scriptPath = Path.Combine(scriptPath, scriptFileName);
+            var scriptPath = Path.Combine(_updateTempDir, scriptFileName);
+
+            if (string.IsNullOrEmpty(startApp))
+            {
+                startApp = Process.GetCurrentProcess().MainModule?.FileName;
+                if (string.IsNullOrWhiteSpace(startApp))
+                {
+                    startApp = Assembly.GetEntryAssembly().Location;
+                }
+                startApp = Path.GetFileName(startApp);
+            }
+
+            using (var writer = new StreamWriter(scriptPath))
+            {
+                writer.WriteLine("@echo off");
+                writer.WriteLine($"timeout /t 3 /nobreak > nul");
+                //writer.WriteLine($"xcopy /Y /E /I /S \"{_updateTempDir}\\*\" \"{_appDir}\" /EXCLUDE:\"{scriptPath}\"");
+                writer.WriteLine($"robocopy {_updateTempDir} {_appDir} /E /XF {scriptFileName}");
+                writer.WriteLine($"start {Path.Combine(_appDir, startApp)}");
+                //延迟删除自身，确保批处理脚本执行完成
+                //writer.WriteLine("ping 127.0.0.1 -n 2 -w 1000 > nul");
+                writer.WriteLine($"timeout /t 5 /nobreak >nul");
+                writer.WriteLine($"del /f /s /q \"%~dp0\\*\"");
+                writer.WriteLine($"cd ..");
+                writer.WriteLine($"rd /s /q \"{_updateTempDir}\" >nul 2>&1");
+            }
+            File.SetAttributes(scriptPath, FileAttributes.Normal);
+
+            return scriptPath;
+        }
+
+        /// <summary>
+        /// windows 服务脚本
+        /// </summary>
+        /// <param name="scriptPath"></param>
+        /// <param name="serviceName"></param>
+        /// <returns></returns>
+        string CreateUpdateWindowServiceScript(string serviceName = "")
+        {
+            string scriptFileName = $"update_{Guid.NewGuid():N}.bat";
+
+            if (string.IsNullOrWhiteSpace(serviceName))
+                serviceName = Process.GetCurrentProcess().ProcessName;
+
+            if (string.IsNullOrEmpty(startApp))
+            {
+                startApp = Process.GetCurrentProcess().MainModule?.FileName;
+                if (string.IsNullOrWhiteSpace(startApp))
+                {
+                    startApp = Assembly.GetEntryAssembly().Location;
+                }
+                startApp = Path.GetFileName(startApp);
+            }
+
+            //string startApp = Path.GetFileName(appPath);
+            string scriptPath = Path.Combine(_updateTempDir, scriptFileName);
+            string workPath = Path.Combine(_appDir, startApp);
+
+            using (var writer = new StreamWriter(scriptPath))
+            {
+                writer.WriteLine("@echo off");
+                writer.WriteLine($"timeout /t 3 /nobreak > nul");
+                writer.WriteLine($"set workname={serviceName}");
+                writer.WriteLine($"set workpath={workPath}");
+                writer.WriteLine($"@sc stop %workname% >nul 2>&1");
+                writer.WriteLine($"timeout /t 5 /nobreak >nul");
+                //writer.WriteLine($"@sc delete %workname%");
+
+                writer.WriteLine($"robocopy {_updateTempDir} {_appDir} /E /XF {scriptFileName}");
+                writer.WriteLine("@sc start %workname%  >nul 2>&1");
+                writer.WriteLine("REM @sc config %workname% start= AUTO");
+                //延迟删除自身，确保批处理脚本执行完成
+                writer.WriteLine("timeout /t 5 /nobreak >nul");
+                writer.WriteLine($"cd ..");
+                writer.WriteLine($"rd /s /q \"{_updateTempDir}\" >nul 2>&1");
+                //writer.WriteLine($"del /f /s /q \"%~dp0\\*\"");
+            }
+            File.SetAttributes(scriptPath, FileAttributes.Normal);
+
+            return scriptPath;
+        }
+        /// <summary>
+        /// 备份恢复
+        /// </summary>
+        /// <param name="backupDir"></param>
+        /// <param name="targetDir"></param>
+        /// <returns></returns>
+        private async Task RestoreFromBackupAsync(string backupDir, string targetDir)
+        {
+            if (!Directory.Exists(backupDir))
+                return;
+
+            Trace.WriteLine("正在从备份恢复...");
+
+            var backupFiles = Directory.GetFiles(backupDir);
+            foreach (var file in backupFiles)
+            {
+                var destFile = Path.Combine(targetDir, Path.GetFileName(file));
+                try
+                {
+                    await Task.Run(() => File.Copy(file, destFile, true));
+                    Trace.WriteLine("恢复文件: {File}", Path.GetFileName(file));
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine("恢复文件失败: {File}", file + ex.Message);
+                }
+            }
         }
 
         private void EnsureDirectoryAccess(string directoryPath)
@@ -422,9 +558,9 @@ namespace CSharp.Net.Update
         {
             try
             {
-                if (Directory.Exists(_updateTempPath))
+                if (Directory.Exists(_updateTempDir))
                 {
-                    Directory.Delete(_updateTempPath, true);
+                    Directory.Delete(_updateTempDir, true);
                 }
             }
             catch { /* 忽略清理错误 */ }

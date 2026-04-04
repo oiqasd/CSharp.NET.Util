@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CSharp.Net.Update
+namespace CSharp.Net.Updater
 {
     /// <summary>
     /// Advanced Encryption Standard

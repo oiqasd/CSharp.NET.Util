@@ -6,7 +6,7 @@ namespace CSharp.Net.Util
 {
     public class AppTimeoutException : AppException
     {
-        public AppTimeoutException() : base(408, "Timeout") { }
-        public AppTimeoutException(string message) : base(408, message) { }
+        public AppTimeoutException() : base(AExceptionCode.TimeOut, "Timeout") { }
+        public AppTimeoutException(string message) : base(AExceptionCode.TimeOut, message) { }
     }
 }

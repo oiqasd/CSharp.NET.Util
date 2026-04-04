@@ -162,7 +162,6 @@ namespace CSharp.Net.Util
         }
         #endregion
 
-
         /// <summary>
         /// 进制转化
         /// </summary>

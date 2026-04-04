@@ -19,7 +19,7 @@ namespace CSharp.Net.Util
         }
         public void StartClient()
         {
-            _tcpClient.ConnectAsync(_server, _port).GetAwaiter();
+            _tcpClient.ConnectAsync(_server, _port).GetAwaiter().GetResult();
             Console.WriteLine("Connected to server");
             _stream = _tcpClient.GetStream();
             _isRunning = true;

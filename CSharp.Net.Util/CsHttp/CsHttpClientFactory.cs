@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Util.CsHttp
 {
@@ -19,15 +18,15 @@ namespace CSharp.Net.Util.CsHttp
         private readonly Func<string, Lazy<ActiveHandlerTrackingEntry>> _entryFactory;
         //IOptionsMonitor<HttpClientFactoryOptions> optionsMonitor;
         private readonly object _cleanupTimerLock;
-        private readonly List<IHttpMessageHandlerBuilderFilter> _filters;
         private readonly object _cleanupActiveLock;
+        private readonly List<IHttpMessageHandlerBuilderFilter> _filters;
         private readonly TimeSpan DefaultCleanupInterval = TimeSpan.FromSeconds(10.0);
 
         internal readonly ConcurrentQueue<ExpiredHandlerTrackingEntry> _expiredHandlers;
         internal readonly HttpClientFactoryOptions options;
         private readonly TimerCallback _expiryCallback;
 
-        public CsHttpClientFactory()
+        internal CsHttpClientFactory()
         {
             _activeHandlers = new ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>>(StringComparer.Ordinal);
             _entryFactory = (string name) => new Lazy<ActiveHandlerTrackingEntry>(() => CreateHandlerEntry(name), LazyThreadSafetyMode.ExecutionAndPublication);
@@ -45,13 +44,13 @@ namespace CSharp.Net.Util.CsHttp
             //ServicePointManager.DefaultConnectionLimit = 512;
         }
 
-        public HttpClient CreateClient(int timeout = -1, bool connectionClose = false, string name = null)
+        internal async Task<HttpClient> CreateClient(int timeout = -1, bool connectionClose = false, string name = null)
         {
             //name = name ?? string.Empty;
             //if (name == null)
             //    throw new ArgumentNullException("name");
 
-            /****
+            /*
               #if NET5_0_OR_GREATER
                 var handler = new SocketsHttpHandler
                 {
@@ -78,7 +77,7 @@ namespace CSharp.Net.Util.CsHttp
               #endif
             */
 
-            HttpMessageHandler handler = CreateHandler(name);
+            HttpMessageHandler handler =await CreateHandler(name);
             HttpClient client = new HttpClient(handler, disposeHandler: false);
             //client.DefaultRequestHeaders.Clear();
             if (connectionClose)
@@ -97,12 +96,10 @@ namespace CSharp.Net.Util.CsHttp
             return client;
         }
 
-        public HttpMessageHandler CreateHandler(string name)
+        internal async Task<HttpMessageHandler> CreateHandler(string name)
         {
-            //if (name == null)
-            //    throw new ArgumentNullException("name");
             name = name ?? nameof(HttpClientUtil);
-            LimitHelper.Case(name).Wait();
+            await LimitHelper.AcquireWait(name);
             ActiveHandlerTrackingEntry value = _activeHandlers.GetOrAdd(name, _entryFactory).Value;
             StartHandlerEntryTimer(value);
             return value.Handler;
@@ -122,16 +119,17 @@ namespace CSharp.Net.Util.CsHttp
             try
             {
                 //HttpMessageHandlerBuilder requiredService = provider.GetRequiredService<HttpMessageHandlerBuilder>();
-                HttpMessageHandlerBuilder requiredService = new DefaultHttpMessageHandlerBuilder();
-                requiredService.Name = name;
+                HttpMessageHandlerBuilder hhb = new DefaultHttpMessageHandlerBuilder();
+                hhb.Name = name;
                 Action<HttpMessageHandlerBuilder> action = Configure;
                 for (int num = _filters.Count - 1; num >= 0; num--)
                 {
                     action = _filters[num].Configure(action);
                 }
 
-                action(requiredService);
-                LifetimeTrackingHttpMessageHandler handler = new LifetimeTrackingHttpMessageHandler(requiredService.Build());
+                action(hhb);
+                LifetimeTrackingHttpMessageHandler handler = new LifetimeTrackingHttpMessageHandler(hhb.Build());
+
                 return new ActiveHandlerTrackingEntry(name, handler, options.HandlerLifetime);
             }
             catch (Exception ex)
@@ -222,8 +220,7 @@ namespace CSharp.Net.Util.CsHttp
                         _expiredHandlers.Enqueue(result);
                     }
                 }
-                if (DateTime.Now.DayOfWeek == DayOfWeek.Wednesday)
-                    LogHelper.Debug("CsHttpClientFactory", $"CleanupCycleBefore:{count},End:" + _expiredHandlers.Count);
+
             }
             finally
             {

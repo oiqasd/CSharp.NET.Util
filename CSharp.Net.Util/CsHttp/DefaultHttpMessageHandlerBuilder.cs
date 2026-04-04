@@ -2,20 +2,13 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using System.Net.Security;
-using System.Net.Sockets;
-using System.Runtime.ConstrainedExecution;
 using System.Security.Authentication;
-using System.Security.Claims;
-using System.Text;
-using System.Threading;
 
 namespace CSharp.Net.Util.CsHttp
 {
     internal sealed class DefaultHttpMessageHandlerBuilder : HttpMessageHandlerBuilder
     {
         private string _name;
-
         public override string Name
         {
             get

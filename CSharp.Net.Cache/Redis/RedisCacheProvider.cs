@@ -14,7 +14,6 @@ namespace CSharp.Net.Cache
 {
     public class RedisCacheProvider : RedisCacheManager, IRedisCache
     {
-
         public RedisCacheProvider(IOptions<RedisCacheOptions> options) : base(options)
         {
 
@@ -122,7 +121,7 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
-        /// 保存单个key value
+        /// 保存单个key member
         /// </summary>
         /// <param name="key">Redis Key</param>
         /// <param name="value">保存的值</param>
@@ -134,7 +133,7 @@ namespace CSharp.Net.Cache
                 throw new ArgumentNullException(nameof(key));
 
             key = PrefixKey(key);
-            return _db.StringSet(key, value, expiry);
+            return _db.StringSet(key, value, expiry, When.Always);
         }
 
         /// <summary>
@@ -179,7 +178,10 @@ namespace CSharp.Net.Cache
             Parallel.ForEach(keyValues, str =>
             {
                 if (str.Value == null) return;
-                batch.StringSetAsync(str.Key, str.Value, cacheSeconds > 0 ? TimeSpan.FromSeconds(cacheSeconds) : (TimeSpan?)null);
+                TimeSpan? span = null;
+                if (cacheSeconds > 0)
+                    span = TimeSpan.FromSeconds(cacheSeconds);
+                batch.StringSetAsync(str.Key, str.Value, span, When.Always);
             });
             batch.Execute();
 
@@ -213,7 +215,7 @@ namespace CSharp.Net.Cache
         /// 为数字增长val
         /// </summary>
         /// <param name="key">key</param>
-        /// <param name="val">value</param>
+        /// <param name="val">member</param>
         /// <param name="expireTimeSpan">过期时间</param>
         /// <param name="updateExpire">是否更新过期时间,滑动过期</param>
         /// <returns></returns>
@@ -235,7 +237,7 @@ namespace CSharp.Net.Cache
         /// 为数字增长val
         /// </summary>
         /// <param name="key">key</param>
-        /// <param name="val">value</param>
+        /// <param name="val">member</param>
         /// <param name="expireTime">绝对过期时间</param>
         /// <returns></returns>
         public double StringIncrement(string key, double val, DateTime? expireTime)
@@ -355,7 +357,7 @@ namespace CSharp.Net.Cache
         {
             Args.Verify(key.IsNotNullOrEmpty());
             key = PrefixKey(key);
-            return _db.StringSetAsync(key, value, expiry);
+            return _db.StringSetAsync(key, value, expiry, When.Always);
         }
 
         /// <summary>
@@ -364,25 +366,24 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="obj"></param>
-        /// <param name="expiry"></param>
+        /// <param name="cacheSeconds"></param>
         /// <returns></returns>
-        public Task<bool> StringSetAsync<T>(string key, T obj, TimeSpan? expiry) where T : new()
-        => StringSetAsync(key, Serialize(obj), expiry);
-
+        public Task<bool> StringSetAsync(string key, object obj, int cacheSeconds = 0)
+        => StringSetAsync(key, Serialize(obj), cacheSeconds);
 
         /// <summary>
         /// 递增
         /// </summary>
         /// <param name="key">key</param>
-        /// <param name="val">value</param>
+        /// <param name="val">member</param>
         /// <param name="expireTimeSpan">过期时间</param>
         /// <param name="updateExpire">是否更新过期时间,滑动过期</param>
         /// <returns></returns>
         public Task<double> StringIncrementAsync(string key, double val = 1, TimeSpan? expireTimeSpan = null, bool updateExpire = false)
         {
-            var pkey = PrefixKey(key);
             var ret = Do(db =>
             {
+                var pkey = PrefixKey(key);
                 var data = db.StringIncrementAsync(pkey, val);
                 if (expireTimeSpan != null && updateExpire)
                     data.ContinueWith(_ => db.KeyExpireAsync(pkey, expireTimeSpan));
@@ -402,9 +403,9 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(db => db.StringDecrementAsync(key, val));
         }
-#endregion 异步方法
+        #endregion 异步方法
 
-#endregion String
+        #endregion String
 
         #region List
 
@@ -537,7 +538,7 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T">The type of the elements in the list.</typeparam>
         /// <param name="key">The key identifying the list in Redis. Cannot be null or empty.</param>
         /// <param name="start">The zero-based index of the first element to retrieve. Defaults to 0.</param>
-        /// <param name="stop">The zero-based index of the last element to retrieve. A value of -1 retrieves all elements  from the start
+        /// <param name="stop">The zero-based index of the last element to retrieve. A member of -1 retrieves all elements  from the start
         /// index to the end of the list. Defaults to -1.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a list of elements  of type
         /// <typeparamref name="T"/> retrieved from the specified range of the list. If the range  is empty, an empty
@@ -611,7 +612,7 @@ namespace CSharp.Net.Cache
         /// <typeparam name="T">The type of the element to be returned.</typeparam>
         /// <param name="key">The key identifying the list. The key cannot be null or empty.</param>
         /// <returns>The first element of the list, deserialized to the specified type <typeparamref name="T"/>. Returns the
-        /// default value of <typeparamref name="T"/> if the list is empty or the key does not exist.</returns>
+        /// default member of <typeparamref name="T"/> if the list is empty or the key does not exist.</returns>
         public async Task<T> ListLeftPopAsync<T>(string key)
         {
             key = PrefixKey(key);
@@ -628,7 +629,7 @@ namespace CSharp.Net.Cache
         /// <param name="key">The key identifying the list in the data store. Cannot be null or empty.</param>
         /// <param name="count">The maximum number of elements to remove and return. Defaults to 10,000.</param>
         /// <returns>The leftmost element(s) from the list, deserialized to the specified type <typeparamref name="T"/>. If the
-        /// list is empty or the key does not exist, returns the default value of <typeparamref name="T"/>.</returns>
+        /// list is empty or the key does not exist, returns the default member of <typeparamref name="T"/>.</returns>
         public async Task<List<T>> ListLeftPopAsync<T>(string key, int count)
         {
             key = PrefixKey(key);
@@ -814,7 +815,7 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
-        /// 获取hashkey所有Redis key value
+        /// 获取hashkey所有Redis key member
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -897,16 +898,16 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
-        /// Increments the value of a specified field in a hash stored in Redis by a given amount.
+        /// Increments the member of a specified field in a hash stored in Redis by a given amount.
         /// </summary>
         /// <remarks>If the specified field does not exist, it will be created and initialized to the
-        /// value of <paramref name="val"/>. If the hash does not exist, it will be created.</remarks>
+        /// member of <paramref name="val"/>. If the hash does not exist, it will be created.</remarks>
         /// <param name="key">The key of the hash in Redis. Cannot be null or empty.</param>
         /// <param name="dataKey">The field within the hash to increment. Cannot be null or empty.</param>
-        /// <param name="val">The amount by which to increment the field's value. Can be positive or negative.</param>
+        /// <param name="val">The amount by which to increment the field's member. Can be positive or negative.</param>
         /// <param name="expired">An optional expiration time for the hash. If specified, the hash's time-to-live will be updated after the
         /// increment operation.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the new value of the field after
+        /// <returns>A task that represents the asynchronous operation. The task result contains the new member of the field after
         /// the increment operation.</returns>
         public Task<double> HashIncrementAsync(string key, string dataKey, double val = 1, TimeSpan? expired = null)
         {
@@ -946,7 +947,7 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
-        /// 获取hashkey所有Redis key value
+        /// 获取hashkey所有Redis key member
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -1064,9 +1065,9 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         public bool SetContains<T>(string key, T value)
         {
-            key = PrefixKey(key);
             return Do(redis =>
             {
+                key = PrefixKey(key);
                 return redis.SetContains(key, Serialize(value));
 
             });
@@ -1080,9 +1081,9 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         public T SetPop<T>(string key)
         {
-            key = PrefixKey(key);
             return Do(redis =>
             {
+                key = PrefixKey(key);
                 var v = redis.SetPop(key);
                 return Deserialize<T>(v);
             });
@@ -1116,47 +1117,49 @@ namespace CSharp.Net.Cache
             key = PrefixKey(key);
             return Do(redis => redis.SetLength(key));
         }
-
-
-
         #endregion 同步方法
 
         #region 异步方法
-
         /// <summary>
-        /// 添加
+        /// 添加单个
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
         /// <param name="timeSpan"></param>
-        public Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? timeSpan = null)
+        public Task<bool> SetAddAsync(string key, object value, TimeSpan? timeSpan = null)
         {
-            key = PrefixKey(key);
-            //return await Do(redis => redis.SetAddAsync(key, Serialize(value)));
+            //return await Do(redis => redis.SetAddAsync(key, Serialize(member)));
             return Do(db =>
             {
+                key = PrefixKey(key);
                 var data = db.SetAddAsync(key, Serialize(value));
                 data.ContinueWith(x => db.KeyExpireAsync(key, timeSpan));
                 return data;
             });
         }
+
         /// <summary>
-        /// 
+        /// 批量添加
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="list"></param>
         /// <param name="timeSpan"></param>
+        /// <param name="IsCover">是否覆盖</param>
         /// <returns></returns>
-        public Task<long> SetAddAsync<T>(string key, T[] value, TimeSpan? timeSpan = null)
+        public Task<long> SetAddAsync<T>(string key, IEnumerable<T> list, TimeSpan? timeSpan = null, bool IsCover = false)
         {
             key = PrefixKey(key);
-            return Do(db =>
-           {
-               var data = db.SetAddAsync(key, ConvertRedisValue(value));
-               data.ContinueWith(x => db.KeyExpireAsync(key, timeSpan));
-               return data;
-           });
+            Task<long> t = Task.FromResult(0L);
+            if (list.IsNullOrEmpty() || IsCover)
+                t.ContinueWith(_ => _db.KeyDeleteAsync(key));//.ContinueWith(_ => _.Result ? 1L : 0)
+
+            if (list.IsHasValue())
+            {
+                t.ContinueWith(_ => _db.SetAddAsync(key, ConvertRedisValue(list.ToArray())), TaskContinuationOptions.ExecuteSynchronously);
+                t.ContinueWith(_ => _db.KeyExpireAsync(key, timeSpan), TaskContinuationOptions.ExecuteSynchronously);
+            }
+            return t;
         }
 
         /// <summary>
@@ -1322,23 +1325,23 @@ namespace CSharp.Net.Cache
         /// 添加
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="member"></param>
         /// <param name="score"></param>
-        public bool SortedSetAdd<T>(string key, T value, double score)
+        public bool SortedSetAdd<T>(string key, T member, double score)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetAddAsync(key, Serialize(value), score)).Result;
+            return Do(redis => redis.SortedSetAddAsync(key, Serialize(member), score)).Result;
         }
 
         /// <summary>
         /// 删除
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
-        public bool SortedSetRemove<T>(string key, T value)
+        /// <param name="member"></param>
+        public bool SortedSetRemove<T>(string key, T member)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetRemoveAsync(key, Serialize(value))).Result;
+            return Do(redis => redis.SortedSetRemoveAsync(key, Serialize(member))).Result;
         }
          
         /// <summary>
@@ -1360,27 +1363,42 @@ namespace CSharp.Net.Cache
         /// 添加
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
+        /// <param name="member"></param>
         /// <param name="score"></param>
-        public Task<bool> SortedSetAdd<T>(string key, T value, double score)
+        public Task<bool> SortedSetAdd<T>(string key, T member, double score)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetAddAsync(key, Serialize(value), score));
+            return Do(redis => redis.SortedSetAddAsync(key, Serialize(member), score));
         }
+
+        /// <summary>
+        /// 增量添加积分
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <param name="score"></param>
+        /// <returns></returns>
+        public Task<double> SortedSetIncrementAsync<T>(string key, T member, double score)
+        {
+            key = PrefixKey(key);
+            return Do(redis => redis.SortedSetIncrementAsync(key, Serialize(member), score));
+        }
+
 
         /// <summary>
         /// 删除
         /// </summary>
         /// <param name="key"></param>
-        /// <param name="value"></param>
-        public Task<bool> SortedSetRemove<T>(string key, T value)
+        /// <param name="member"></param>
+        public Task<bool> SortedSetRemove<T>(string key, T member)
         {
             key = PrefixKey(key);
-            return Do(redis => redis.SortedSetRemoveAsync(key, Serialize(value)));
+            return Do(redis => redis.SortedSetRemoveAsync(key, Serialize(member)));
         }
 
         /// <summary>
-        /// 
+        /// 获取排名
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
@@ -1388,11 +1406,120 @@ namespace CSharp.Net.Cache
         /// <param name="stop"></param>
         /// <param name="sortAsc"></param>
         /// <returns></returns>
-        public async Task<List<T>> SortedSetRangeByRank<T>(string key, long start = 0, long stop = -1, bool sortAsc = true)
+        public async Task<List<T>> SortedSetRangeByRank<T>(string key, long start = 0, long stop = -1, bool sortAsc = false)
         {
             key = PrefixKey(key);
-            var values = await Do(redis => redis.SortedSetRangeByRankAsync(key, start, stop, sortAsc ? Order.Ascending : Order.Descending));
-            return ConvetList<T>(values);
+            var results = await Do(redis => redis.SortedSetRangeByRankAsync(key, start, stop, sortAsc ? Order.Ascending : Order.Descending));
+            return ConvetList<T>(results);
+        }
+
+        /// <summary>
+        /// 根据排名区间返回积分和排名
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start">排名</param>
+        /// <param name="stop"></param>
+        /// <param name="sortAsc"></param>
+        /// <returns>T1:"原value",T2:积分,T3:排名</returns>
+        public async Task<List<ValueTuple<string, double, long>>> SortedSetRangeByRankWithScoresAsync(string key, long start = 0, long stop = -1, bool sortAsc = false)
+        {
+            key = PrefixKey(key);
+            var results = await _db.SortedSetRangeByRankWithScoresAsync(key, start, stop, order: sortAsc ? Order.Ascending : Order.Descending);
+
+            if (results.Length <= 0) return null;
+            var data = new List<ValueTuple<string, double, long>>(results.Length);
+            for (int i = 0; i < results.Length; i++)
+            {
+                data.Add((results[i].Element.ToString(), results[i].Score, start + i + 1));
+            }
+
+            return data;
+        }
+        /// <summary>
+        /// 根据积分区间返回数据、积分
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="start">最小积分</param>
+        /// <param name="stop">最大积分</param>
+        /// <param name="sortAsc"></param>
+        /// <returns>T1:"原value",T2:score,T3:rank</returns>
+        public async Task<List<ValueTuple<string, double>>> SortedSetRangeByScoreWithScoresAsync(string key, long start = 0, long stop = -1, bool sortAsc = false)
+        {
+            key = PrefixKey(key);
+            var results = await _db.SortedSetRangeByScoreWithScoresAsync(key, start, stop, order: sortAsc ? Order.Ascending : Order.Descending);
+
+            if (results.Length <= 0) return null;
+            var data = new List<ValueTuple<string, double>>(results.Length);
+            for (int i = 0; i < results.Length; i++)
+            {
+                data.Add((results[i].Element.ToString(), results[i].Score));
+            }
+
+            return data;
+        }
+
+        /// <summary>
+        /// 获取单个用户的积分和排名（Lua）
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns>(bool, double, long)<code>(成功失败, 积分, 排名)</code>无数据放回(false,0,0)</returns>
+        public async Task<ValueTuple<bool, double, long>> SortedSetMenberScoreAndRank(string key, string member)
+        {
+            var luaScript = $@"
+                    local memberKey = ARGV[1]
+                    local rankKey = KEYS[1]
+                    
+                    local score = redis.call('ZSCORE', rankKey, memberKey)
+                    if not score then
+                        return nil
+                    end
+                    
+                    local rank = redis.call('ZREVRANK', rankKey, memberKey)
+                    if rank then
+                        rank = rank + 1
+                    end
+                    
+                    -- 同时获取用户信息
+                    -- local userInfo = redis.call('HGETALL', 'ranking:user:info:' .. memberKey)
+
+                    return {{score,rank}}";
+
+            var result = await _db.ScriptEvaluateAsync(luaScript,
+                                                       new RedisKey[] { PrefixKey(key) }, // KEYS[1]
+                                                       new RedisValue[] { member }        // ARGV[1]
+                                                       );
+            if (result.IsNull)
+                return (false, 0, 0);
+            return (true, result[0].ToDouble(), result[1].ToLong());
+
+        }
+        /// <summary>
+        /// 获取单个<![CDATA[member]]>积分
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public Task<double?> SortedSetScoreAsync<T>(string key, T member)
+        {
+            key = PrefixKey(key);
+            var result = Do(redis => redis.SortedSetScoreAsync(key, Serialize(member)));
+            return result;
+        }
+
+        /// <summary>
+        /// 获取单个value排名
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        public Task<long?> SortedSetRankAsync<T>(string key, T member)
+        {
+            key = PrefixKey(key);
+            var result = Do(redis => redis.SortedSetRankAsync(key, Serialize(member)));
+            return result;
         }
 
         /// <summary>
@@ -1628,7 +1755,7 @@ namespace CSharp.Net.Cache
                 CancellationTokenSource cts = new CancellationTokenSource(waitSeconds * 1000);
                 var t = Task.Run(async () =>
                 {
-                    while (!LockTake(key, waitSeconds))
+                    while (!await LockTakeAsync(key, waitSeconds))
                     {
                         await Task.Delay(1);
                         // cts.Token.ThrowIfCancellationRequested();
@@ -1889,11 +2016,13 @@ namespace CSharp.Net.Cache
         /// <returns></returns>
         List<T> ConvetList<T>(RedisValue[] values)
         {
-            List<T> list = new List<T>();
-            if (values == null || values.Length <= 0 || values[0].ToString() == "[]")
-                return list;
+            if (values == null || values.Length <= 0)
+                return null;
 
-            list = values.Select(o => Deserialize<T>(o)).ToList();
+            if (values[0].ToString() == "[]")
+                return new List<T>();
+
+            List<T> list = values.Select(o => Deserialize<T>(o)).ToList();
             return list;
         }
 

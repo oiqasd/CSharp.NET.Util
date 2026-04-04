@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,7 +34,7 @@ namespace CSharp.Net.Cache.Redis
                     throw new ArgumentNullException(nameof(options));
 
                 _options = options.Value;
-                Connect().Wait();
+                Connect().GetAwaiter().GetResult();
             }
             finally
             {
@@ -87,7 +88,7 @@ namespace CSharp.Net.Cache.Redis
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                await LogHelper.Fatal(ex);
+                LogHelper.Fatal(ex);
             }
             finally
             {
@@ -135,13 +136,24 @@ namespace CSharp.Net.Cache.Redis
         }
 
         /// <summary>
-        /// 获取指定服务器
+        /// 获取默认第一个服务器
         /// </summary>
-        /// <param name="hostAndPort"></param>
         /// <returns></returns>
-        protected IServer GetServer(string hostAndPort)
+        protected IServer GetServer()
         {
-            return _connection.GetServer(hostAndPort);
+            var endpoints = _db.Multiplexer.GetEndPoints();
+            if (endpoints.Length == 0)
+                throw new InvalidOperationException("No Redis endpoints available");
+
+            foreach (var endpoint in endpoints)
+            {
+                var server = _db.Multiplexer.GetServer(endpoint);
+                if (server != null && server.IsConnected)
+                {
+                    return server;
+                }
+            }
+            return null;
         }
 
         /// <summary>

@@ -2,10 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
@@ -27,7 +28,7 @@ namespace CSharp.Net.Util
         /// 日志记录级别
         /// Debug:将打印请求/响应日志
         /// </summary>
-        public LogLevel LogLevel { get; set; } = LogLevel.None;
+        public LogLevel LogLevel { get; set; } = LogLevel.Trace;
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 日志记录级别
         /// </summary>
-        static LogLevel LogLevel = LogLevel.None;
+        static LogLevel LogLevel = LogLevel.Trace;
 
         /*   static HttpClientUtil()
          {
@@ -150,9 +151,9 @@ namespace CSharp.Net.Util
         /// <param name="connectionClose">是否标记短链接</param>
         /// <param name="encoding"></param>
         /// <returns></returns>
-        public static async Task<string> PostAsync(string url, Dictionary<string, string> dataDic = null,
+        public static async Task<string> PostAsync(string url, Dictionary<string, object> dataDic = null,
             HttpContentType httpContentType = HttpContentType.JSON, Dictionary<string, string> headers = null,
-            string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
+            string encoding = "utf-8", int timeOutSecond = 60, bool throwEx = true, bool connectionClose = false, string handleName = null)
         {
             string result = string.Empty;
             HttpContent httpContent = null;
@@ -160,7 +161,7 @@ namespace CSharp.Net.Util
             {
                 if ((httpContentType == HttpContentType.FormData) && dataDic != null)
                 {
-                    httpContent = new FormUrlEncodedContent(dataDic);
+                    httpContent = ToFormUrlEncodedContent(dataDic);
 
                     //var fromData = new MultipartFormDataContent(Guid.NewGuid().ToString());
                     //foreach (var k in dataDic)
@@ -187,7 +188,7 @@ namespace CSharp.Net.Util
                 }
 
                 if ((httpContentType == HttpContentType.x_www_form_urlEncoded) && dataDic != null)
-                    httpContent = new FormUrlEncodedContent(dataDic);
+                    httpContent = ToFormUrlEncodedContent(dataDic);
 
                 if (httpContentType == HttpContentType.JSON && dataDic != null)
                     httpContent = new StringContent(JsonHelper.Serialize(dataDic), Encoding.GetEncoding(encoding), "application/json");
@@ -195,7 +196,7 @@ namespace CSharp.Net.Util
                 if (httpContentType == HttpContentType.QueryString && dataDic != null)
                 {
                     StringBuilder sb = new StringBuilder();
-                    dataDic.ForEach(x => { if (!string.IsNullOrEmpty(x.Value)) sb.Append(x.Key).Append("=").Append(x.Value).Append("&"); });
+                    dataDic.ForEach(x => { if (x.Value != null) sb.Append(x.Key).Append("=").Append(x.Value).Append("&"); });
 
                     if (!url.Contains("?")) url += "?";
                     if (url.Contains("&")) url += "&";
@@ -203,7 +204,7 @@ namespace CSharp.Net.Util
                     url = $"{url}{sb.ToString().TrimEnd('&')}";
                 }
                 PrintRequestLog("post", url, out string trackId, dataDic);
-                return await PostAsync(url, httpContent, trackId, headers, timeOutSecond, connectionClose);
+                return await PostAsync(url, httpContent, trackId, headers, timeOutSecond, connectionClose, handleName: handleName);
 
                 /*
                 PrintRequestLog("post", url, out string trackId, dataDic);
@@ -351,7 +352,7 @@ namespace CSharp.Net.Util
         //    var count = 0;
         //    var buffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
         //    stream.Read(buffer, 0, buffer.Length);
-        //    pool.Return(buffer);
+        //    _tenants.Return(buffer);
         //}
 
         /// <summary>
@@ -366,8 +367,10 @@ namespace CSharp.Net.Util
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> PostAsync(string url, string dataStr, HttpContentType httpContentType = HttpContentType.JSON,
-            Dictionary<string, string> headers = null, string encoding = "utf-8", int timeOutSecond = -1, bool throwEx = true, bool connectionClose = false)
+        public static async Task<string> PostAsync(string url, string dataStr,
+            HttpContentType httpContentType = HttpContentType.JSON,
+            Dictionary<string, string> headers = null, string encoding = "utf-8",
+            int timeOutSecond = 60, bool throwEx = true, bool connectionClose = false, string handleName = null)
         {
             string result = string.Empty;
             HttpContent httpContent = null;
@@ -386,7 +389,7 @@ namespace CSharp.Net.Util
                 }
 
                 PrintRequestLog("post", url, out string trackId, dataStr);
-                return await PostAsync(url, httpContent, trackId, headers, timeOutSecond, connectionClose);
+                return await PostAsync(url, httpContent, trackId, headers, timeOutSecond, connectionClose, handleName);
                 /*
                 //CancellationTokenSource cts = new CancellationTokenSource();
                 //if (timeOutSecond > 0)
@@ -429,58 +432,34 @@ namespace CSharp.Net.Util
         /// <param name="headers"></param>
         /// <param name="prams"></param>
         /// <param name="timeOutSecond">default 5 second</param>
+        /// <param name="retryNum">超时重试,默认0 不重试</param>
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, Dictionary<string, string> prams, Dictionary<string, string> headers = null, int timeOutSecond = 5, bool throwEx = true, bool connectionClose = false)
+        public static async Task<string> GetAsync(string url,
+            Dictionary<string, string> prams, Dictionary<string, string> headers = null,
+            int timeOutSecond = 5, uint retryNum = 0, bool throwEx = true, bool connectionClose = false, string handleName = null)
         {
             StringBuilder sb = new StringBuilder();
             if (prams != null)
             {
                 prams.ForEach(x => { if (!string.IsNullOrEmpty(x.Value)) sb.Append(x.Key).Append("=").Append(x.Value).Append("&"); });
             }
-            return await GetAsync(url, sb.ToString(), headers, timeOutSecond, throwEx, connectionClose);
+            return await GetAsync(url, sb.ToString(), headers, timeOutSecond, retryNum, throwEx, connectionClose, handleName: handleName);
         }
-        /// <summary>
-        /// http get
-        /// </summary>
-        /// <param name="url"></param>
-        /// <param name="pramstr"></param>
-        /// <param name="timeOutSecond">default 5 second</param>
-        /// <param name="throwEx">是否抛出异常</param>
-        /// <param name="connectionClose">是否标记短链接</param>
-        /// <returns></returns>
-        public static async Task<string> GetAsync(string url, string pramstr, int timeOutSecond = 5, bool throwEx = true, bool connectionClose = false) => await GetAsync(url, pramstr, headers: null, timeOutSecond, throwEx, connectionClose);
 
         /// <summary>
         /// http get
         /// </summary>
         /// <param name="url"></param>
         /// <param name="timeoutSeconds"></param>
+        /// <param name="retryNum">超时重试,默认0 不重试</param>
+        /// <param name="headers"></param>
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, int timeoutSeconds, bool throwEx = true, bool connectionClose = false) => await GetAsync(url, null, timeoutSeconds, throwEx, connectionClose);
-
-
-        static async Task<string> PostAsync(string url, HttpContent httpContent, string trackId, Dictionary<string, string> headers = null, int timeoutSeconds = -1, bool connectionClose = false)
-        {
-            var v = ValueStopwatch.StartNew();
-            string result = null;
-            var _httpClient = _csHttpFactory.CreateClient(timeoutSeconds, connectionClose);
-
-            SetHeader(_httpClient, headers);
-            using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))
-            {
-                if (v.GetElapsedTime().TotalSeconds > 1)
-                    LogHelper.Debug("[HttpPost]", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url);
-
-                response.EnsureSuccessStatusCode();
-                result = await response.Content.ReadAsStringAsync();
-            }
-            PrintResponseLog(trackId, result);
-            return result;
-        }
+        public static async Task<string> GetAsync(string url, int timeoutSeconds = 5, uint retryNum = 0, Dictionary<string, string> headers = null, bool throwEx = true, bool connectionClose = false, string handleName = null)
+            => await GetAsync(url, null, headers, timeoutSeconds, retryNum, throwEx, connectionClose, handleName: handleName);
 
         /// <summary>
         /// Get请求
@@ -489,10 +468,14 @@ namespace CSharp.Net.Util
         /// <param name="pramstr"></param>
         /// <param name="headers"></param>
         /// <param name="timeoutSeconds">default 5 second</param>
+        /// <param name="retryNum">重试，默认0</param>
         /// <param name="throwEx">是否抛出异常</param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
-        public static async Task<string> GetAsync(string url, string pramstr = null, Dictionary<string, string> headers = null, int timeoutSeconds = 5, bool throwEx = true, bool connectionClose = false, string encoding = "UTF-8")
+        public static async Task<string> GetAsync(string url, string pramstr,
+            Dictionary<string, string> headers = null,
+            int timeoutSeconds = 5, uint retryNum = 0, bool throwEx = true,
+            bool connectionClose = false, string encoding = "UTF-8", string handleName = null)
         {
             string result = string.Empty;
 
@@ -511,13 +494,14 @@ namespace CSharp.Net.Util
                 //cts.CancelAfter(timeOutSecond * 1000);
 
                 var v = ValueStopwatch.StartNew();
-                using (var _httpClient = _csHttpFactory.CreateClient(timeoutSeconds, connectionClose))
+                using (var _httpClient = await _csHttpFactory.CreateClient(timeoutSeconds, connectionClose, handleName))
                 {
                     SetHeader(_httpClient, headers);
+
                     using (var response = await _httpClient.GetAsync(url))//,cts.Token
                     {
                         if (v.GetElapsedTime().TotalSeconds > 1)
-                            LogHelper.Debug("[HttpGet]", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url, eventId: trackId);
+                            LogHelper.Debug("HttpGet", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url, eventId: trackId);
 
                         response.EnsureSuccessStatusCode();
                         var bytes = await response.Content.ReadAsByteArrayAsync();
@@ -532,18 +516,39 @@ namespace CSharp.Net.Util
             return result;
         }
 
-        static async Task<string> Invoke(Func<Task<string>> action, string url, bool throwEx)
+        static async Task<string> PostAsync(string url, HttpContent httpContent, string trackId,
+            Dictionary<string, string> headers = null, int timeoutSeconds = -1, bool connectionClose = false, string handleName = null)
+        {
+            var v = ValueStopwatch.StartNew();
+            string result = null;
+            var _httpClient = await _csHttpFactory.CreateClient(timeoutSeconds, connectionClose, handleName);
+
+            SetHeader(_httpClient, headers);
+            using (HttpResponseMessage response = await _httpClient.PostAsync(url, httpContent))
+            {
+                if (v.GetElapsedTime().TotalSeconds > 1)
+                    LogHelper.Debug("HttpPost", "Response:" + v.GetElapsedTime().TotalMilliseconds + "ms " + url);
+
+                response.EnsureSuccessStatusCode();
+                result = await response.Content.ReadAsStringAsync();
+            }
+            PrintResponseLog(trackId, result);
+            return result;
+        }
+
+        static async Task<string> Invoke(Func<Task<string>> action, string url, bool throwEx, uint retryNum = 0)
         {
             try
             {
-                var ret = await action();
+                //var ret =  await action();
+                var ret = await RetryUtil.Invoke(action, retryNum, exceptionTypes: typeof(TaskCanceledException));
                 return ret;
             }
             catch (Exception ex)
             {
                 //if (ex.GetType() == typeof(TaskCanceledException))
                 //    ex = new TimeoutException();
-                OutputErrorLog(ex, url);
+                OutputErrorLog(ex, url, retryNum);
                 if (IfThrow(throwEx)) throw;
                 return null;
             }
@@ -559,7 +564,9 @@ namespace CSharp.Net.Util
         /// <param name="headers">请求头</param>
         /// <param name="connectionClose">是否短链接</param>
         /// <returns></returns>
-        public static async Task<HttpResponseDto> SendAsync(string url, HttpMethod httpMethod, HttpContent content = null, int timeout = -1, Dictionary<string, string> headers = null, bool connectionClose = false)
+        public static async Task<HttpResponseDto> SendAsync(string url,
+            HttpMethod httpMethod, HttpContent content = null, int timeout = -1,
+            Dictionary<string, string> headers = null, bool connectionClose = false, string handleName = null)
         {
             HttpResponseDto ret = new HttpResponseDto();
             var request = new HttpRequestMessage(httpMethod, url);
@@ -568,7 +575,7 @@ namespace CSharp.Net.Util
             //_httpClient.Timeout = TimeSpan.FromSeconds(3);
             if (content != null)
                 request.Content = content;
-            var _httpClient = _csHttpFactory.CreateClient(timeout, connectionClose);
+            var _httpClient = await _csHttpFactory.CreateClient(timeout, connectionClose, handleName);
             SetHeader(_httpClient, headers);
 
             PrintRequestLog(httpMethod.ToString(), url, out string trackId);
@@ -604,11 +611,23 @@ namespace CSharp.Net.Util
         /// <param name="headers"></param>
         private static void SetHeader(HttpClient httpClient, Dictionary<string, string> headers)
         {
-            //_httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            //httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             //httpClient.DefaultRequestHeaders.Clear();
             //httpClient.DefaultRequestHeaders.ConnectionClose = true;
+
             if (headers.IsHasValue())
                 headers.ForEach(x => httpClient.DefaultRequestHeaders.Add(x.Key, x.Value));
+
+            //某些网站会检查User-Agent等header，缺失可能导致请求失败
+            if (headers == null && httpClient.DefaultRequestHeaders.IsNullOrEmpty())
+            {
+                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+                httpClient.DefaultRequestHeaders.Add("Accept", "*/*");
+                httpClient.DefaultRequestHeaders.Add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8");
+                httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");//, br
+                //_httpClient.DefaultRequestHeaders.Add("Referer", "https://www.xxx.com/");  
+                //_httpClient.DefaultRequestHeaders.Add("Origin", "https://www.xxx.com/");
+            }
         }
 
         private static bool IfThrow(bool throwEx)
@@ -617,17 +636,20 @@ namespace CSharp.Net.Util
                    ThrowExceptionMode == ThrowExceptionMode.Always ||
                    (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx);
         }
+
+       
         /// <summary>
         /// 打印日志
         /// </summary>
         /// <param name="ex"></param>
         /// <param name="url"></param>
-        private static void OutputErrorLog(Exception ex, string url)
+        /// <param name="retryNum"></param>
+        private static void OutputErrorLog(Exception ex, string url, uint retryNum = 0)
         {
-            string msg = DateTime.Now.ToString(1) + ex.Message + url;
             if (OutputErrorInConsole)
-                Console.WriteLine(msg);
-            LogHelper.Fatal($"[{nameof(HttpClientUtil)}]", ex.Message + url);
+                Console.WriteLine(DateTime.Now.ToString(1) + ex.Message + url);
+            LogHelper.Fatal($"{nameof(HttpClientUtil)}", $"{ex.Message}.retryNum:{retryNum}.{url}");
+
             if (ex is TaskCanceledException)
                 ex = new AppTimeoutException("响应超时");
         }
@@ -656,7 +678,7 @@ namespace CSharp.Net.Util
         {
             try
             {
-                var httpClient = _csHttpFactory.CreateClient();
+                var httpClient = await _csHttpFactory.CreateClient();
                 using var response = await httpClient.GetAsync(downUrl);
                 using (var downloadedFileStream = File.Create(filePath))
                     await response.Content.CopyToAsync(downloadedFileStream);
@@ -678,7 +700,7 @@ namespace CSharp.Net.Util
         {
             try
             {
-                var _httpClient = _csHttpFactory.CreateClient();
+                var _httpClient = await _csHttpFactory.CreateClient();
                 using (var response = await _httpClient.GetAsync(downUrl, HttpCompletionOption.ResponseHeadersRead))
                 {
                     using (var stream = await response.Content.ReadAsStreamAsync())
@@ -716,6 +738,84 @@ namespace CSharp.Net.Util
                 Console.WriteLine($"下载文件失败: {ex.Message}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// ToFormUrlEncodedContent
+        /// </summary>
+        /// <param name="dict"></param>
+        /// <param name="ignoreNullValues">忽略空对象</param>
+        /// <param name="serializeComplexObjects">处理复杂对象</param>
+        /// <returns></returns>
+        static FormUrlEncodedContent ToFormUrlEncodedContent(Dictionary<string, object> dict,
+            bool ignoreNullValues = true,
+            bool serializeComplexObjects = false)
+        {
+            /*
+            if (dict == null)
+                throw new ArgumentNullException(nameof(dict));
+
+            // 处理 null 值
+            var keyValuePairs = ignoreNullValues
+                ? dict.Where(kvp => kvp.Value != null)
+                : dict.Where(kvp => kvp.Key != null);
+
+            // 转换为字符串键值对
+            var formData = keyValuePairs.Select(kvp =>
+                new KeyValuePair<string, string>(
+                    kvp.Key,
+                    ConvertToString(kvp.Value)
+                ));
+
+            return new FormUrlEncodedContent(formData);
+            */
+
+            var keyValuePairs = new List<KeyValuePair<string, string>>();
+            foreach (var kvp in dict)
+            {
+                if (ignoreNullValues && kvp.Value == null)
+                    continue;
+
+                string value = HandleValue(kvp.Value, serializeComplexObjects);
+                keyValuePairs.Add(new KeyValuePair<string, string>(kvp.Key, value));
+            }
+
+            return new FormUrlEncodedContent(keyValuePairs);
+        }
+
+        private static string HandleValue(object value, bool serializeComplexObjects)
+        {
+            if (value == null)
+                return string.Empty;
+
+            // 处理基本类型
+            if (value is string || value.GetType().IsValueType)
+            {
+                return value.ToString();
+            }
+
+            // 处理数组
+            if (value is System.Collections.IEnumerable enumerable)
+            {
+                if (serializeComplexObjects)
+                {
+                    return JsonSerializer.Serialize(value);
+                }
+                else
+                {
+                    // 数组类型可能需要特殊处理，比如用逗号分隔
+                    var list = enumerable.Cast<object>().Select(x => x?.ToString());
+                    return string.Join(",", list);
+                }
+            }
+
+            // 处理复杂对象
+            if (serializeComplexObjects)
+            {
+                return JsonSerializer.Serialize(value);
+            }
+
+            return value.ToString();
         }
     }
 

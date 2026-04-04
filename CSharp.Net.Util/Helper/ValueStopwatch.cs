@@ -7,6 +7,7 @@ namespace CSharp.Net.Util
 {
     public struct ValueStopwatch
     {
+        //将Stopwatch的计数值转换为TimeSpan的Ticks值
         private static readonly double TimestampToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
 
         private readonly long _startTimestamp;

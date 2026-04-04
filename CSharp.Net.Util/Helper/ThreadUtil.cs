@@ -133,7 +133,7 @@ namespace CSharp.Net.Util
 
             for (var i = 0; i < 6; i++)
             {
-                task[i].Wait();
+                task[i].GetAwaiter().GetResult();
             }
 
         }

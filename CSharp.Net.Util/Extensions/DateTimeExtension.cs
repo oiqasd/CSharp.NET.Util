@@ -132,7 +132,7 @@ public static class DateTimeExtension
     /// 日期部分转化为数字
     /// </summary>
     /// <returns>yyyyMMdd</returns>
-    public static int ToyyyyMMdd(this DateTime date)
+    public static int DateToInt(this DateTime date)
     {
         return date.Year * 10000 + date.Month * 100 + date.Day;
     }

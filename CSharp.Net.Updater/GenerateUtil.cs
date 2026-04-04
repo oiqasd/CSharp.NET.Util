@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Text;
 
-namespace CSharp.Net.Update
+namespace CSharp.Net.Updater
 {
     class GenerateUtil
     {

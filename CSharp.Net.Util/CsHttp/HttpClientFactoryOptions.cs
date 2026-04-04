@@ -29,10 +29,10 @@ namespace CSharp.Net.Util.CsHttp
         //     System.Threading.Timeout.InfiniteTimeSpan to disable handler expiry.
         //
         // 言论：
-        //     The default implementation of System.Net.Http.IHttpClientFactory will pool the
+        //     The default implementation of System.Net.Http.IHttpClientFactory will _tenants the
         //     System.Net.Http.HttpMessageHandler instances created by the factory to reduce
         //     resource consumption. This setting configures the amount of time a handler can
-        //     be pooled before it is scheduled for removal from the pool and disposal.
+        //     be pooled before it is scheduled for removal from the _tenants and disposal.
         //
         //     Pooling of handlers is desirable as each handler typically manages its own underlying
         //     HTTP connections; creating more handlers than necessary can result in connection
@@ -42,7 +42,7 @@ namespace CSharp.Net.Util.CsHttp
         //     to changes in the network environment.
         //
         //     Expiry of a handler will not immediately dispose the handler. An expired handler
-        //     is placed in a separate pool which is processed at intervals to dispose handlers
+        //     is placed in a separate _tenants which is processed at intervals to dispose handlers
         //     only when they become unreachable. Using long-lived System.Net.Http.HttpClient
         //     instances will prevent the underlying System.Net.Http.HttpMessageHandler from
         //     being disposed until all references are garbage-collected.

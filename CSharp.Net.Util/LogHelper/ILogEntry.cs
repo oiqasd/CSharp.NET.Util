@@ -7,7 +7,7 @@ namespace CSharp.Net.Util
     /// <summary>
     /// 程序操作日志
     /// </summary>
-    public interface ISystemLog
+    public interface ILogEntry
     {
         /// <summary>
         /// 事务ID

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Threading;
 
 namespace CSharp.Net.Util
 {
-    public class SystemLog : ISystemLog
+    struct LogEntry
     {
-        public SystemLog()
+        public LogEntry()
         {
             LoggerTime = DateTime.Now;
             Level = LogLevel.Info;
@@ -18,18 +17,20 @@ namespace CSharp.Net.Util
           => Console.WriteLine($"AsyncLocalValueChanged_{obj.PreviousValue}_{obj.CurrentValue},thread:{Thread.CurrentThread.ManagedThreadId}");
         */
 
-        public SystemLog(LogLevel level, string title, string message, DateTime? loggerTime, string loggerName,
-            Exception exception = null, string eventId = null, string appId = null, long elapsedTime = 0)
+        public LogEntry(LogLevel level, string title, string message,
+                        Exception exception = null, string eventId = null,
+                        string appId = null, long elapsedTime = 0,
+                        PrintType printType=PrintType.Text)
         {
             EventId = eventId;
             AppId = appId;
             Title = title;
             Message = message;
-            LoggerName = loggerName;
             Exception = exception;
-            LoggerTime = loggerTime;
+            LoggerTime = DateTime.Now;
             ElapsedTime = elapsedTime;
             Level = level;
+            PrintType= printType;
         }
 
         public string EventId { get; set; }
@@ -37,17 +38,19 @@ namespace CSharp.Net.Util
         public string Title { get; set; }
         public string Message { get; set; }
         public Exception Exception { get; set; }
-        public DateTime? LoggerTime { get; set; }
+        public DateTime LoggerTime { get; set; }
         public long ElapsedTime { get; set; }
         public LogLevel Level { get; set; }
+        public PrintType PrintType { get; set; } = PrintType.Text;
         /// <summary>
         /// 文件名
         /// </summary>
-        public string LoggerName { get; set; }
+       // public string LoggerName { get; set; }
+    }
 
-        public override string ToString()
-        {
-            return JsonHelper.Serialize(this);
-        }
+    enum PrintType
+    {
+        Text,
+        Json
     }
 }
