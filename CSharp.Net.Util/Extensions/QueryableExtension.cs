@@ -27,8 +27,8 @@ public static class QueryableExtension
         foreach (var item in sortModels)
         {
             var paramter = Expression.Parameter(typeof(T), "u");
-            var selector = Expression.PropertyOrField(paramter, item.ColumnName);
-            var method = item.SortAsc ? !orderby ? "OrderBy" : "ThenBy" : !orderby ? "OrderByDescending" : "ThenByDescending";
+            var selector = Expression.PropertyOrField(paramter, item.SortName);
+            var method = item.Asc ? !orderby ? "OrderBy" : "ThenBy" : !orderby ? "OrderByDescending" : "ThenByDescending";
             expression = Expression.Call(typeof(Queryable), method, new Type[] { source.ElementType, selector.Type }, expression, Expression.Quote(Expression.Lambda(selector, paramter)));
             orderby = true;
         }

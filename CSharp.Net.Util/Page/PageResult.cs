@@ -17,7 +17,7 @@ public static class PageResult
     /// <param name="pageIndexRange">超出最大页显示最后一页，默认false</param>
     /// <param name="sortModels">排序规则</param>
     /// <returns></returns>
-    public static PageList<T> ToPageList<T>(this IQueryable<T> allItems, PageArgument page, bool pageIndexRange = false, IEnumerable<SortModel> sortModels = null)
+    public static PageList<T> ToPageList<T>(this IQueryable<T> allItems, PageArgument page, bool pageIndexRange = false, params SortModel[] sortModels)
     {
         page = page ?? new PageArgument();
         var itemIndex = (page.PageIndex - 1) * page.PageSize;
@@ -42,7 +42,7 @@ public static class PageResult
     /// <param name="pageIndexRange">超出最大页显示最后一页，默认false</param>
     /// <param name="sortModels">排序规则</param>
     /// <returns></returns>
-    public static PageList<T> ToPageList<T>(this IQueryable<T> allItems, int pageIndex, int pageSize, bool pageIndexRange = false, IEnumerable<SortModel> sortModels = null)
+    public static PageList<T> ToPageList<T>(this IQueryable<T> allItems, int pageIndex, int pageSize, bool pageIndexRange = false, params SortModel[] sortModels)
     {
         var page = new PageArgument(pageIndex, pageSize);
         //var itemIndex = (page.PageIndex - 1) * page.PageSize;
@@ -66,7 +66,7 @@ public static class PageResult
     /// <param name="pageIndexRange">超出最大页显示最后一页，默认false</param>
     /// <param name="sortModels">排序规则</param>
     /// <returns></returns>
-    public static async Task<PageList<T>> ToPageListAsync<T>(this IQueryable<T> allItems, PageArgument page, bool pageIndexRange = false, IEnumerable<SortModel> sortModels = null)
+    public static async Task<PageList<T>> ToPageListAsync<T>(this IQueryable<T> allItems, PageArgument page, bool pageIndexRange = false, params SortModel[] sortModels)
     {
         var resultAsync = Task.Run(() =>
         {
@@ -96,7 +96,7 @@ public static class PageResult
     /// <param name="pageIndexRange">超出最大页显示最后一页，默认false</param>
     /// <param name="sortModels">排序规则</param>
     /// <returns></returns>
-    public static async Task<PageList<T>> ToPageListAsync<T>(this IQueryable<T> allItems, int pageIndex, int pageSize, bool pageIndexRange = false, IEnumerable<SortModel> sortModels = null)
+    public static async Task<PageList<T>> ToPageListAsync<T>(this IQueryable<T> allItems, int pageIndex, int pageSize, bool pageIndexRange = false, params SortModel[] sortModels)
     {
         var resultAsync = Task.Run(() =>
         {

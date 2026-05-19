@@ -6,9 +6,9 @@ public class SortModel
     /// <summary>
     /// 排序字段
     /// </summary>
-    public string ColumnName { get; set; }
+    public string SortName { get; set; }
     /// <summary>
     /// 排序方法 asc:true;desc:false
     /// </summary>
-    public bool SortAsc { get; set; }
+    public bool Asc { get; set; }
 }
