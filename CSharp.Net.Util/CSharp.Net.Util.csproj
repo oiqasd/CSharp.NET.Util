@@ -22,6 +22,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon>appicon.ico</ApplicationIcon>
 	</PropertyGroup>
 	<!--<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
 		<ItemGroup>
@@ -109,5 +110,8 @@
 	  <Compile Include="Sockets\SocketEvent\SocketEventArgs.cs" />
 	  <Compile Include="Sockets\SocketEvent\SocketHandle.cs" />
 	  <Compile Include="Sockets\SocketEvent\SocketHandleHub.cs" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Include="appicon.ico" />
 	</ItemGroup>
 </Project>

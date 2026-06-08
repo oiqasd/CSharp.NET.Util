@@ -470,6 +470,8 @@ namespace CSharp.Net.Util
         /// <param name="timeoutSeconds">default 5 second</param>
         /// <param name="retryNum">重试，默认0</param>
         /// <param name="throwEx">是否抛出异常</param>
+        /// <param name="encoding">UTF-8</param>
+        /// <param name="handleName"></param>
         /// <param name="connectionClose">是否标记短链接</param>
         /// <returns></returns>
         public static async Task<string> GetAsync(string url, string pramstr,
@@ -637,7 +639,7 @@ namespace CSharp.Net.Util
                    (ThrowExceptionMode == ThrowExceptionMode.Default && throwEx);
         }
 
-       
+
         /// <summary>
         /// 打印日志
         /// </summary>
@@ -648,7 +650,7 @@ namespace CSharp.Net.Util
         {
             if (OutputErrorInConsole)
                 Console.WriteLine(DateTime.Now.ToString(1) + ex.Message + url);
-            LogHelper.Fatal($"{nameof(HttpClientUtil)}", $"{ex.Message}.retryNum:{retryNum}.{url}");
+            LogHelper.Fatal($"{nameof(HttpClientUtil)}", $"{ex.Message}{(retryNum > 0 ? $"RetryNum:{retryNum}" : "")}.{url}");
 
             if (ex is TaskCanceledException)
                 ex = new AppTimeoutException("响应超时");

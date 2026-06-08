@@ -22,10 +22,10 @@ namespace CSharp.Net.Util
             if (action == null) throw new ArgumentNullException(nameof(action));
 
             await Invoke(async () =>
-             {
-                 action();
-                 await Task.CompletedTask;
-             }, numRetries, retryTimeout, finalThrow, exceptionTypes);
+            {
+                action();
+                await Task.CompletedTask;
+            }, numRetries, retryTimeout, finalThrow, exceptionTypes);
         }
 
         /// <summary>
@@ -81,6 +81,7 @@ namespace CSharp.Net.Util
         /// <param name="exceptionTypes">终止重试异常类型,可多个</param>
         public static async Task<T> Invoke<T>(Func<Task<T>> action, uint numRetries = 1, int retryTimeout = 1000, bool finalThrow = true, params Type[] exceptionTypes)
         {
+            var _numRetries = numRetries;
             if (action == null) throw new ArgumentNullException(nameof(action));
             do
             {
@@ -88,14 +89,14 @@ namespace CSharp.Net.Util
                 {
                     return await action();
                 }
-                catch (Exception ex)// when(numRetries <= 0)
+                catch (Exception ex)// when(_numRetries <= 0)
                 {
                     //if (Debugger.IsAttached)
-
-                    LogHelper.Error($"You can retry {numRetries} more times.{ex.Message}");
+                    if (numRetries > 0)
+                        LogHelper.Error($"You can retry {numRetries} more times.{ex.Message}");
 
                     // 如果可重试次数小于或等于0，则终止重试
-                    if (numRetries <= 0)
+                    if (_numRetries <= 0)
                     {
                         if (finalThrow) throw;
                         else return default(T);
@@ -111,7 +112,7 @@ namespace CSharp.Net.Util
                     // 如果可重试异常数大于 0，则间隔指定时间后继续执行
                     if (retryTimeout > 0) await Task.Delay(retryTimeout);
                 }
-            } while (numRetries-- > 0);
+            } while (_numRetries-- > 0);
             return default(T);
         }
     }

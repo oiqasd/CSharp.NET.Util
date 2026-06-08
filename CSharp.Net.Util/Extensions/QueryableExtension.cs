@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 /// <summary>
@@ -27,13 +28,21 @@ public static class QueryableExtension
         foreach (var item in sortModels)
         {
             var paramter = Expression.Parameter(typeof(T), "u");
-            var selector = Expression.PropertyOrField(paramter, item.SortName);
+            var selector = paramter.PropertyOrFieldSafe(item.SortName);
+            //var selector = Expression.PropertyOrField(paramter, item.SortName);
+            if (selector == null) continue;
             var method = item.Asc ? !orderby ? "OrderBy" : "ThenBy" : !orderby ? "OrderByDescending" : "ThenByDescending";
             expression = Expression.Call(typeof(Queryable), method, new Type[] { source.ElementType, selector.Type }, expression, Expression.Quote(Expression.Lambda(selector, paramter)));
             orderby = true;
         }
 
         return orderby ? source.Provider.CreateQuery<T>(expression) : source;
+    }
+    public static Expression? PropertyOrFieldSafe(this Expression expression, string memberName)
+    {
+        var type = expression.Type;
+        var member = type.GetProperty(memberName) ?? (MemberInfo)type.GetField(memberName);
+        return member == null ? null : Expression.MakeMemberAccess(expression, member);
     }
 
     #region Expression Joiner
