@@ -62,6 +62,26 @@ namespace CSharp.Net.Cache.Memory
                 return data;
             });
         }
+
+        /// <summary>
+        /// 获取或添加key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="func"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null)
+        {
+            return await _cache.GetOrCreateAsync<T>(key, async c =>
+            {
+                var data = await func();
+                //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
+                c.AbsoluteExpiration = TimeSpanToTimeOffset(expiry);
+                c.SetValue(data);
+                return data;
+            });
+        }
+
         DateTimeOffset? TimeSpanToTimeOffset(TimeSpan? expiry)
         {
             if (!expiry.HasValue)
@@ -92,7 +112,7 @@ namespace CSharp.Net.Cache.Memory
             {
                 //c.SetOptions(new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromSeconds(seconds)));
                 if (seconds > 0) c.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(seconds);
-                var data= func().Result;
+                var data = func().Result;
                 c.SetValue(data);
                 return data;
             });
@@ -306,7 +326,7 @@ namespace CSharp.Net.Cache.Memory
 
             if ((data.Count / count) <= 10)
             {
-                data = Utils.GetRandomList(data,(int)count);
+                data = Utils.GetRandomList(data, (int)count);
                 return data;
             }
 

@@ -105,6 +105,23 @@ namespace CSharp.Net.Cache
         }
 
         /// <summary>
+        /// 获取或添加key
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="func"></param>
+        /// <param name="expiry"></param>
+        /// <returns></returns>
+        public async Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null)
+        {
+            if (await _db.KeyExistsAsync(PrefixKey(key)))
+                return await StringGetAsync<T>(key);
+
+            var data = await func();
+            await StringSetAsync(key, Serialize(data), expiry);
+            return data;
+        }
+
+        /// <summary>
         /// 保存单个key
         /// </summary>
         /// <param name="key"></param>

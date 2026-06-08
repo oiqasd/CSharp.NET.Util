@@ -27,7 +27,7 @@ namespace CSharp.Net.Cache
         /// <param name="cacheSeconds"></param>
         /// <param name="isSliding"></param>
         bool StringSet(string key, string value, int cacheSeconds = 0, bool isSliding = true);
-
+        Task<T> GetOrSetAsync<T>(string key, Func<Task<T>> func, TimeSpan? expiry = null);
         ///// <summary>
         ///// 保存一个对象
         ///// </summary>
@@ -76,7 +76,7 @@ namespace CSharp.Net.Cache
         /// <param name="func"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan expiry );// where T : new();
+        T GetOrSet<T>(string key, Func<Task<T>> func, TimeSpan expiry);// where T : new();
         /// <summary>
         /// 获取或创建一个key
         /// </summary>

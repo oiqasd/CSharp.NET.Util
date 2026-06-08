@@ -36,6 +36,10 @@ namespace CSharp.Net.Cache.Redis
                 _options = options.Value;
                 Connect().GetAwaiter().GetResult();
             }
+            catch (Exception ex)
+            {
+                LogHelper.Fatal(ex);
+            }
             finally
             {
                 Monitor.Exit(this);
