@@ -14,7 +14,7 @@ public static class ExceptionExtension
     /// <param name="ex"></param>
     /// <param name="memberName">调用者方法名</param>
     /// <returns></returns>
-    public static string GetExcetionMessage(this Exception ex, [CallerMemberName] string memberName = null)
+    public static string GetExceptionMessage(this Exception ex, [CallerMemberName] string memberName = null)
     {
         //// 使用System.Diagnostics.StackTrace类解析文件名和行号
         //var stackTrace = new System.Diagnostics.StackTrace(ex, true);
@@ -23,11 +23,39 @@ public static class ExceptionExtension
         //msg += (";Line Number: " + frame.GetFileLineNumber());
 
         if (ex == null) return "";
-        string exceMsg = "";
-        exceMsg += ex.Message + "\n" + ex.StackTrace;
-        if (ex.InnerException == null)
-            return exceMsg;
-        exceMsg += "\n" + ex.InnerException.GetExcetionMessage();
-        return exceMsg;
+
+        var sb = new StringBuilder();
+        //sb.AppendLine($"Method: {memberName}");
+        sb.AppendLine(ex.Message);
+
+        // 显示完整的堆栈，包括所有内部帧
+        sb.AppendLine("--- StackTrace ---");
+        sb.AppendLine(ex.StackTrace);
+
+        // 如果使用 ExceptionDispatchInfo，可以获取更多信息
+        if (ex.Data.Count > 0)
+        {
+            sb.AppendLine("--- Additional Data ---");
+            foreach (var key in ex.Data.Keys)
+            {
+                sb.AppendLine($"  {key}: {ex.Data[key]}");
+            }
+        }
+
+        if (ex.InnerException != null)
+        {
+            sb.AppendLine("--- Inner Exception ---");
+            sb.Append(ex.InnerException.GetExceptionMessage());
+        }
+
+        return sb.ToString();
+
+        //if (ex == null) return "";
+        //string exceMsg = "";
+        //exceMsg += ex.Message + "\n" + ex.StackTrace;
+        //if (ex.InnerException == null)
+        //    return exceMsg;
+        //exceMsg += "\n" + ex.InnerException.GetExceptionMessage();
+        //return exceMsg;
     }
 }

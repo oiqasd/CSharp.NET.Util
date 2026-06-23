@@ -108,7 +108,7 @@ namespace CSharp.Net.Util.Logger
                 builder.Append("[Exception:");
                 builder.Append(log.Exception.GetType().Name);
                 builder.Append("]详情：");
-                builder.Append(log.Exception.GetExcetionMessage());
+                builder.Append(log.Exception.GetExceptionMessage());
             }
             //builder.Append(log.LoggerTime);
             //if (log.Exception != null)
@@ -169,7 +169,7 @@ namespace CSharp.Net.Util.Logger
             builder.Append((byte)'"');
 
             builder.Append(",\"exception_msg\":\"");
-            builder.Append(log.Exception?.GetExcetionMessage().Trim("\n".ToCharArray()));
+            builder.Append(log.Exception?.GetExceptionMessage().Trim("\n".ToCharArray()));
             builder.Append((byte)'"');
 
 
@@ -210,7 +210,7 @@ namespace CSharp.Net.Util.Logger
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.GetExcetionMessage());
+                        Console.WriteLine(ex.GetExceptionMessage());
                     }
                     finally
                     {

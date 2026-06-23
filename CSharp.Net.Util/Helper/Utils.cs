@@ -294,7 +294,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Trace.TraceError(ex.GetExcetionMessage());
+                Trace.TraceError(ex.GetExceptionMessage());
             }
         }
 

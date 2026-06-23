@@ -153,6 +153,7 @@ namespace CSharp.Net.Util
             PrintThreadPoolStats(out string iocp, out string worker);
             StringBuilder sb = new StringBuilder();
             sb.Append(GetHostName)
+              .AppendLine($"当前时间：{DateTime.Now.ToString(1)}")
               .AppendLine(IpUtil.GetLocalIP())
               .AppendLine(AppName)
               .Append("程序集版本:").AppendLine(GetVersion.ToString())

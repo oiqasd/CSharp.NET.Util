@@ -251,6 +251,19 @@ namespace CSharp.Net.Util
                             .ToDictionary(x => x.Groups[1].Value, x => x.Groups[3].Value);
             return data;
         }
+        /// <summary>
+        /// 替换指定html标签，如：img 标签，替换成指定字符
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="tag"></param>
+        /// <param name="newChar">整串替换</param>
+        /// <returns></returns>
+        public static string ReplaceHtmlTag(string input, string tag = "img", string newChar = "")
+        {
+            if (string.IsNullOrEmpty(input)) { return input; }
+            var data = Regex.Replace(input, @$"<{tag}\s+[^>]*>", newChar);
+            return data;
+        }
     }
 }
 

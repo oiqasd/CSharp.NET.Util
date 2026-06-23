@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 
 namespace CSharp.Net.Util
@@ -52,11 +54,13 @@ namespace CSharp.Net.Util
         /// <param name="defaultValue"></param> 
         /// <param name="provider">格式信息,默认null, 例:Thread.CurrentThread.CurrentCulture</param>
         /// <returns>The target type</returns>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static T ConvertTo<T>(object obj, T defaultValue = default(T), IFormatProvider provider = null)
         {
             // 对于值类型返回 default(T)，引用类型返回 null
             if (obj == null)
                 return defaultValue;
+
             // 处理已经是目标类型的情况
             if (obj is T result)
                 return result;
@@ -73,7 +77,7 @@ namespace CSharp.Net.Util
             if (typeof(JsonObject).IsAssignableFrom(objType)
                 || typeof(JsonArray).IsAssignableFrom(objType))
                 return JsonHelper.Deserialize<T>(obj.ToString());
-
+             
             return Try.Func(() => (T)ChangeType(obj, typeof(T), provider), ex => LogHelper.Fatal($"ConvertTo<{typeof(T).Name}>:{obj}", ex), defaultValue);
         }
 
@@ -84,54 +88,58 @@ namespace CSharp.Net.Util
         /// <param name="type">目标类型</param>
         /// <param name="provider"><see cref="IFormatProvider"/></param>
         /// <returns>转换后的对象</returns>
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static object ChangeType(object obj, Type type, IFormatProvider provider = null)
         {
-            if (obj == null) return default;
+            if (obj == null) return type.IsValueType ? Activator.CreateInstance(type) : null;
             if (type == typeof(string)) return obj?.ToString();
             if (type == typeof(Guid) && obj != null) return Guid.Parse(obj.ToString());
-            if (obj == null) return type.IsValueType ? Activator.CreateInstance(type) : null;
+
+            provider= provider?? CultureInfo.InvariantCulture;
 
             Type objType = obj.GetType();
-            var underlyingType = Nullable.GetUnderlyingType(type);
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
-            if (type.IsAssignableFrom(objType)) return obj;
-            if ((underlyingType ?? type).IsEnum || typeof(Enum).IsAssignableFrom(objType))
+            if (underlyingType.IsAssignableFrom(objType))
+                return obj;
+
+            if (underlyingType.IsEnum || typeof(Enum).IsAssignableFrom(objType))
             {
                 if (underlyingType != null && string.IsNullOrWhiteSpace(obj.ToString())) return null;
-                if (obj is Enum enumValue) return Enum.ToObject(underlyingType ?? type, enumValue);
-                if (obj is string enumStr) return Enum.Parse(underlyingType ?? type, enumStr);
-                if (obj.GetType().IsPrimitive) return Enum.ToObject(underlyingType ?? type, obj);
+                if (obj is Enum enumValue) return Enum.ToObject(underlyingType, enumValue);
+                if (obj is string enumStr) return Enum.Parse(underlyingType, enumStr);
+                if (obj.GetType().IsPrimitive) return Enum.ToObject(underlyingType, obj);
 
-                return Enum.Parse(underlyingType ?? type, obj.ToString());
+                return Enum.Parse(underlyingType, obj.ToString());
             }
             //DateTime->DateTimeOffset
-            if (objType.Equals(typeof(DateTime)) && (underlyingType ?? type).Equals(typeof(DateTimeOffset)))
+            if (objType.Equals(typeof(DateTime)) && underlyingType.Equals(typeof(DateTimeOffset)))
             {
                 return DateTimeHelper.ConvertToDateTimeOffset((DateTime)obj);
             }
             //DateTimeOffset->DateTime
-            if (objType.Equals(typeof(DateTimeOffset)) && (underlyingType ?? type).Equals(typeof(DateTime)))
+            if (objType.Equals(typeof(DateTimeOffset)) && underlyingType.Equals(typeof(DateTime)))
             {
                 return DateTimeHelper.ConvertToDateTime((DateTimeOffset)obj);
             }
-            if (obj.ToString().Contains(".") && (underlyingType ?? type).Equals(typeof(int)))
+            if (obj.ToString().Contains(".") && underlyingType.Equals(typeof(int)))
             {
                 bool s = int.TryParse(obj.ToString(), NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.Float, provider, out int ret);
                 if (s) return ret;
-               return (int)Convert.ToDecimal(obj, provider);
+                return (int)Convert.ToDecimal(obj, provider);
             }
-            if (obj.ToString().Contains(".") && (underlyingType ?? type).Equals(typeof(long)))
+            if (obj.ToString().Contains(".") && underlyingType.Equals(typeof(long)))
             {
                 bool s = long.TryParse(obj.ToString(), NumberStyles.Integer | NumberStyles.AllowDecimalPoint | NumberStyles.Float, provider, out long ret);
                 if (s) return ret;
                 return (long)Convert.ToDecimal(obj, provider);
             }
 
-            if (typeof(IConvertible).IsAssignableFrom(underlyingType ?? type))
+            if (typeof(IConvertible).IsAssignableFrom(underlyingType))
             {
                 try
                 {
-                    return Convert.ChangeType(obj, underlyingType ?? type, provider);
+                    return Convert.ChangeType(obj, underlyingType, provider);
                 }
                 catch
                 {

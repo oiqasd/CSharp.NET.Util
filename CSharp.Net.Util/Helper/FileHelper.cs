@@ -205,7 +205,7 @@ namespace CSharp.Net.Util
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[WriteLog] error" + ex.GetExcetionMessage());
+                Console.WriteLine("[WriteLog] error" + ex.GetExceptionMessage());
             }
             finally
             {

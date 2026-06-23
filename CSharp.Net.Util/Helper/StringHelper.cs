@@ -1318,7 +1318,7 @@ namespace CSharp.Net.Util
         public static string DecodeBase64(string encodedValue, string encoding = "UTF-8")
         {
             if (IsEmpty(encodedValue)) return "";
-            
+
             return DecodeBase64(encodedValue, Encoding.GetEncoding(encoding));
         }
 
@@ -1349,7 +1349,7 @@ namespace CSharp.Net.Util
         /// <param name="encoding"></param>
         /// <returns></returns>
         public static string DecodeBase64Url(string base64, string encoding = "UTF-8")
-        { 
+        {
             return DecodeBase64(base64, encoding);
         }
         #endregion
@@ -2679,6 +2679,19 @@ namespace CSharp.Net.Util
 
             // 默认使用 ToString()
             return value.ToString();
+        }
+
+        /// <summary>
+        /// 第一个字母大写
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string FirstCharToUpper(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            return char.ToUpper(input[0]) + input.Substring(1);
         }
     }
 }

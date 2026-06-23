@@ -1,5 +1,7 @@
 ﻿using CSharp.Net.Util;
 using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -46,16 +48,26 @@ public struct Try
     /// </summary>
     /// <param name="func"></param>
     /// <param name="errorAction"></param>
+    /// <param name="captureBefore">捕获异常前的调用链</param>
     /// <returns>true:成功,false:异常</returns>
-    public static T Func<T>(Func<T> func, Action<Exception> errorAction, T defaultValue = default(T))
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    public static T Func<T>(Func<T> func, Action<Exception> errorAction, T defaultValue = default(T), bool captureBefore = true)
     {
+        var beforeStack = captureBefore ? new StackTrace(true) : null;
         try
         {
             return func();
         }
         catch (Exception ex)
         {
+            if (captureBefore && beforeStack != null)
+            {
+                ex.Data["BeforeStack"] = beforeStack.ToString();
+            }
+
             if (errorAction != null) errorAction(ex);
+            //System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex).Throw();
+
             return defaultValue;
         }
     }
