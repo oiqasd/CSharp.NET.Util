@@ -4,7 +4,12 @@ namespace CSharp.Net.Mvc;
 
 public static class ServiceCollectionExtension
 {
-    public static void AddMyMvc(IServiceCollection services)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="preflightMaxAge">default 1h</param>
+    public static void AddMyCors(IServiceCollection services, TimeSpan? preflightMaxAge = null)
     {
 
         services.AddCors(options =>
@@ -12,7 +17,7 @@ public static class ServiceCollectionExtension
             options.AddPolicy("AllowCorsAny", policy =>
             {
                 policy.AllowAnyMethod().AllowAnyHeader().AllowAnyOrigin();
-                policy.SetPreflightMaxAge(TimeSpan.FromHours(1));
+                policy.SetPreflightMaxAge(preflightMaxAge ?? TimeSpan.FromHours(1));
             });
 
         });

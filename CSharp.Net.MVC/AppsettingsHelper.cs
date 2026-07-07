@@ -78,7 +78,7 @@ public class AppsettingsHelper
         catch (Exception ex)
         {
             var msg = string.Format("类型转换失败 '{0}' to type of {1}", configValue, typeof(T).FullName);
-            Utils.WriteLog(msg + "\n" + ex.GetExcetionMessage());
+            Utils.WriteLog(msg + "\n" + ex.GetExceptionMessage());
             throw new Exception(string.Format("类型转换失败 '{0}' to type of {1}", configValue, typeof(T).FullName), ex);
         }
     }
@@ -99,7 +99,7 @@ public class AppsettingsHelper
         }
         catch (Exception ex)
         {
-            Utils.WriteLog("获取AppSetting失败" + "\n" + ex.GetExcetionMessage());
+            Utils.WriteLog("获取AppSetting失败" + "\n" + ex.GetExceptionMessage());
             //throw new ArgumentException("获取AppSetting失败");
         }
         return retValue;
@@ -149,7 +149,7 @@ public class AppsettingsHelper
         }
         catch (Exception ex)
         {
-            Utils.WriteLog("获取参数失败" + "\n" + ex.GetExcetionMessage());
+            Utils.WriteLog("获取参数失败" + "\n" + ex.GetExceptionMessage());
         }
         return retValue;
     }

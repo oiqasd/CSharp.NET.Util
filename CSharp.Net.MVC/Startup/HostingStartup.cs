@@ -65,7 +65,7 @@ namespace CSharp.Net.Mvc
 
                 //print UnobservedTaskException after gc
                 TaskScheduler.UnobservedTaskException += (sender, e) =>
-                    Trace.TraceError(e.Exception.GetExcetionMessage());
+                    Trace.TraceError(e.Exception.GetExceptionMessage());
 
                 services.AddRazorPages();
                 //linux下无法使用gb2313编码时需要注册

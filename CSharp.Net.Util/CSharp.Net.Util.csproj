@@ -4,11 +4,11 @@
 		<!--<TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>-->
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
-		<Authors>Util</Authors>
+		<Authors>HuYou</Authors>
 		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
-		<Version>7.3.2</Version>
+		<Version>7.3.3</Version>
 		<LangVersion>12.0</LangVersion>
-		<Copyright>©uu</Copyright>
+		<Copyright>©HuYou</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
@@ -22,7 +22,8 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<ApplicationIcon>appicon.ico</ApplicationIcon>
+		<PackageIcon>app.png</PackageIcon>
+		<!--<ApplicationIcon>appicon.ico</ApplicationIcon>-->
 	</PropertyGroup>
 	<!--<Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
 		<ItemGroup>
@@ -52,6 +53,10 @@
 		<NoWarn>1701;1702;1591;4014;8632</NoWarn>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<None Include="app.png" Pack="true" PackagePath="" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<Compile Remove="Json.NET\**" />
 		<Compile Remove="LiteSockets\**" />
@@ -110,8 +115,5 @@
 	  <Compile Include="Sockets\SocketEvent\SocketEventArgs.cs" />
 	  <Compile Include="Sockets\SocketEvent\SocketHandle.cs" />
 	  <Compile Include="Sockets\SocketEvent\SocketHandleHub.cs" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Content Include="appicon.ico" />
 	</ItemGroup>
 </Project>

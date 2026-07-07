@@ -6,26 +6,33 @@
 		<PackageId>CSharp.Net.Cache</PackageId>
 		<SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
 		<!--<PackageVersion>2.2</PackageVersion>-->
-		<Authors>Util</Authors>
+		<Authors>HuYou</Authors>
 		<Description>.NET Cache:Memorycache and Redis</Description>
-		<Version>7.3.1</Version>
+		<Version>7.3.3</Version>
 		<AssemblyVersion>7.3.*</AssemblyVersion>
 		<Deterministic>false</Deterministic>
-		<Copyright></Copyright>
+		<Copyright>@HuYou</Copyright>
 		<!--<ProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</ProjectUrl>-->
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Tags>Memorycache;Redis</Tags>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageIcon>app.png</PackageIcon>
 	</PropertyGroup>
+ 
 
 	<ItemGroup>
-		<PackageReference Include="CSharp.Net.Util" Version="7.3.2" />
+		<None Include="app.png" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CSharp.Net.Util" Version="7.3.3" />
 		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.9" />
 		<PackageReference Include="StackExchange.Redis" Version="2.12.8" />
 	</ItemGroup>
 
+	
 
 
 </Project>

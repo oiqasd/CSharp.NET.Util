@@ -47,7 +47,7 @@ namespace CSharp.Net.Mvc
                         }
                         catch (Exception ex)
                         {
-                            Trace.TraceError(ex.GetExcetionMessage());
+                            Trace.TraceError(ex.GetExceptionMessage());
                         }
                     };
                 });
