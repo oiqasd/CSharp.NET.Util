@@ -12,7 +12,7 @@ public static class EnumerableExtension
     /// <param name="source"></param>
     /// <param name="memberSelector"></param>
     /// <returns></returns>
-    public static IOrderedEnumerable<T> ThenBy<T>(this IOrderedEnumerable<T> source, Func<T, string> memberSelector)
+    public static IOrderedEnumerable<T> ThenByPinyin<T>(this IOrderedEnumerable<T> source, Func<T, string> memberSelector)
     {
         var culture = new System.Globalization.CultureInfo("zh-cn");
         return source.ThenBy(memberSelector, StringComparer.Create(culture, true));
@@ -25,7 +25,7 @@ public static class EnumerableExtension
     /// <param name="source"></param>
     /// <param name="memberSelector"></param>
     /// <returns></returns>
-    public static IOrderedEnumerable<T> ThenByDescending<T>(this IOrderedEnumerable<T> source, Func<T, string> memberSelector)
+    public static IOrderedEnumerable<T> ThenByPinyinDescending<T>(this IOrderedEnumerable<T> source, Func<T, string> memberSelector)
     {
         var culture = new System.Globalization.CultureInfo("zh-cn");
         return source.ThenByDescending(memberSelector, StringComparer.Create(culture, true));
@@ -38,7 +38,7 @@ public static class EnumerableExtension
     /// <param name="source"></param>
     /// <param name="memberSelector"></param>
     /// <returns></returns>
-    public static IOrderedEnumerable<T> OrderByAscending<T>(this IEnumerable<T> source, Func<T, string> memberSelector)
+    public static IOrderedEnumerable<T> OrderByPinyin<T>(this IEnumerable<T> source, Func<T, string> memberSelector)
     {
         var culture = new System.Globalization.CultureInfo("zh-cn");
         return source.OrderBy(memberSelector, StringComparer.Create(culture, true));
@@ -51,7 +51,7 @@ public static class EnumerableExtension
     /// <param name="source"></param>
     /// <param name="memberSelector"></param>
     /// <returns></returns>
-    public static IOrderedEnumerable<T> OrderByDescending<T>(this IEnumerable<T> source, Func<T, string> memberSelector)
+    public static IOrderedEnumerable<T> OrderByPinyinDescending<T>(this IEnumerable<T> source, Func<T, string> memberSelector)
     {
         var culture = new System.Globalization.CultureInfo("zh-cn");
         return source.OrderByDescending(memberSelector, StringComparer.Create(culture, true));
