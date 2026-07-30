@@ -261,7 +261,19 @@ namespace CSharp.Net.Util
         public static string ReplaceHtmlTag(string input, string tag = "img", string newChar = "")
         {
             if (string.IsNullOrEmpty(input)) { return input; }
-            var data = Regex.Replace(input, @$"<{tag}\s+[^>]*>", newChar);
+            //var data = Regex.Replace(input, @$"<{tag}\s+[^>]*>", newChar);
+            var data = Regex.Replace(input, $"<.*?>", newChar);
+            return data;
+        }
+        /// <summary>
+        /// 替换所有html标签
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string ReplaceAllHtmlTag(string input)
+        {
+            if (string.IsNullOrEmpty(input)) { return input; }
+            var data = Regex.Replace(input, $"<.*?>", string.Empty);
             return data;
         }
     }

@@ -473,8 +473,8 @@ namespace CSharp.Net.Util
         /// DateTime时间格式转换为Unix时间戳格式,秒级
         /// </summary>
         /// <param name="time">默认当前时间</param>
-        /// <returns>在2038年将会溢出</returns>
-        [Obsolete]
+        /// <returns></returns>
+        [Obsolete("建议使用GetTimestamp()")]
         public static int GetTimeStampInt(DateTime? time = null)
         {
             if (time == null)
