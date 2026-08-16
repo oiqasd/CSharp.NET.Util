@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -139,6 +140,38 @@ namespace CSharp.Net.Util
                      }
     } */
 
+        public static async Task<string> PostAsync(string url, object data,
+            Dictionary<string, string> headers = null,
+           string encoding = "utf-8", int timeOutSecond = 60, 
+           bool throwEx = true, bool connectionClose = false, string handleName = null)
+        {
+
+            string result = string.Empty;
+            HttpContent httpContent = null;
+            try
+            {
+                if (data != null)
+                    httpContent = new StringContent(JsonHelper.Serialize(data), Encoding.GetEncoding(encoding), "application/json");
+
+                PrintRequestLog("post", url, out string trackId, data);
+                return await PostAsync(url, httpContent, trackId, headers, timeOutSecond, connectionClose, handleName: handleName);
+            }
+            catch (Exception ex)
+            {
+                OutputErrorLog(ex, url);
+                if (IfThrow(throwEx))
+                    throw;
+            }
+            finally
+            {
+                if (httpContent != null)
+                {
+                    httpContent.Dispose();
+                    httpContent = null;
+                }
+            }
+            return result;
+        }
         /// <summary>
         /// Post请求
         /// </summary>

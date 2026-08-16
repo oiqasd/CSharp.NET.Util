@@ -106,7 +106,7 @@ public static class ArrayExtension
     /// </summary>
     /// <param name="list">list</param>
     /// <returns>字符串</returns>
-    public static string ToStringValue(this IList<string> list)
+    public static string ToStringValue(this IEnumerable<string> list)
     {
         if (list.IsHasValue())
         {
@@ -121,7 +121,7 @@ public static class ArrayExtension
     /// <param name="list">list</param>
     /// <param name="value">选定字符串</param>
     /// <returns>字符串</returns>
-    public static string ToStringValue(this IList<string> list, string value)
+    public static string ToStringValue(this IEnumerable<string> list, string value)
     {
         if (list.IsHasValue())
         {

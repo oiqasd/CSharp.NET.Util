@@ -696,6 +696,21 @@ namespace CSharp.Net.Util
         }
 
         /// <summary>
+        /// 计算距离下一个执行时点的等待时长,使任务每天固定在指定整点运行。
+        /// </summary>
+        public static TimeSpan GetInitialDelay(int runAtHour)
+        {
+            var now = DateTime.Now;
+            var next = now.Date.AddHours(runAtHour);
+            if (next <= now)
+            {
+                next = next.AddDays(1);
+            }
+
+            return next - now;
+        }
+
+        /// <summary>
         /// 将时间写入到字节数组中，格式为yyyy-MM-dd HH:mm:ss.fff
         /// </summary>
         /// <param name="time"></param>

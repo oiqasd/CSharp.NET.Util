@@ -14,6 +14,14 @@ namespace CSharp.Net.Util
 {
     public sealed class FileHelper
     {
+        public static bool IsSafeFileName(string value)
+        {
+            return !string.IsNullOrWhiteSpace(value)
+                && value.IndexOfAny(Path.GetInvalidFileNameChars()) < 0
+                && value.IndexOf('/') < 0
+                && value.IndexOf('\\') < 0;
+        }
+
         /// <summary>
         /// 返回路径，不存在则创建
         /// </summary>

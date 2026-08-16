@@ -20,12 +20,20 @@ public static class SwaggerMiddleware
     public static void UseApiDocument(this IApplicationBuilder app, string title = "ApiHelp V1 doc", string virPath = null)
     {
         app.UseMiddleware<SwaggerAuthMiddleware>();
-  
+
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        });
+
+        return;
         // 启用中间件服务生成Swagger作为JSON终结点
         app.UseSwagger(option => InjectDocServer(option, title, virPath));
 
         // 启用中间件服务对swagger-ui，指定Swagger JSON终结点
         app.UseSwaggerUI(c => InjectGroup(c, app, virPath));
+
         // Knife4j配置
         //app.UseKnife4UI(c =>
         //{
@@ -66,7 +74,7 @@ public static class SwaggerMiddleware
     /// <param name="virPath"></param>
     static void InjectGroup(SwaggerUIOptions options, IApplicationBuilder app, string virPath = null)
     {
-        var apiDescriptionGroups = app.ApplicationServices.GetRequiredService<IApiDescriptionGroupCollectionProvider>().ApiDescriptionGroups.Items;
+        var apiDescriptionGroups = app.ApplicationServices.GetRequiredService<IApiDescriptionGroupCollectionProvider>()?.ApiDescriptionGroups?.Items;
         foreach (var apidesc in apiDescriptionGroups)
         {
             options.SwaggerEndpoint($"{virPath}/swagger/{apidesc.GroupName ?? "default"}/swagger.json", apidesc.GroupName ?? "default");

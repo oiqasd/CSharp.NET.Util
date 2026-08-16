@@ -1036,11 +1036,25 @@ namespace CSharp.Net.Util
             }
         }
 
-        public static string[] Split(string value, char separator)
-        {
+        /// <summary>
+        /// 分列，
+        /// 默认分列字符：<code> ,, ，,、,/| </code>
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="separator">默认：<code> ,, ，,、,/| </code></param>
+        /// <returns></returns>
+        public static string[] Split(string value, params char[] separator)
+        { 
             if (string.IsNullOrEmpty(value))
                 return null;
-            return value.Split(separator);
+
+            if (separator.IsNullOrEmpty())
+                separator = new[] { ',', '，', '、', '/','|' };
+
+            return value.Split(separator, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Trim())
+                        .Where(x => x.IsHasValue())
+                        .ToArray();
         }
 
         /// <summary>
