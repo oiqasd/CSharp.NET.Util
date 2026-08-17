@@ -1,24 +1,31 @@
-﻿using CSharp.Net.Mvc;
-using CSharp.Net.Util;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
+namespace CSharp.Net.Mvc;
 
-public class ErrorException : AppException
+public class ErrorException : Exception
 {
-    public ErrorException(ReturnCode code) : base(code, code.GetDescription())
-    {
-    }
-    public ErrorException(string message) : base(ReturnCode.DataError, message)
+    public ErrorException(ReturnCode code)
+        : this(code, code.GetDescription())
     {
     }
 
-
-    public ErrorException(ReturnCode code, string message) : base(code, message)
+    public ErrorException(string message)
+        : this(ReturnCode.DataError, message)
     {
     }
+
+    public ErrorException(
+        ReturnCode code,
+        string message,
+        object responseData = null,
+        Exception innerException = null)
+        : base(message, innerException)
+    {
+        Code = code;
+        ResponseData = responseData;
+    }
+
+    public ReturnCode Code { get; }
+
+    public object ResponseData { get; }
 }
-

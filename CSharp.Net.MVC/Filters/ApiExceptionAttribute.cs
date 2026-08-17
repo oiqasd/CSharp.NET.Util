@@ -21,10 +21,9 @@ namespace CSharp.Net.Mvc.Filters
         {
             if (context.Result == null)
             {
-                if (context.Exception is AppException)
+                if (context.Exception is ErrorException error)
                 {
-                    var error = context.Exception as AppException;
-                    Response<object> responseObj = new Response<object>((ReturnCode)error.ErrorCode, error.Message, error.Data);
+                    Response<object> responseObj = new Response<object>(error.Code, error.Message, error.ResponseData);
                     context.Result = new ObjectResult(responseObj);
                 }
                 else if (context.Exception is NotImplementedException)
@@ -42,7 +41,7 @@ namespace CSharp.Net.Mvc.Filters
                 }
 
                 var client_ip = context.HttpContext.GetRemoteIP();
-                var method_name = context.Exception.TargetSite.Name;
+                var method_name = context.Exception.TargetSite?.Name;
                 var strLog = $"[IP:{client_ip}],[接口:{context.HttpContext.Request.Path} 链：{method_name}],[错误信息:{context.Exception.Message}]";
                 context.ExceptionHandled = true;
 

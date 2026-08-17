@@ -1,14 +1,9 @@
-﻿// ****************************************************
-// * 创建日期：
-// * 创建人：
-// * 备注：
-// ****************************************************
-
-using CSharp.Net.Util;
-
 namespace CSharp.Net.Mvc;
 
-public class RequestExpiredException : AppException
+public class RequestExpiredException : ErrorException
 {
-    public RequestExpiredException(string message="请求已过期") : base(message) { }
+    public RequestExpiredException(string message = "请求已过期")
+        : base(ReturnCode.ExpiredRequest, message)
+    {
+    }
 }

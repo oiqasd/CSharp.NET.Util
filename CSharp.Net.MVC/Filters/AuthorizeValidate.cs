@@ -112,13 +112,13 @@ namespace CSharp.Net.Mvc.Filters
             //{
             //    if (tm == null || tm.Uid <= 0)
             //    {
-            //        throw new AppException(ReturnCode.UnAuthorized, ReturnCode.UnAuthorized.GetDescription());
+            //        throw new ErrorException(ReturnCode.UnAuthorized, ReturnCode.UnAuthorized.GetDescription());
             //    }
 
             //    var user = _userApplication.GetUser(tm.Uid);
             //    if (user.IsLock)
             //    {
-            //        throw new AppException(ReturnCode.UserAccountLocked, ReturnCode.UserAccountLocked.GetDescription());
+            //        throw new ErrorException(ReturnCode.UserAccountLocked, ReturnCode.UserAccountLocked.GetDescription());
             //        //var result = new Response<string>(ErrorCode.User_Account_Locked);
             //        //context.Result = new JsonResult(result);
             //        //return;
@@ -137,7 +137,7 @@ namespace CSharp.Net.Mvc.Filters
                 parmPro = parmObj.GetType().GetProperties().FirstOrDefault(q => q.Name == "Parameter");
                 if (parmPro == null)
                 {
-                    throw new AppException(ReturnCode.PamramerError, ReturnCode.PamramerError.GetDescription());
+                    throw new ErrorException(ReturnCode.PamramerError, ReturnCode.PamramerError.GetDescription());
                 }
 
                 var parameter = parmPro.GetValue(parmObj);
@@ -160,7 +160,7 @@ namespace CSharp.Net.Mvc.Filters
                 var result = Validate.ValidataData(parameter);
                 if (!result.Flag)
                 {
-                    throw new AppException(ReturnCode.PamramerError, result.ErrorMessage);
+                    throw new ErrorException(ReturnCode.PamramerError, result.ErrorMessage);
                 }
             }
 
@@ -170,7 +170,7 @@ namespace CSharp.Net.Mvc.Filters
                 string ckey = $"{tm?.Uid}:{context.HttpContext.Request.Path}:{JsonHelper.Serialize(parmPro.GetValue(parmObj))}";
                 if (_cache.KeyExists(ckey))
                 {
-                    throw new AppException(ReturnCode.RepeatCommit, ReturnCode.RepeatCommit.GetDescription());
+                    throw new ErrorException(ReturnCode.RepeatCommit, ReturnCode.RepeatCommit.GetDescription());
                 }
                 _cache.StringSet(ckey, "", 1, false);
             }
