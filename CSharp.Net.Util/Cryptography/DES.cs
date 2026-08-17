@@ -8,6 +8,7 @@ namespace CSharp.Net.Util.Cryptography
     /// <summary>
     /// 数据加密算法 Data Encryption Algorithm
     /// </summary>
+    [Obsolete("DES is cryptographically weak. Use AES instead.")]
     public class DES
     {
         //默认密钥向量

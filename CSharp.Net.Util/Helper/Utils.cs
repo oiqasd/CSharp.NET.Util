@@ -103,13 +103,13 @@ namespace CSharp.Net.Util
         /// 雪花算法生成编号
         /// <para>自定义配置方式：IdWorkerHelper.GeneratorIdWorker(IdWorkerOptions options)</para>
         /// </summary>
-        public static long CreateWorkId(DateTime? baseTime = null)
+        public static long CreateWorkId()
         {
             if (IdWorkerHelper.Instance == null)
             {
                 IdWorkerHelper.GeneratorIdWorker();
             }
-            return IdWorkerHelper.Instance.NextId(baseTime);
+            return IdWorkerHelper.Instance.NextId();
         }
 
         /// <summary>  
@@ -172,9 +172,9 @@ namespace CSharp.Net.Util
         /// 生成一个不重复的短字符串
         /// </summary>
         /// <returns></returns>
-        public static string ShortCode(DateTime? baseTime = null)
+        public static string ShortCode()
         {
-            long code = Utils.CreateWorkId(baseTime ?? DateTime.Parse("2024/01/01"));
+            long code = Utils.CreateWorkId();
             return NumberUtil.DecimalToBinary(code, 62);
         }
 

@@ -13,6 +13,8 @@ namespace CSharp.Net.Util.Cryptography
     /// </summary>
     public sealed class RSA
     {
+        private const string OaepSha256Prefix = "rsa-oaep-sha256:v1:";
+
         #region 签名
         /// <summary>
         /// 使用私钥签名
@@ -22,7 +24,7 @@ namespace CSharp.Net.Util.Cryptography
         /// <param name="rsaType"></param>
         /// <param name="charset"></param>
         /// <returns></returns>
-        public static string Sign(string data, string privateKey, RSAType rsaType = RSAType.MD5, string charset = "utf-8")
+        public static string Sign(string data, string privateKey, RSAType rsaType = RSAType.SHA256, string charset = "utf-8")
         {
             if (string.IsNullOrEmpty(privateKey))
             {
@@ -47,7 +49,7 @@ namespace CSharp.Net.Util.Cryptography
         /// <param name="rsaType">签名类型</param>
         /// <param name="charset">编码</param>
         /// <returns></returns>
-        public static bool Verify(string data, string sign, string publicKey, RSAType rsaType = RSAType.MD5, string charset = "utf-8")
+        public static bool Verify(string data, string sign, string publicKey, RSAType rsaType = RSAType.SHA256, string charset = "utf-8")
         {
             if (string.IsNullOrEmpty(publicKey))
             {
@@ -83,13 +85,22 @@ namespace CSharp.Net.Util.Cryptography
         /// <returns></returns>
         public static string Decrypt(string decryptData, string privateKey, string charset = "utf-8")
         {
-            using (RSACryptoServiceProvider rsa = CreateRSAProviderFromPrivateKey(privateKey))
+            bool useOaepSha256 = decryptData.StartsWith(OaepSha256Prefix, StringComparison.Ordinal);
+#if !NET
+            if (useOaepSha256)
+                throw new PlatformNotSupportedException("RSA OAEP-SHA256 ciphertext requires a modern .NET target.");
+#endif
+            string payload = useOaepSha256 ? decryptData.Substring(OaepSha256Prefix.Length) : decryptData;
+            using (var rsa = CreateRSAProviderFromPrivateKey(privateKey))
             {
-                var dataArr = Convert.FromBase64String(decryptData);
+                var dataArr = Convert.FromBase64String(payload);
                 var maxBufferSize = rsa.KeySize / 8;
+                RSAEncryptionPadding padding = useOaepSha256
+                    ? RSAEncryptionPadding.OaepSHA256
+                    : RSAEncryptionPadding.Pkcs1;
 
-                if (dataArr.Length < maxBufferSize)
-                    return Encoding.GetEncoding(charset).GetString(rsa.Decrypt(dataArr, false));
+                if (dataArr.Length % maxBufferSize != 0)
+                    throw new CryptographicException("Invalid RSA ciphertext length.");
 
                 using (MemoryStream msread = new MemoryStream(dataArr))
                 {
@@ -99,7 +110,7 @@ namespace CSharp.Net.Util.Cryptography
                         var len = msread.Read(buffer, 0, buffer.Length);
                         while (len > 0)
                         {
-                            var data = rsa.Decrypt(buffer, false);
+                            var data = rsa.Decrypt(buffer, padding);
                             mswrite.Write(data, 0, data.Length);
                             buffer = new byte[maxBufferSize];
                             len = msread.Read(buffer, 0, buffer.Length);
@@ -127,12 +138,15 @@ namespace CSharp.Net.Util.Cryptography
             using (var rsa = CreateRSAProviderFromPublicKey(publicKey))
             {
                 var dataArr = Encoding.GetEncoding(charset).GetBytes(text);
+#if NET
+                RSAEncryptionPadding padding = RSAEncryptionPadding.OaepSHA256;
+                var maxBufferSize = rsa.KeySize / 8 - 2 * 32 - 2;
+#else
+                RSAEncryptionPadding padding = RSAEncryptionPadding.Pkcs1;
                 var maxBufferSize = rsa.KeySize / 8 - 11;
-                if (dataArr.Length < maxBufferSize)
-                {
-                    var data = rsa.Encrypt(dataArr, RSAEncryptionPadding.Pkcs1);
-                    return Convert.ToBase64String(data);
-                }
+#endif
+                if (maxBufferSize <= 0)
+                    throw new CryptographicException("The RSA key is too small for the selected padding.");
 
                 using (MemoryStream msread = new MemoryStream(dataArr))
                 {
@@ -142,13 +156,23 @@ namespace CSharp.Net.Util.Cryptography
                         var len = msread.Read(buffer, 0, buffer.Length);
                         while (len > 0)
                         {
-                            var data = rsa.Encrypt(buffer, RSAEncryptionPadding.Pkcs1);
+                            byte[] block = buffer;
+                            if (len != buffer.Length)
+                            {
+                                block = new byte[len];
+                                Buffer.BlockCopy(buffer, 0, block, 0, len);
+                            }
+                            var data = rsa.Encrypt(block, padding);
                             mswrite.Write(data, 0, data.Length);
                             buffer = new byte[maxBufferSize];
                             len = msread.Read(buffer, 0, buffer.Length);
                         }
-                        var resStr = Convert.ToBase64String(mswrite.ToArray());
-                        return resStr;
+                        var result = Convert.ToBase64String(mswrite.ToArray());
+#if NET
+                        return OaepSha256Prefix + result;
+#else
+                        return result;
+#endif
                     }
                 }
             }
@@ -159,16 +183,16 @@ namespace CSharp.Net.Util.Cryptography
         #region 创建RSA实例
 
 #if NET
-        private static RSACryptoServiceProvider CreateRSAProviderFromPublicKey(string publicKey)
+        private static System.Security.Cryptography.RSA CreateRSAProviderFromPublicKey(string publicKey)
         {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            System.Security.Cryptography.RSA rsa = System.Security.Cryptography.RSA.Create();
             var bt = Convert.FromBase64String(publicKey);
             rsa.ImportRSAPublicKey(bt, out int bytesreadPublic);
             return rsa;
         }
-        private static RSACryptoServiceProvider CreateRSAProviderFromPrivateKey(string privateKey)
+        private static System.Security.Cryptography.RSA CreateRSAProviderFromPrivateKey(string privateKey)
         {
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
+            System.Security.Cryptography.RSA rsa = System.Security.Cryptography.RSA.Create();
             var bt = Convert.FromBase64String(privateKey);
             rsa.ImportRSAPrivateKey(bt, out int bytesreadPrivate);
 
@@ -636,13 +660,15 @@ namespace CSharp.Net.Util.Cryptography
         /// <summary>
         /// RSA算法类型字典
         /// </summary>
-        private static SortedDictionary<RSAType, HashAlgorithmName> DicAlgorithmName = new SortedDictionary<RSAType, HashAlgorithmName>()
+#pragma warning disable CS0618
+        private static readonly SortedDictionary<RSAType, HashAlgorithmName> DicAlgorithmName = new SortedDictionary<RSAType, HashAlgorithmName>()
         {
             { RSAType.MD5, HashAlgorithmName.MD5 },
             { RSAType.SHA1, HashAlgorithmName.SHA1 },
             { RSAType.SHA256, HashAlgorithmName.SHA256 },
             { RSAType.SHA512, HashAlgorithmName.SHA512 }
         };
+#pragma warning restore CS0618
 
         #endregion
 
@@ -762,11 +788,13 @@ namespace CSharp.Net.Util.Cryptography
         /// <summary>
         /// MD5
         /// </summary>
+        [Obsolete("MD5 signatures are cryptographically weak. Use SHA256 or SHA512.")]
         MD5,
 
         /// <summary>
         /// SHA1
         /// </summary>
+        [Obsolete("SHA1 signatures are cryptographically weak. Use SHA256 or SHA512.")]
         SHA1,
 
         /// <summary>

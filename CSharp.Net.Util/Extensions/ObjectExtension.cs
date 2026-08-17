@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
 
 public static class ObjectExtension
@@ -329,33 +328,4 @@ public static class ObjectExtension
         return obj.MemberwiseClone();
     }
     */
-    /// <summary>
-    /// 深拷贝
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    public static T DeepClone<T>(this T obj)
-    {
-#pragma warning disable SYSLIB0011 // 类型或成员已过时
-        BinaryFormatter bf = new BinaryFormatter();
-        MemoryStream ms = new MemoryStream();
-        bf.Serialize(ms, obj);
-        ms.Seek(0, SeekOrigin.Begin);
-        return (T)bf.Deserialize(ms);
-
-#pragma warning restore SYSLIB0011 // 类型或成员已过时
-    }
-
-    public static T Clone<T>(this T list)
-    {
-#pragma warning disable SYSLIB0011 // 类型或成员已过时 
-        BinaryFormatter bf = new BinaryFormatter();
-        using (MemoryStream ms = new MemoryStream())
-        {
-            bf.Serialize(ms, list);
-            ms.Seek(0, SeekOrigin.Begin);
-            var a = bf.Deserialize(ms);
-            return (T)a;
-        }
-    }
 }

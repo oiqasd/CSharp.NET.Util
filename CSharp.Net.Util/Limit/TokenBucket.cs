@@ -32,6 +32,8 @@ namespace CSharp.Net.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryAcquire(long permits)
         {
+            if (permits < 0)
+                throw new ArgumentOutOfRangeException(nameof(permits), permits, "Permits cannot be negative.");
             IntervalRefill();
             /*
               long after = Interlocked.Add(ref _tokens, -permits);
@@ -56,6 +58,8 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public async ValueTask AcquireAsync(long permits, CancellationToken ct = default)
         {
+            if (permits < 0)
+                throw new ArgumentOutOfRangeException(nameof(permits), permits, "Permits cannot be negative.");
             SpinWait spin = new();
             while (true)
             {

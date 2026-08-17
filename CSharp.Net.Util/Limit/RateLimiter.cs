@@ -55,6 +55,8 @@ namespace CSharp.Net.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryAcquire(int permits = 1)
         {
+            if (permits < 0)
+                throw new ArgumentOutOfRangeException(nameof(permits), permits, "Permits cannot be negative.");
             _lastReadTick = Environment.TickCount;
             if (_single != null)
             {
@@ -78,6 +80,8 @@ namespace CSharp.Net.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task AcquireWait(int permits = 1)
         {
+            if (permits < 0)
+                throw new ArgumentOutOfRangeException(nameof(permits), permits, "Permits cannot be negative.");
             _lastReadTick = Environment.TickCount;
             if (_single != null)
             {

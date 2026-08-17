@@ -52,10 +52,10 @@ namespace CSharp.Net.Util.CsHttp
 #else
         public override HttpMessageHandler PrimaryHandler { get; set; } = new HttpClientHandler()
         {
-            UseDefaultCredentials = true,
+            UseDefaultCredentials = false,
             ClientCertificateOptions = ClientCertificateOption.Automatic,
             //关闭证书验证
-            ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true,
+            //ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true,
             SslProtocols = SslProtocols.None,
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
             MaxConnectionsPerServer = 512,

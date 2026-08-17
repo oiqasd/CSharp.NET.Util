@@ -23,7 +23,7 @@ namespace CSharp.Net.Util
         public virtual int SequenceBits { get; set; } = 10;
 
         /// <summary>
-        /// 基础时间（UTC格式）
+        /// 基础时间。Utc按UTC时间处理，Local和Unspecified按本地时间处理
         /// 不能超过当前系统时间
         /// <para>默认:DateTime(2020, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)</para>
         /// </summary>

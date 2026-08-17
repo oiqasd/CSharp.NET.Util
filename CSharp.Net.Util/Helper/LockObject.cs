@@ -1,70 +1,89 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
-    /// <summary>
-    /// 采用HashCode算法，所以不能保证完全唯一，适合小范围下的获取对象锁
-    /// </summary>
-    public class LockObject
+    internal static class FileLock
     {
-        private static readonly Timer cleanupTimer;
-        private static readonly ConcurrentDictionary<int, TimedSemaphore> _locks;
-        private static readonly TimeSpan cleanupInterval = TimeSpan.FromSeconds(100);
-        private static readonly TimeSpan expireTime = TimeSpan.FromSeconds(300);
+        private static readonly ConcurrentDictionary<string, Entry> Locks =
+            new ConcurrentDictionary<string, Entry>(StringComparer.OrdinalIgnoreCase);
 
-        static LockObject()
+        public static async Task<IDisposable> AcquireAsync(string key, CancellationToken cancellationToken = default)
         {
-            _locks = new ConcurrentDictionary<int, TimedSemaphore>();
-            cleanupTimer = new Timer(_ => { CleanupExpiredLocks(); }, null, expireTime, cleanupInterval);
-        }
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("A lock key is required.", nameof(key));
 
-        /// <summary>
-        /// 获取锁
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns>sem.AcquireWait();sem.Release()</returns>
-        public static SemaphoreSlim GetLockObj(string key)
-        {
-            int cdk = key.GetHashCode();
-            var timedSem = _locks.GetOrAdd(cdk, _ => new TimedSemaphore());
-            timedSem.Refresh();
-            return timedSem.Semaphore;
-        }
-
-        /// <summary>
-        /// 定时清理过期的锁对象
-        /// </summary>
-        /// <returns></returns>
-        static void CleanupExpiredLocks()
-        {
-            foreach (var kvp in _locks)
+            while (true)
             {
-                if (DateTime.UtcNow - kvp.Value.LastAccessTime > expireTime)
+                Entry entry = Locks.GetOrAdd(key, _ => new Entry());
+                lock (entry.SyncRoot)
                 {
-                    if (_locks.TryRemove(kvp.Key, out var removed))
-                    {
-                        removed.Dispose();
-                    }
+                    if (entry.Removed)
+                        continue;
+                    entry.ReferenceCount++;
+                }
+
+                try
+                {
+                    await entry.Semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+                    return new Lease(key, entry);
+                }
+                catch
+                {
+                    ReleaseReference(key, entry, false);
+                    throw;
+                }
+            }
+        }
+
+        private static void ReleaseReference(string key, Entry entry, bool releaseSemaphore)
+        {
+            if (releaseSemaphore)
+                entry.Semaphore.Release();
+
+            bool dispose = false;
+            lock (entry.SyncRoot)
+            {
+                entry.ReferenceCount--;
+                if (entry.ReferenceCount == 0)
+                {
+                    entry.Removed = true;
+                    Locks.TryRemove(key, out Entry removed);
+                    dispose = ReferenceEquals(removed, entry);
                 }
             }
 
+            if (dispose)
+                entry.Semaphore.Dispose();
         }
-        internal class TimedSemaphore : IDisposable
+
+        private sealed class Entry
         {
-            public DateTime LastAccessTime { get; private set; }
-            public SemaphoreSlim Semaphore { get; }
-            public TimedSemaphore()
+            public readonly object SyncRoot = new object();
+            public readonly SemaphoreSlim Semaphore = new SemaphoreSlim(1, 1);
+            public int ReferenceCount;
+            public bool Removed;
+        }
+
+        private sealed class Lease : IDisposable
+        {
+            private readonly string _key;
+            private Entry _entry;
+
+            public Lease(string key, Entry entry)
             {
-                Semaphore = new SemaphoreSlim(1, 1);
-                LastAccessTime = DateTime.UtcNow;
+                _key = key;
+                _entry = entry;
             }
-            public void Refresh()
-                => LastAccessTime = DateTime.UtcNow;
 
             public void Dispose()
-                => Semaphore.Dispose();
+            {
+                Entry entry = Interlocked.Exchange(ref _entry, null);
+                if (entry != null)
+                    ReleaseReference(_key, entry, true);
+            }
         }
     }
 }

@@ -493,16 +493,24 @@ namespace CSharp.Net.Util
         /// <returns>时间戳</returns>
         public static long GetTimestamp(DateTime? time, bool milliseconds = true)
         {
-            DateTimeOffset localtime;
+            DateTimeOffset value;
             if (time.HasValue)
-                localtime = DateTime.SpecifyKind(time.Value, DateTimeKind.Local);
+            {
+                DateTime dateTime = time.Value;
+                if (dateTime.Kind == DateTimeKind.Unspecified)
+                    dateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Local);
+
+                value = new DateTimeOffset(dateTime);
+            }
             else
-                localtime = DateTimeOffset.UtcNow;
+            {
+                value = DateTimeOffset.UtcNow;
+            }
 
             if (milliseconds)
-                return localtime.ToUnixTimeMilliseconds();
+                return value.ToUnixTimeMilliseconds();
 
-            return localtime.ToUnixTimeSeconds();
+            return value.ToUnixTimeSeconds();
         }
 
         /// <summary>

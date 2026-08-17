@@ -1,9 +1,5 @@
 ﻿using System;
-using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Text;
 
 namespace CSharp.Net.Util
 {
@@ -109,41 +105,5 @@ namespace CSharp.Net.Util
             int* ptr = (int*)&obj;
             return $"0x{*(ptr):X}";
         }
-#if NET
-        /// <summary>
-        /// 操作共享内存
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="data"></param>
-        /// <param name="bSize">bytes,default:1024</param>
-        [SupportedOSPlatform("windows")]
-        public static async void WriteSharedMemory(string name, string data, int bSize = 1024)
-        {
-            using (MemoryMappedFile mmf = MemoryMappedFile.CreateOrOpen(name, bSize))
-            {
-                using (var stream = mmf.CreateViewStream())
-                {
-                    await stream.WriteAsync(Encoding.UTF8.GetBytes(data));
-                }
-            }
-        }
-
-        /// <summary>
-        /// 读取共享内存
-        /// </summary>
-        /// <param name="name"></param>
-        [SupportedOSPlatform("windows")]
-        public static string ReadSharedMemory(string name)
-        {
-            using (MemoryMappedFile mmf = MemoryMappedFile.OpenExisting(name))
-            {
-                using (var stream = mmf.CreateViewStream())
-                {
-                    BinaryReader reader = new BinaryReader(stream);
-                    return reader.ReadString();
-                }
-            }
-        }
-#endif
     }
 }

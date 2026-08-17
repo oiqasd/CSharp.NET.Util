@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -6,147 +6,134 @@ using System.Text;
 namespace CSharp.Net.Util.Cryptography
 {
     /// <summary>
-    /// 对称加密 
-    /// Advanced Encryption Standard，高级加密标准
+    /// AES 对称加密。现代目标框架写入 AES-GCM 格式，并兼容读取旧 CBC 格式。
     /// </summary>
     public class AES
     {
-        // AES算法支持的密钥长度：128位、192位、256位
-        // 向量长度固定为128位(16字节)
         private const int KeySize = 256;
         private const int BlockSize = 128;
+        private const string GcmPrefix = "aes-gcm:v1:";
+        private const int GcmNonceSize = 12;
+        private const int GcmTagSize = 16;
+        private static readonly string AesDefaultKey = "ibzdO1JTUrQGyZ3rNGTsnGxd7O0A350ScGjBzWfYfbw=";
 
-        /// <summary>
-        /// AES加密
-        /// </summary>
-        /// <param name="plainText">明文</param>
-        /// <param name="key">密钥(32字节 for 256位, 24字节 for 192位, 16字节 for 128位),base64字符串</param>
-        /// <returns>加密后的字符串(包含向量)</returns>
         public static string Encrypt(string plainText, string key = "")
         {
             if (string.IsNullOrEmpty(plainText))
                 throw new ArgumentNullException(nameof(plainText));
 
-            if (string.IsNullOrEmpty(key))
-                key = AesDefaultKey;
-            //throw new ArgumentNullException(nameof(key));
+            byte[] keyBytes = GetKeyBytes(key);
+#if NET
+            byte[] nonce = new byte[GcmNonceSize];
+            RandomNumberGenerator.Fill(nonce);
+            byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+            byte[] cipherBytes = new byte[plainBytes.Length];
+            byte[] tag = new byte[GcmTagSize];
 
-            // 将密钥转换为字节数组并验证长度
-            byte[] keyBytes = Convert.FromBase64String(key);
-            ValidateKeyLength(keyBytes);
+            using (var aes = new AesGcm(keyBytes, GcmTagSize))
+                aes.Encrypt(nonce, plainBytes, cipherBytes, tag);
 
-            using (Aes aesAlg = Aes.Create())
-            {
-                aesAlg.KeySize = KeySize;
-                aesAlg.BlockSize = BlockSize;
-                aesAlg.Mode = CipherMode.CBC;
-                aesAlg.Padding = PaddingMode.PKCS7;
-
-                // 生成随机向量
-                aesAlg.GenerateIV();
-                byte[] iv = aesAlg.IV;
-
-                // 创建加密器
-                using ICryptoTransform encryptor = aesAlg.CreateEncryptor(keyBytes, iv);
-
-                // 加密过程
-                using (MemoryStream msEncrypt = new MemoryStream())
-                {
-                    // 先写入向量，解密时需要用到
-                    msEncrypt.Write(iv, 0, iv.Length);
-
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                    using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
-                    {
-                        // 将明文写入加密流
-                        swEncrypt.Write(plainText);
-                        swEncrypt.Flush();
-                        csEncrypt.FlushFinalBlock();
-                    }
-
-                    // 转换为Base64字符串返回(包含向量)
-                    return Convert.ToBase64String(msEncrypt.ToArray());
-                }
-            }
+            byte[] payload = new byte[nonce.Length + tag.Length + cipherBytes.Length];
+            Buffer.BlockCopy(nonce, 0, payload, 0, nonce.Length);
+            Buffer.BlockCopy(tag, 0, payload, nonce.Length, tag.Length);
+            Buffer.BlockCopy(cipherBytes, 0, payload, nonce.Length + tag.Length, cipherBytes.Length);
+            return GcmPrefix + Convert.ToBase64String(payload);
+#else
+            return EncryptLegacy(plainText, keyBytes);
+#endif
         }
 
-        /// <summary>
-        /// AES解密
-        /// </summary>
-        /// <param name="cipherText">加密后的字符串(包含向量)</param>
-        /// <param name="key">密钥(与加密时使用的密钥相同)</param>
-        /// <returns>解密后的明文</returns>
         public static string Decrypt(string cipherText, string key = "")
         {
             if (string.IsNullOrEmpty(cipherText))
                 throw new ArgumentNullException(nameof(cipherText));
 
-            if (string.IsNullOrEmpty(key))
-                key = AesDefaultKey;
+            byte[] keyBytes = GetKeyBytes(key);
+            if (!cipherText.StartsWith(GcmPrefix, StringComparison.Ordinal))
+                return DecryptLegacy(cipherText, keyBytes);
 
-            // 将密钥转换为字节数组并验证长度
-            byte[] keyBytes = Convert.FromBase64String(key);
-            ValidateKeyLength(keyBytes);
+#if NET
+            byte[] payload = Convert.FromBase64String(cipherText.Substring(GcmPrefix.Length));
+            if (payload.Length < GcmNonceSize + GcmTagSize)
+                throw new CryptographicException("Invalid AES-GCM payload.");
 
-            // 将加密字符串转换为字节数组
-            byte[] cipherBytes = Convert.FromBase64String(cipherText);
+            byte[] nonce = new byte[GcmNonceSize];
+            byte[] tag = new byte[GcmTagSize];
+            byte[] encrypted = new byte[payload.Length - GcmNonceSize - GcmTagSize];
+            Buffer.BlockCopy(payload, 0, nonce, 0, nonce.Length);
+            Buffer.BlockCopy(payload, nonce.Length, tag, 0, tag.Length);
+            Buffer.BlockCopy(payload, nonce.Length + tag.Length, encrypted, 0, encrypted.Length);
 
-            using (Aes aesAlg = Aes.Create())
+            byte[] plainBytes = new byte[encrypted.Length];
+            using (var aes = new AesGcm(keyBytes, GcmTagSize))
+                aes.Decrypt(nonce, encrypted, tag, plainBytes);
+            return Encoding.UTF8.GetString(plainBytes);
+#else
+            throw new PlatformNotSupportedException("AES-GCM ciphertext requires a modern .NET target.");
+#endif
+        }
+
+        public static string GenerateRandomKey()
+        {
+            using (Aes aes = Aes.Create())
             {
-                aesAlg.KeySize = KeySize;
-                aesAlg.BlockSize = BlockSize;
-                aesAlg.Mode = CipherMode.CBC;
-                aesAlg.Padding = PaddingMode.PKCS7;
+                aes.KeySize = KeySize;
+                aes.GenerateKey();
+                return Convert.ToBase64String(aes.Key);
+            }
+        }
 
-                // 从加密数据中提取向量(前16字节)
-                byte[] iv = new byte[BlockSize / 8];
-                Array.Copy(cipherBytes, 0, iv, 0, iv.Length);
-                aesAlg.IV = iv;
+        private static byte[] GetKeyBytes(string key)
+        {
+            byte[] keyBytes = Convert.FromBase64String(string.IsNullOrEmpty(key) ? AesDefaultKey : key);
+            if (keyBytes.Length != KeySize / 8)
+                throw new ArgumentException($"密钥长度必须为{KeySize / 8}字节", nameof(key));
+            return keyBytes;
+        }
 
-                // 创建解密器
-                using ICryptoTransform decryptor = aesAlg.CreateDecryptor(keyBytes, aesAlg.IV);
-
-                // 解密过程
-                using (MemoryStream msDecrypt = new MemoryStream(cipherBytes, iv.Length, cipherBytes.Length - iv.Length))
-                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+        private static string EncryptLegacy(string plainText, byte[] keyBytes)
+        {
+            using (Aes aes = CreateLegacyAes(keyBytes))
+            {
+                aes.GenerateIV();
+                using (ICryptoTransform encryptor = aes.CreateEncryptor())
+                using (var output = new MemoryStream())
                 {
-                    // 从解密流中读取明文
-                    return srDecrypt.ReadToEnd();
+                    output.Write(aes.IV, 0, aes.IV.Length);
+                    using (var crypto = new CryptoStream(output, encryptor, CryptoStreamMode.Write))
+                    using (var writer = new StreamWriter(crypto, Encoding.UTF8))
+                        writer.Write(plainText);
+                    return Convert.ToBase64String(output.ToArray());
                 }
             }
         }
 
-        /// <summary>
-        /// 生成符合AES要求的随机密钥
-        /// </summary>        
-        /// <returns>随机密钥字符串</returns>    
-        public static string GenerateRandomKey()
+        private static string DecryptLegacy(string cipherText, byte[] keyBytes)
         {
-            using (Aes aesAlg = Aes.Create())
-            {
-                aesAlg.KeySize = KeySize;
-                aesAlg.GenerateKey();
-                return Convert.ToBase64String(aesAlg.Key);
-            }
+            byte[] payload = Convert.FromBase64String(cipherText);
+            int ivLength = BlockSize / 8;
+            if (payload.Length <= ivLength || (payload.Length - ivLength) % ivLength != 0)
+                throw new CryptographicException("Invalid legacy AES-CBC payload.");
+
+            byte[] iv = new byte[ivLength];
+            Buffer.BlockCopy(payload, 0, iv, 0, iv.Length);
+            using (Aes aes = CreateLegacyAes(keyBytes))
+            using (ICryptoTransform decryptor = aes.CreateDecryptor(keyBytes, iv))
+            using (var input = new MemoryStream(payload, iv.Length, payload.Length - iv.Length))
+            using (var crypto = new CryptoStream(input, decryptor, CryptoStreamMode.Read))
+            using (var reader = new StreamReader(crypto, Encoding.UTF8))
+                return reader.ReadToEnd();
         }
 
-        /// <summary>
-        /// 验证密钥长度是否符合要求
-        /// </summary>
-        private static void ValidateKeyLength(byte[] keyBytes)
+        private static Aes CreateLegacyAes(byte[] keyBytes)
         {
-            int validKeySize = KeySize / 8; // 转换为字节数
-            if (keyBytes.Length != validKeySize)
-            {
-                throw new ArgumentException($"密钥长度必须为{validKeySize}字节", nameof(keyBytes));
-            }
+            Aes aes = Aes.Create();
+            aes.KeySize = KeySize;
+            aes.BlockSize = BlockSize;
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+            aes.Key = keyBytes;
+            return aes;
         }
-
-        /// <summary>   
-        /// 获得密钥   
-        /// </summary>   
-        /// <returns>密钥</returns>   
-        static readonly string AesDefaultKey = "ibzdO1JTUrQGyZ3rNGTsnGxd7O0A350ScGjBzWfYfbw=";
     }
 }

@@ -191,35 +191,24 @@ namespace CSharp.Net.Util
         /// <param name="file"></param>
         /// <param name="contents"></param>
         /// <param name="encoding">null:Encoding.UTF8</param>
+        /// <param name="cancellationToken">取消令牌</param>
         //[MethodImpl(MethodImplOptions.Synchronized)]
-        public static async Task AppendWrittenFile(string file, string contents, Encoding encoding = null)
+        public static async Task AppendWrittenFile(
+            string file,
+            string contents,
+            Encoding encoding = null,
+            CancellationToken cancellationToken = default)
         {
-            var semaphore = LockObject.GetLockObj(file);
-            try
+            if (string.IsNullOrWhiteSpace(file))
+                throw new ArgumentException("File path is required.", nameof(file));
+            string fullPath = Path.GetFullPath(file);
+            using (await FileLock.AcquireAsync(fullPath, cancellationToken).ConfigureAwait(false))
+            using (FileStream stream = new FileStream(
+                fullPath, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous))
             {
-                //Monitor.Enter(obj, ref l);
-                await semaphore.WaitAsync();
-                using (FileStream fs = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous))
-                {
-                    encoding = encoding ?? Encoding.UTF8;//: Encoding.GetEncoding(encoding);
-                    var buffer = encoding.GetBytes(contents);//+ Environment.NewLine;
-                    await fs.WriteAsync(buffer, 0, buffer.Length);
-                    await fs.FlushAsync();
-
-                    //using StreamWriter sw = new StreamWriter(fs, encoding == null ? Encoding.Default : Encoding.GetEncoding(encoding));
-                    //sw.BaseStream.Seek(0, SeekOrigin.End);
-                    //await sw.WriteLineAsync(contents);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("[WriteLog] error" + ex.GetExceptionMessage());
-            }
-            finally
-            {
-                semaphore.Release();
-
-                // if (l) Monitor.Exit(obj);
+                byte[] buffer = (encoding ?? Encoding.UTF8).GetBytes(contents ?? string.Empty);
+                await stream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -231,22 +220,32 @@ namespace CSharp.Net.Util
         /// <param name="text"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static void WriteTextAsync(string filePath, string fileName, string text, CancellationToken cancellationToken)
+        public static async Task WriteTextAsync(
+            string filePath,
+            string fileName,
+            string text,
+            CancellationToken cancellationToken = default)
         {
-            foreach (char c in Path.GetInvalidFileNameChars())
-                fileName = fileName.Replace(c.ToString(), "");
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Directory path is required.", nameof(filePath));
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentException("File name is required.", nameof(fileName));
 
-            try
+            foreach (char c in Path.GetInvalidFileNameChars())
+                fileName = fileName.Replace(c.ToString(), string.Empty);
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentException("File name contains no valid characters.", nameof(fileName));
+
+            Directory.CreateDirectory(filePath);
+            string fullPath = Path.GetFullPath(Path.Combine(filePath, fileName));
+            using (await FileLock.AcquireAsync(fullPath, cancellationToken).ConfigureAwait(false))
+            using (FileStream stream = new FileStream(
+                fullPath, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous))
             {
-                if (!Directory.Exists(filePath))
-                    Directory.CreateDirectory(filePath);
+                byte[] buffer = Encoding.UTF8.GetBytes(text ?? string.Empty);
+                await stream.WriteAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch (NotSupportedException) { }
-            fileName = Path.Combine(filePath, fileName);
-            var semaphore = LockObject.GetLockObj(fileName);
-            semaphore.Wait();
-            File.WriteAllText(fileName, contents: text);
-            semaphore.Release();
         }
 
         /// <summary>
