@@ -32,12 +32,12 @@ namespace CSharp.Net.Util
         /// <summary>
         /// 不等待补充，直接抛出异常
         /// </summary>
-        /// <exception cref="AppException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public void Cross()
         {
             lastReadTime = DateTime.UtcNow;
             while (bucket == null || bucket.Count == 0)
-                throw new AppException("network is busy");
+                throw new InvalidOperationException("Network is busy.");
         }
         /// <summary>
         /// 设置容量，默认50

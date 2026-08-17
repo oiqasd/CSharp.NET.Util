@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace CSharp.Net.Util
 {
     public class Args
@@ -10,7 +7,7 @@ namespace CSharp.Net.Util
         {
             if (!val)
             {
-                throw new ArgsException(message);
+                throw new ArgumentException(message);
             }
         }
     }

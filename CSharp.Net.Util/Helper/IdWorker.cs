@@ -104,7 +104,8 @@ namespace CSharp.Net.Util
         public Snowflake(int machineId = 1)
         {
             if (machineId > maxMachineId || machineId < 0)
-                throw new WorkIdException($"machineId can't be greater than {maxMachineId} or less than 0 ");
+                throw new ArgumentOutOfRangeException(nameof(machineId), machineId,
+                    $"machineId cannot be greater than {maxMachineId} or less than 0.");
             this.machineId = machineId;
         }
 
@@ -122,7 +123,8 @@ namespace CSharp.Net.Util
             workerIdShift = sequenceBits;
 
             if (machineId > maxMachineId || machineId < 0)
-                throw new WorkIdException($"machineId can't be greater than {maxMachineId} or less than 0 ");
+                throw new ArgumentOutOfRangeException(nameof(options.MachineId), machineId,
+                    $"machineId cannot be greater than {maxMachineId} or less than 0.");
 
             //timestampShift = sequenceBits + workerIdBits;//+datacenteridBits
             timestampShift = (int)Math.Ceiling(Math.Log((machineId << workerIdShift) | sequenceMax, 2));
@@ -149,7 +151,7 @@ namespace CSharp.Net.Util
                     {
                         LogHelper.Fatal("WorkId Error", string.Format("Clock moved backwards.Refusing to generate id for {0} milliseconds", lastTimestamp - timestamp));
                         return Guid.NewGuid().GetHashCode();
-                        //throw new WorkIdException(string.Format("Clock moved backwards.  Refusing to generate id for {0} milliseconds", this.lastTimestamp - timestamp));
+                        //throw new InvalidOperationException(string.Format("Clock moved backwards. Refusing to generate id for {0} milliseconds", lastTimestamp - timestamp));
                     }
                 }
 

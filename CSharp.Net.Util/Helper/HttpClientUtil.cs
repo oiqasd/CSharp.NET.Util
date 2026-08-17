@@ -685,8 +685,6 @@ namespace CSharp.Net.Util
                 Console.WriteLine(DateTime.Now.ToString(1) + ex.Message + url);
             LogHelper.Fatal($"{nameof(HttpClientUtil)}", $"{ex.Message}{(retryNum > 0 ? $"RetryNum:{retryNum}" : "")}.{url}");
 
-            if (ex is TaskCanceledException)
-                ex = new AppTimeoutException("响应超时");
         }
 
         private static void PrintRequestLog(string method, string url, out string trackId, object data = null)

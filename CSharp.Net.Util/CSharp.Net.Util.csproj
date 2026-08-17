@@ -75,6 +75,7 @@
 
 	<ItemGroup>
 		<Compile Remove="Cryptography\RSA_BouncyCastle.cs" />
+		<Compile Remove="Exception\AException\ExceptionOps.cs" />
 		<Compile Remove="Limit\LimitTask.cs" />
 		<Compile Remove="Logger\ALoggerManager.cs" />
 		<Compile Remove="LogHelper\ILogEntry.cs" />

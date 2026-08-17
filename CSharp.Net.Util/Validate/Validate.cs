@@ -1,3 +1,5 @@
+using System;
+
 namespace CSharp.Net.Util.Validate
 {
     public class Validate
@@ -7,7 +9,7 @@ namespace CSharp.Net.Util.Validate
             var result= ValidataData(t);
             if (!result.Flag)
             {
-                throw new ArgsException(result.ErrorMessage);
+                throw new ArgumentException(result.ErrorMessage, nameof(t));
             }
         }
 

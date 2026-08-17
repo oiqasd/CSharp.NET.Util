@@ -1,7 +1,7 @@
 ﻿namespace CSharp.Net.Util
 {
-    internal class LoggerStopedException : AppException
+    internal class LoggerStopedException : System.InvalidOperationException
     {
-        public LoggerStopedException() : base(AExceptionCode.LoggerStoped, "Logger stop.") { }
+        public LoggerStopedException() : base("Logger has stopped.") { }
     }
 }

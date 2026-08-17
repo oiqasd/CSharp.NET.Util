@@ -227,7 +227,7 @@ public static class ObjectExtension
     /// <returns></returns>
     public static DateTime ToDateTime(this object obj, bool throwExIfNull = false, DateTime defaultValue = default)
     {
-        if (obj == null && throwExIfNull) throw new ArgsException("Date value is null");
+        if (obj == null && throwExIfNull) throw new ArgumentNullException(nameof(obj), "Date value is null.");
         if (obj == null) return defaultValue;
         if (DateTime.TryParse(obj.ToString(), out DateTime r))
             return r;

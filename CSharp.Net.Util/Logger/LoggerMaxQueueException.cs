@@ -1,8 +1,8 @@
 ﻿namespace CSharp.Net.Util
 {
-    internal class LoggerMaxQueueException:AppException
+    internal class LoggerMaxQueueException : System.InvalidOperationException
     {
-        public LoggerMaxQueueException() : base(AExceptionCode.LoggerMaxQueue, "LoggerMaxQueue") { }
-        public LoggerMaxQueueException(string message) : base(AExceptionCode.LoggerMaxQueue, message) { }
+        public LoggerMaxQueueException() : base("Logger queue has reached its maximum length.") { }
+        public LoggerMaxQueueException(string message) : base(message) { }
     }
 }

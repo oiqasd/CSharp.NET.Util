@@ -19,7 +19,7 @@ namespace CSharp.Net.Util.Json.Converters
                 case JsonTokenType.Number:
                     return reader.GetInt32();
                 default:
-                    throw new ArgsException("Invalid Boolean to Int value");
+                    throw new JsonException("Invalid Boolean-to-Int value.");
             }
         }
 

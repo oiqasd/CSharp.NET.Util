@@ -658,7 +658,7 @@ namespace CSharp.Net.Util
                 }
                 return dic;
             }
-            throw new AppException(input.GetType().Name + "is not support");
+            throw new NotSupportedException($"Type '{input.GetType().Name}' is not supported.");
         }
 
         /// <summary>

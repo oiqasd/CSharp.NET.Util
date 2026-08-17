@@ -152,8 +152,10 @@ namespace CSharp.Net.Util
         /// <returns></returns>
         public static List<T> DeserializeList<T>(string json, string key, JsonSerializerOptions options = null)
         {
-            if (string.IsNullOrEmpty(json) || key.IsNullOrEmpty())
-                throw new ArgsException("参数不能为空");
+            if (string.IsNullOrEmpty(json))
+                throw new ArgumentException("JSON cannot be null or empty.", nameof(json));
+            if (key.IsNullOrEmpty())
+                throw new ArgumentException("Key cannot be null or empty.", nameof(key));
 
             var node = GetJsonNode(json);
             if (node is JsonObject)
@@ -163,7 +165,7 @@ namespace CSharp.Net.Util
                         return JsonSerializer.Deserialize<List<T>>(item.Value.ToString(), options ?? _options);
             }
 
-            throw new ArgsException("暂不支持");
+            throw new NotSupportedException($"The JSON value for key '{key}' is not a supported array.");
         }
 
         /// <summary>
@@ -259,12 +261,12 @@ namespace CSharp.Net.Util
         /// <param name="jsonData">json data</param>
         /// <param name="dataKey">默认空,适用于对象下的某个字段是数组</param>
         /// <returns>Null or empty return null</returns>
-        /// <exception cref="JsonFormatterException"></exception>
+        /// <exception cref="FormatException"></exception>
         public static List<Dictionary<string, object>> GetList(string jsonData, string dataKey = null)
         {
             var node = GetJsonNode(jsonData);
             if (node is JsonValue)
-                throw new JsonFormatterException("input is a value");
+                throw new FormatException("Input is a JSON value, not an object or array.");
             Func<JsonArray, List<Dictionary<string, object>>> funArr = null;
             Func<JsonObject, Dictionary<string, object>> funObj = null;
             funObj = (obj) =>
@@ -356,7 +358,7 @@ namespace CSharp.Net.Util
                     else if (item.Value is JsonArray)
                         jobj = (JsonObject)item.Value[0];
                     else
-                        throw new JsonFormatterException($"Node '{item.Key}' not object or array,please check dataKey.");
+                        throw new FormatException($"Node '{item.Key}' is not an object or array; check dataKey.");
                     break;
                 }
             }
