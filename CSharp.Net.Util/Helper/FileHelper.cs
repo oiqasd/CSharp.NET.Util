@@ -202,7 +202,7 @@ namespace CSharp.Net.Util
             if (string.IsNullOrWhiteSpace(file))
                 throw new ArgumentException("File path is required.", nameof(file));
             string fullPath = Path.GetFullPath(file);
-            using (await FileLock.AcquireAsync(fullPath, cancellationToken).ConfigureAwait(false))
+            using (await LockEntry.AcquireAsync(fullPath, cancellationToken).ConfigureAwait(false))
             using (FileStream stream = new FileStream(
                 fullPath, FileMode.Append, FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous))
             {
@@ -238,7 +238,7 @@ namespace CSharp.Net.Util
 
             Directory.CreateDirectory(filePath);
             string fullPath = Path.GetFullPath(Path.Combine(filePath, fileName));
-            using (await FileLock.AcquireAsync(fullPath, cancellationToken).ConfigureAwait(false))
+            using (await LockEntry.AcquireAsync(fullPath, cancellationToken).ConfigureAwait(false))
             using (FileStream stream = new FileStream(
                 fullPath, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous))
             {

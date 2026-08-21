@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CSharp.Net.Util
 {
-    internal static class FileLock
+    public static class LockEntry
     {
         private static readonly ConcurrentDictionary<string, Entry> Locks =
             new ConcurrentDictionary<string, Entry>(StringComparer.OrdinalIgnoreCase);
