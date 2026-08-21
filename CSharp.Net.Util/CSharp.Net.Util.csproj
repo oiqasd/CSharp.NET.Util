@@ -5,22 +5,22 @@
 		<PackageId>CSharp.Net.Util</PackageId>
 		<!--<PackageVersion>2.3.1</PackageVersion>-->
 		<Authors>HuYou</Authors>
-		<Description>Provides some tools for .NET projects,including:AppDomain,Attributes,BankInfo-CN,Compression,Cryptography,Convertions,Enums,File,Http Request,Model,Retry,String,Random and Snowflake algorithm,Queries,Json,Log,Utils,Validations among others.</Description>
-		<Version>7.3.3</Version>
+		<Description>一个面向 .NET 项目的通用工具类库，提供日常开发中常用的扩展方法、辅助类和基础组件，减少重复代码，方便快速构建应用程序。</Description>
+		<Version>7.4.0</Version>
 		<LangVersion>12.0</LangVersion>
 		<Copyright>©HuYou</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<!--在此版本的包中进行的更改的说明-->
 		<PackageReleaseNotes></PackageReleaseNotes>
 		<!--<FileVersion>2.2.1.0</FileVersion>--> 
-		<AssemblyVersion>7.3.*</AssemblyVersion>
+		<AssemblyVersion>7.4.*</AssemblyVersion>
 		<Deterministic>false</Deterministic>
 		
 		<!--<PackageProjectUrl>https://github.com/oiqasd/CSharp.NET.Util</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/oiqasd/CSharp.NET.Util</RepositoryUrl>-->
 		<PackageTags>.NET;Util;Utility,Tools</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<PackageIcon>app.png</PackageIcon>
 		<!--<ApplicationIcon>appicon.ico</ApplicationIcon>-->
